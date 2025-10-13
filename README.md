@@ -1,6 +1,6 @@
 # OpenBurner 🔥
 
-A production-ready Web3 wallet with hardware-secured key storage using HaLo NFC chips. Built with Next.js, TypeScript, and ethers.js.
+A production-ready Web3 wallet with hardware-secured key storage using Burner cards (powered by HaLo NFC chips). Built with Next.js, TypeScript, and ethers.js.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
@@ -12,7 +12,7 @@ This repository contains two applications:
 
 - **`/` (Root)** - **Wallet Application** (Run locally only)
   - The actual Web3 wallet with hardware-secured key storage
-  - Requires local installation and HaLo NFC chip
+  - Requires local installation and Burner card from [burner.pro](https://burner.pro)
   - **Not deployed to the web** - runs on your machine for maximum security
   
 - **`/website`** - **Marketing Website** (Deployed on Vercel)
@@ -43,7 +43,7 @@ This repository contains two applications:
 
 ### Prerequisites
 
-1. **HaLo NFC Chip** - [Order from Arx](https://arx.org)
+1. **Burner Card** - [Order from Burner.pro](https://burner.pro) (note: requires specially programmed Burner card)
 2. **USB NFC Reader** - ACR122U or compatible PC/SC reader
 3. **HaLo Bridge** - Local WebSocket bridge software
 4. **Node.js 18+** - [Download](https://nodejs.org)
@@ -251,7 +251,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Resources
 
 ### Official Links
-- **HaLo Chips**: [arx.org](https://arx.org)
+- **Get a Burner**: [burner.pro](https://burner.pro)
 - **LibHaLo**: [github.com/arx-research/libhalo](https://github.com/arx-research/libhalo)
 - **ethers.js**: [docs.ethers.org](https://docs.ethers.org)
 - **Next.js**: [nextjs.org](https://nextjs.org)

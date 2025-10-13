@@ -5,7 +5,7 @@
 ## Quick Start
 
 ### Prerequisites
-- **HaLo NFC Chip** - [Order from Arx](https://arx.org)
+- **Burner Card** - [Order from Burner.pro](https://burner.pro) (note: requires a specially programmed Burner card, not just any HaLo chip)
 - **USB NFC Reader** - ACR122U or compatible
 - **Node.js 18+**
 
@@ -59,8 +59,8 @@ npm run dev
 
 ### 1. Connection
 - Web app connects to HaLo Bridge via WebSocket
-- Bridge detects chip on NFC reader
-- App fetches Ethereum address from chip
+- Bridge detects Burner card on NFC reader
+- App fetches Ethereum address from card
 
 ### 2. View Balances
 - App queries blockchain RPCs for ETH and token balances
@@ -70,7 +70,7 @@ npm run dev
 ### 3. Send Transaction
 - User enters recipient address and amount
 - App builds unsigned transaction with ethers.js
-- Transaction sent to chip via bridge for signing
+- Transaction sent to Burner card via bridge for signing
 - Signed transaction broadcast to blockchain
 
 ## Key Code APIs
@@ -183,9 +183,9 @@ openburner/
 - Grant consent: `http://127.0.0.1:32868/consent?website=http://localhost:3000`
 - Check NFC reader is plugged in
 
-### Can't read chip
-- Ensure chip is properly positioned on reader
-- Try removing and re-tapping chip
+### Can't read card
+- Ensure Burner card is properly positioned on reader
+- Try removing and re-tapping card
 - Check bridge logs for errors
 
 ### Transaction fails
@@ -209,7 +209,7 @@ npm run build
 ## Links
 
 - **GitHub**: https://github.com/rdyplayerB/openburner
-- **HaLo Chips**: https://arx.org
+- **Get a Burner**: https://burner.pro
 - **LibHaLo**: https://github.com/arx-research/libhalo
 - **ethers.js**: https://docs.ethers.org
 
