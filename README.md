@@ -272,7 +272,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Community
 - **Discord**: [Join our Discord](#)
 - **Twitter**: [@OpenBurner](#)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/OpenBurner/issues)
+- **Issues**: [GitHub Issues](https://github.com/rdyplayerB/openburner/issues)
 
 ## 🙏 Acknowledgments
 
