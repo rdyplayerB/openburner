@@ -52,7 +52,7 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
+      <section className="max-w-4xl mx-auto px-6 pt-20 pb-12">
         <div className="grid md:grid-cols-[1.3fr,1fr] gap-10 items-start">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
@@ -79,7 +79,7 @@ export default function Home() {
               </a>
             </div>
           </div>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-10 mt-4">
             <div className="flex justify-center md:justify-end">
               <Image 
                 src="/images/Burner.jpg" 
@@ -91,8 +91,8 @@ export default function Home() {
             </div>
             
             {/* Supported Networks - Icon Grid */}
-            <div className="flex flex-col gap-3">
-              <div className="flex gap-3">
+            <div className="flex flex-col gap-2.5">
+              <div className="flex gap-2.5">
               {[
                 { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg' },
                 { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg' },
@@ -104,26 +104,30 @@ export default function Home() {
               ].map((network) => (
                 <div
                   key={network.name}
-                  className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-shadow border border-gray-200"
-                  title={network.name}
+                  className="group relative flex flex-col items-center"
                 >
-                  <img
-                    src={network.logo}
-                    alt={network.name}
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
-                      }
-                    }}
-                  />
+                  <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
+                    <img
+                      src={network.logo}
+                      alt={network.name}
+                      className="w-5 h-5 rounded-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-xs font-bold text-gray-700">${network.name[0]}</span>`;
+                        }
+                      }}
+                    />
+                  </div>
+                  <span className="absolute -bottom-6 text-[9px] text-gray-600 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    {network.name}
+                  </span>
                 </div>
               ))}
             </div>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-2.5 items-center">
               {[
                 { name: 'Mantle', logo: 'https://icons.llamao.fi/icons/chains/rsz_mantle.jpg' },
                 { name: 'Mode', logo: 'https://icons.llamao.fi/icons/chains/rsz_mode.jpg' },
@@ -134,27 +138,31 @@ export default function Home() {
               ].map((network) => (
                 <div
                   key={network.name}
-                  className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-shadow border border-gray-200"
-                  title={network.name}
+                  className="group relative flex flex-col items-center"
                 >
-                  <img
-                    src={network.logo}
-                    alt={network.name}
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
-                      }
-                    }}
-                  />
+                  <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
+                    <img
+                      src={network.logo}
+                      alt={network.name}
+                      className="w-5 h-5 rounded-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-xs font-bold text-gray-700">${network.name[0]}</span>`;
+                        }
+                      }}
+                    />
+                  </div>
+                  <span className="absolute -bottom-6 text-[9px] text-gray-600 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    {network.name}
+                  </span>
                 </div>
               ))}
               <div className="flex flex-col items-center gap-1">
-                <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-shadow border border-gray-200">
-                  <Plus className="w-4 h-4 text-gray-400" strokeWidth={2.5} />
+                <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-lg hover:scale-110 transition-all border border-gray-200">
+                  <Plus className="w-3.5 h-3.5 text-gray-400" strokeWidth={2.5} />
                 </div>
                 <span className="text-[9px] text-gray-600 font-medium text-center leading-tight whitespace-nowrap">Custom RPC</span>
               </div>
@@ -165,7 +173,7 @@ export default function Home() {
       </section>
 
       {/* What it does */}
-      <section className="max-w-4xl mx-auto px-6 py-20 border-t border-gray-200">
+      <section className="max-w-4xl mx-auto px-6 pt-12 pb-20 border-t border-gray-200">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
           What it does
         </h2>
