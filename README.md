@@ -6,9 +6,13 @@ An open source Web3 wallet for Burner Ethereum hardware wallets. Built with Next
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📂 About
+## What is Burner?
 
-OpenBurner is a locally-run wallet application for Burner Ethereum hardware wallets. It is designed to run **locally only** on your machine, providing maximum security by eliminating remote attack vectors. Your private keys remain secure in the Burner card's secure element and never leave the hardware.
+[Burner](https://burner.pro) is an affordable, credit-card-sized hardware wallet built for gifting and everyday crypto use. It uses the same secure chip technology found in traditional hardware wallets like Ledger or Trezor, but reimagines the hardware wallet experience with a seedless design, web-based interface, and NFC connectivity. Burner combines the security of cold storage with the convenience of a software wallet, offering an accessible self-custody solution for spending, saving, and gifting crypto securely.
+
+## What is OpenBurner?
+
+OpenBurner is a wallet application for Burner Ethereum hardware wallets. It runs locally on your machine. Private keys remain in the card's secure element.
 
 ## ✨ Features
 
