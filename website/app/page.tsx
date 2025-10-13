@@ -94,9 +94,9 @@ export default function Home() {
               </div>
               
               {/* Supported Networks - Icon Grid */}
-              <div className="flex flex-col gap-2.5 items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+              <div className="flex flex-col gap-3 items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-2"></div>
-              <div className="flex gap-3 sm:gap-3.5 flex-wrap justify-center">
+              <div className="flex gap-3 justify-center">
               {[
                 { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg' },
                 { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg' },
@@ -131,7 +131,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div className="flex gap-3 sm:gap-3.5 items-center flex-wrap justify-center">
+            <div className="flex gap-3 items-center justify-center">
               {[
                 { name: 'Mantle', logo: 'https://icons.llamao.fi/icons/chains/rsz_mantle.jpg' },
                 { name: 'Mode', logo: 'https://icons.llamao.fi/icons/chains/rsz_mode.jpg' },
