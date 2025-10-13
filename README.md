@@ -15,10 +15,9 @@ This repository contains two applications:
   - Requires local installation and Burner Ethereum card ([get one here](https://arx-burner.myshopify.com/OPENBURNER))
   - **Not deployed to the web** - runs on your machine
   
-- **`/website`** - **Website** (Deployed on Vercel)
+- **`/website`** - **Website**
   - Public-facing website with documentation and installation guides
   - Live at: [openburner.xyz](https://openburner.xyz)
-  - Source code for informational purposes only
 
 > **⚠️ Important**: The wallet application is designed to run **locally only**. This provides maximum security by eliminating remote attack vectors. Only the website is deployed publicly.
 
@@ -204,7 +203,7 @@ openburner/
 │   ├── token-lists.ts           # Token metadata
 │   └── multicall.ts             # Batch RPC calls
 ├── store/                        # Zustand state management
-├── website/                      # Website (Vercel)
+├── website/                      # Website
 ├── DOCS.md                       # Complete documentation
 └── DEPLOYMENT.md                 # Vercel deployment guide
 ```
