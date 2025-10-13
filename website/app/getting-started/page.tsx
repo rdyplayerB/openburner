@@ -107,11 +107,11 @@ export default function GettingStarted() {
             {/* Node.js */}
             <div className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg">
               <Image 
-                src="/images/nodejs-logo.svg" 
+                src="/images/nodejs.png" 
                 alt="Node.js" 
                 width={120} 
                 height={120} 
-                className="rounded-lg w-[120px] h-[120px]"
+                className="rounded-lg w-[120px] h-[120px] object-contain"
               />
               <div>
                 <p className="text-gray-900 font-medium">Node.js 18+</p>
