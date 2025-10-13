@@ -61,7 +61,7 @@ export default function Home() {
                 An open source Web3 wallet for Burner Ethereum hardware wallets
               </h1>
               <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8">
-                Extends Burner use across any EVM-compatible chain.
+                Use your Burner across any EVM-compatible chain.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8">
                 <Link
@@ -200,7 +200,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">What is OpenBurner?</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                OpenBurner is an open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. It extends the functionality of your Burner by adding support for additional EVM-compatible chains like BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain you configure.
+                OpenBurner is an open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Use your Burner across Ethereum, Base, BNB Chain, Arbitrum, Avalanche, Blast, Linea, Mantle, Mode, Optimism, Polygon, Scroll, Unichain, and any custom EVM chain you configure.
               </p>
             </div>
 
