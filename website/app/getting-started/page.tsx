@@ -59,18 +59,25 @@ export default function GettingStarted() {
         {/* Prerequisites */}
         <section className="mb-16">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Prerequisites</h2>
-          <div className="space-y-4">
-            <div className="text-gray-600">
-              • Burner Card (<a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">order here - 10% off</a>)
+          <div className="space-y-3">
+            {/* Burner Card */}
+            <div className="p-4 bg-white border border-gray-200 rounded-lg">
+              <p className="text-gray-900 font-medium">• Burner Card</p>
+              <p className="text-sm text-gray-600 mt-1">
+                <a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">
+                  Order here - 10% off →
+                </a>
+              </p>
             </div>
             
+            {/* NFC Reader */}
             <a 
               href="https://amzn.to/3ISNwd7" 
               target="_blank" 
               rel="noopener noreferrer"
               className="block"
             >
-              <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-100 transition-all group">
+              <div className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all group">
                 <Image 
                   src="/images/ACR1252U.png" 
                   alt="ACR1252U NFC Reader" 
@@ -85,8 +92,9 @@ export default function GettingStarted() {
               </div>
             </a>
             
-            <div className="text-gray-600">
-              • Node.js 18+
+            {/* Node.js */}
+            <div className="p-4 bg-white border border-gray-200 rounded-lg">
+              <p className="text-gray-900 font-medium">• Node.js 18+</p>
             </div>
           </div>
         </section>
