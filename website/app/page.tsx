@@ -52,46 +52,49 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-4xl mx-auto px-6 pt-20 pb-12">
-        <div className="grid md:grid-cols-[1.3fr,1fr] gap-10 items-start">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-              An open source Web3 wallet for Burner Ethereum hardware wallets
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Extends Burner use across any EVM-compatible chain.
-            </p>
-            <div className="flex gap-4 mb-8">
-              <Link
-                href="/getting-started"
-                className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                Get Started
-              </Link>
-              <a
-                href="https://github.com/rdyplayerB/openburner"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-900 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-              >
-                <Github size={18} />
-                GitHub
-              </a>
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50/30 to-blue-50/20">
+        <div className="max-w-4xl mx-auto px-6 pt-20 pb-12">
+          <div className="grid md:grid-cols-[1.3fr,1fr] gap-10 items-start animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+                An open source Web3 wallet for Burner Ethereum hardware wallets
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Extends Burner use across any EVM-compatible chain.
+              </p>
+              <div className="flex gap-4 mb-8">
+                <Link
+                  href="/getting-started"
+                  className="px-8 py-3.5 bg-gray-900 text-white rounded-lg text-base font-semibold hover:bg-gray-800 transition-all hover:shadow-lg hover:scale-105 active:scale-100"
+                >
+                  Get Started
+                </Link>
+                <a
+                  href="https://github.com/rdyplayerB/openburner"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 border border-gray-300 text-gray-700 rounded-lg text-base font-medium hover:bg-gray-50 hover:border-gray-400 transition-all"
+                >
+                  <Github size={18} />
+                  GitHub
+                </a>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col gap-10 mt-4">
-            <div className="flex justify-center md:justify-end">
-              <Image 
-                src="/images/Burner.jpg" 
-                alt="OpenBurner app interface showing wallet and NFC card" 
-                width={420} 
-                height={630} 
-                className="rounded-2xl shadow-2xl max-w-full h-auto"
-              />
-            </div>
-            
-            {/* Supported Networks - Icon Grid */}
-            <div className="flex flex-col gap-2.5 items-center">
+            <div className="flex flex-col gap-10 mt-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+              <div className="flex justify-center md:justify-end relative">
+                <div className="absolute inset-0 bg-blue-400/20 blur-3xl rounded-full scale-75 -z-10"></div>
+                <Image 
+                  src="/images/Burner.jpg" 
+                  alt="OpenBurner app interface showing wallet and NFC card" 
+                  width={420} 
+                  height={630} 
+                  className="rounded-2xl shadow-2xl max-w-full h-auto ring-1 ring-gray-200/50"
+                />
+              </div>
+              
+              {/* Supported Networks - Icon Grid */}
+              <div className="flex flex-col gap-2.5 items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-2"></div>
               <div className="flex gap-2.5">
               {[
                 { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg' },
@@ -169,8 +172,9 @@ export default function Home() {
                 </span>
               </div>
             </div>
+              </div>
+            </div>
           </div>
-        </div>
         </div>
       </section>
 
