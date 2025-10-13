@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OpenBurner - Hardware-Secured Web3 Wallet",
-  description: "A production-ready Web3 wallet with hardware-secured key storage using HaLo NFC chips. Built with Next.js, TypeScript, and ethers.js.",
-  keywords: ["web3", "wallet", "hardware wallet", "NFC", "HaLo", "ethereum", "crypto"],
-  authors: [{ name: "OpenBurner Team" }],
+  title: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
+  description: "An open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Extends BurnerOS with support for BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain.",
+  keywords: ["web3", "wallet", "hardware wallet", "Burner", "Burner Ethereum", "NFC", "ethereum", "crypto", "EVM", "multi-chain"],
+  authors: [{ name: "@rdyplayerB" }],
   openGraph: {
-    title: "OpenBurner - Hardware-Secured Web3 Wallet",
-    description: "A production-ready Web3 wallet with hardware-secured key storage using HaLo NFC chips.",
+    title: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
+    description: "An open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Extends BurnerOS with support for multiple EVM chains.",
     type: "website",
   },
 };

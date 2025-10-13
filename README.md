@@ -1,6 +1,6 @@
 # OpenBurner 🔥
 
-An open source Web3 wallet for Burner cards. Built with Next.js, TypeScript, and ethers.js.
+An open source Web3 wallet for Burner Ethereum hardware wallets. Built with Next.js, TypeScript, and ethers.js.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
@@ -11,8 +11,8 @@ An open source Web3 wallet for Burner cards. Built with Next.js, TypeScript, and
 This repository contains two applications:
 
 - **`/` (Root)** - **Wallet Application** (Run locally only)
-  - Web3 wallet for Burner cards
-  - Requires local installation and Burner card from [burner.pro](https://burner.pro)
+  - Web3 wallet for Burner Ethereum hardware wallets
+  - Requires local installation and Burner Ethereum card from [burner.pro/eth](https://burner.pro/eth)
   - **Not deployed to the web** - runs on your machine
   
 - **`/website`** - **Marketing Website** (Deployed on Vercel)
@@ -26,7 +26,7 @@ This repository contains two applications:
 
 ### Core Functionality
 - 🔐 **Hardware-Secured Keys** - Private keys never leave the secure element chip
-- 🌐 **Multi-Chain Support** - Ethereum, Base, Arbitrum, Optimism, Polygon, and more
+- 🌐 **Multi-Chain Support** - Extends BurnerOS chains (Ethereum, Base, Arbitrum, Optimism) + BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM chain
 - 💰 **Token Management** - View balances for ETH and ERC-20 tokens
 - 💸 **Send Transactions** - Native and ERC-20 transfers with hardware signing
 - 📊 **Real-Time Prices** - CoinGecko integration with intelligent caching
@@ -43,8 +43,8 @@ This repository contains two applications:
 
 ### Prerequisites
 
-1. **Burner Card** - [Order from Burner.pro](https://burner.pro) (note: requires specially programmed Burner card)
-2. **USB NFC Reader** - ACR122U or compatible PC/SC reader
+1. **Burner Ethereum Card** - [Order from burner.pro/eth](https://burner.pro/eth)
+2. **Desktop NFC Reader** - ACR122U or compatible USB NFC reader
 3. **HaLo Bridge** - Local WebSocket bridge software
 4. **Node.js 18+** - [Download](https://nodejs.org)
 
@@ -157,19 +157,21 @@ See [Security Documentation](docs/technical/SECURITY.md) for details.
 
 ## 📊 Supported Networks
 
-| Network | Chain ID | Native Token |
-|---------|----------|--------------|
-| Ethereum | 1 | ETH |
-| Base | 8453 | ETH |
-| Arbitrum One | 42161 | ETH |
-| Optimism | 10 | ETH |
-| Polygon | 137 | MATIC |
-| Blast | 81457 | ETH |
-| Scroll | 534352 | ETH |
-| Linea | 59144 | ETH |
-| zkSync Era | 324 | ETH |
+**Everything BurnerOS supports:**
+- Ethereum, Base, Arbitrum, Optimism
 
-**Plus any custom EVM-compatible chain via Custom RPC**
+**Plus additional chains:**
+- BNB Chain
+- Avalanche  
+- Blast
+- Linea
+- Mantle
+- Mode
+- Polygon
+- Scroll
+- Unichain
+
+**Plus any custom EVM-compatible chain via Custom RPC configuration**
 
 ## 🎯 Key Features Explained
 
@@ -251,7 +253,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Resources
 
 ### Official Links
-- **Get a Burner**: [burner.pro](https://burner.pro)
+- **Get a Burner Ethereum Card**: [burner.pro/eth](https://burner.pro/eth)
 - **LibHaLo**: [github.com/arx-research/libhalo](https://github.com/arx-research/libhalo)
 - **ethers.js**: [docs.ethers.org](https://docs.ethers.org)
 - **Next.js**: [nextjs.org](https://nextjs.org)

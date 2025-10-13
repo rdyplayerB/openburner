@@ -13,13 +13,17 @@ interface Chain {
 const POPULAR_CHAINS: Chain[] = [
   { chainId: 1, name: "Ethereum", rpcUrl: "https://eth.llamarpc.com" },
   { chainId: 8453, name: "Base", rpcUrl: "https://mainnet.base.org" },
+  { chainId: 56, name: "BNB Chain", rpcUrl: "https://bsc-dataseed1.binance.org" },
   { chainId: 42161, name: "Arbitrum One", rpcUrl: "https://arb1.arbitrum.io/rpc" },
-  { chainId: 10, name: "Optimism", rpcUrl: "https://mainnet.optimism.io" },
+  { chainId: 43114, name: "Avalanche", rpcUrl: "https://api.avax.network/ext/bc/C/rpc" },
   { chainId: 81457, name: "Blast", rpcUrl: "https://rpc.blast.io" },
+  { chainId: 59144, name: "Linea Mainnet", rpcUrl: "https://rpc.linea.build" },
+  { chainId: 5000, name: "Mantle", rpcUrl: "https://rpc.mantle.xyz" },
+  { chainId: 34443, name: "Mode Mainnet", rpcUrl: "https://mainnet.mode.network" },
+  { chainId: 10, name: "OP Mainnet", rpcUrl: "https://mainnet.optimism.io" },
   { chainId: 137, name: "Polygon", rpcUrl: "https://polygon-rpc.com" },
   { chainId: 534352, name: "Scroll", rpcUrl: "https://rpc.scroll.io" },
-  { chainId: 59144, name: "Linea", rpcUrl: "https://rpc.linea.build" },
-  { chainId: 324, name: "zkSync Era", rpcUrl: "https://mainnet.era.zksync.io" },
+  { chainId: 1301, name: "Unichain", rpcUrl: "https://sepolia.unichain.org" },
 ];
 
 export function ChainSelector() {

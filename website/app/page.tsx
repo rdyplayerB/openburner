@@ -16,16 +16,21 @@ export default function Home() {
             </Link>
             <div className="flex items-center gap-8">
               <a
-                href="https://burner.pro"
+                href="https://burner.pro/eth"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-gray-900 text-sm"
               >
                 Get a Burner
               </a>
-              <Link href="/getting-started" className="text-gray-600 hover:text-gray-900 text-sm">
+              <a
+                href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm"
+              >
                 Docs
-              </Link>
+              </a>
               <a
                 href="https://github.com/rdyplayerB/openburner"
                 target="_blank"
@@ -44,18 +49,20 @@ export default function Home() {
         <div className="grid md:grid-cols-[1.4fr,1fr] gap-12 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-              An open source Web3 wallet for Burner cards
+              An open source Web3 wallet for Burner Ethereum hardware wallets
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Extends BurnerOS with support for Blast, Scroll, Linea, zkSync Era, and any custom EVM chain.
+              Extends BurnerOS with support for BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain.
             </p>
             <div className="flex gap-4">
-              <Link 
-                href="/getting-started" 
+              <a
+                href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Get Started
-              </Link>
+              </a>
               <a
                 href="https://github.com/rdyplayerB/openburner"
                 target="_blank"
@@ -98,31 +105,84 @@ export default function Home() {
         <div className="space-y-6 text-gray-600 leading-relaxed">
           <p>
             OpenBurner extends Burner's utility by adding support for chains beyond what BurnerOS currently offers. 
-            Supports everything BurnerOS does (Ethereum, Base, Arbitrum, Optimism, Polygon), plus Blast, Scroll, 
-            Linea, zkSync Era, and any custom EVM-compatible chain.
+            Supports everything BurnerOS does (Ethereum, Base, Arbitrum, Optimism), plus BNB Chain, Avalanche, 
+            Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM-compatible chain.
           </p>
           <p>
-            Your Burner card stores the keys. The wallet runs on your machine and connects to RPC endpoints you configure.
+            Your Burner Ethereum card stores the keys. The wallet runs on your machine and connects to RPC endpoints you configure.
           </p>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-20">
-          <div className="grid md:grid-cols-3 gap-12">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Hardware-secured</h3>
-              <p className="text-sm text-gray-600">Private keys never leave the secure element</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Multi-chain</h3>
-              <p className="text-sm text-gray-600">Any EVM-compatible blockchain</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Open source</h3>
-              <p className="text-sm text-gray-600">MIT licensed, community-driven</p>
-            </div>
+      {/* Supported Networks */}
+      <section className="border-t border-gray-200 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+            Supports any EVM-compatible networks
+          </h2>
+          
+          <div className="flex gap-4 justify-center flex-wrap mb-6 max-w-3xl mx-auto">
+            {[
+              { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg', isBurnerOS: true },
+              { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg', isBurnerOS: true },
+              { name: 'BNB Chain', logo: 'https://icons.llamao.fi/icons/chains/rsz_binance.jpg', isBurnerOS: false },
+              { name: 'Arbitrum One', logo: 'https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg', isBurnerOS: true },
+              { name: 'Avalanche', logo: 'https://icons.llamao.fi/icons/chains/rsz_avalanche.jpg', isBurnerOS: false },
+              { name: 'Blast', logo: 'https://icons.llamao.fi/icons/chains/rsz_blast.jpg', isBurnerOS: false },
+              { name: 'Linea', logo: 'https://icons.llamao.fi/icons/chains/rsz_linea.jpg', isBurnerOS: false },
+              { name: 'Mantle', logo: 'https://icons.llamao.fi/icons/chains/rsz_mantle.jpg', isBurnerOS: false },
+              { name: 'Mode', logo: 'https://icons.llamao.fi/icons/chains/rsz_mode.jpg', isBurnerOS: false },
+              { name: 'Optimism', logo: 'https://icons.llamao.fi/icons/chains/rsz_optimism.jpg', isBurnerOS: true },
+              { name: 'Polygon', logo: 'https://icons.llamao.fi/icons/chains/rsz_polygon.jpg', isBurnerOS: false },
+              { name: 'Scroll', logo: 'https://icons.llamao.fi/icons/chains/rsz_scroll.jpg', isBurnerOS: false },
+              { name: 'Unichain', logo: 'https://icons.llamao.fi/icons/chains/rsz_unichain.jpg', isBurnerOS: false },
+            ].map((network) => (
+              <div
+                key={network.name}
+                className="flex flex-col items-center gap-2 w-[60px] group relative"
+              >
+                <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center group-hover:shadow-xl transition-shadow border border-gray-200">
+                  <img
+                    src={network.logo}
+                    alt={network.name}
+                    className="w-7 h-7 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
+                      }
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-gray-600 font-medium text-center leading-tight">
+                  {network.name}
+                </span>
+                {network.isBurnerOS && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center">
+                    <Image
+                      src="/images/burneros.png"
+                      alt="Supported by BurnerOS"
+                      width={14}
+                      height={14}
+                      className="w-[14px] h-[14px]"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Image
+              src="/images/burneros.png"
+              alt="Available in BurnerOS"
+              width={12}
+              height={12}
+              className="w-3 h-3"
+            />
+            <span className="text-xs text-gray-400">Available in BurnerOS</span>
           </div>
         </div>
       </section>
@@ -134,8 +194,84 @@ export default function Home() {
             Built with
           </h2>
           <p className="text-gray-600">
-            Next.js 14, React 18, TypeScript, ethers.js v6, libhalo (NFC), Zustand, Tailwind CSS
+            ethers.js, libhalo, Multicall3, CoinGecko API
           </p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-gray-200 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-20">
+          <h2 className="text-2xl font-bold text-gray-900 mb-12">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-8">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">What is OpenBurner?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                OpenBurner is an open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. It extends the functionality of BurnerOS by adding support for additional EVM-compatible chains like BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain you configure.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Do I need a Burner card to use this?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Yes, OpenBurner requires a Burner Ethereum hardware wallet. The card contains a secure element that stores your private keys, which never leave the hardware. You can get a Burner Ethereum card at{' '}
+                <a href="https://burner.pro/eth" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                  burner.pro/eth
+                </a>.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How is this different from BurnerOS?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                BurnerOS is the official wallet app from Burner that supports Ethereum, Base, Arbitrum, and Optimism. OpenBurner is a community-built alternative that supports those same chains plus many more (including BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, and Unichain), and allows you to add any custom EVM-compatible chain. It runs locally on your machine and gives you full control over which RPC endpoints you use.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Is it secure?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Yes. Your private keys never leave the Burner card's secure element. All signing happens on the hardware. OpenBurner communicates with the card using the libhalo library (the same one BurnerOS uses) and simply requests signatures when needed. The wallet code is open source and can be audited by anyone.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Can I use it with my existing Burner card?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Absolutely. If you already have a Burner card set up with BurnerOS, you can use the same card with OpenBurner. Your addresses and keys remain the same across both applications.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How do I add a custom chain?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Check the{' '}
+                <a href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                  docs
+                </a>
+                {' '}for instructions on adding custom networks.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Is this open source?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Yes! OpenBurner is MIT licensed and completely open source. You can view the code, contribute features, report issues, or fork it for your own use on{' '}
+                <a href="https://github.com/rdyplayerB/openburner" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                  GitHub
+                </a>.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How do I access OpenBurner?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                OpenBurner runs locally on your machine and requires a desktop browser with NFC support and an NFC reader.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

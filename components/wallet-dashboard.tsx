@@ -28,19 +28,29 @@ interface Chain {
 const POPULAR_CHAINS: Chain[] = [
   { chainId: 1, name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", logo: "https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg" },
   { chainId: 8453, name: "Base", rpcUrl: "https://mainnet.base.org", logo: "https://icons.llamao.fi/icons/chains/rsz_base.jpg" },
+  { chainId: 56, name: "BNB Chain", rpcUrl: "https://bsc-dataseed1.binance.org", logo: "https://icons.llamao.fi/icons/chains/rsz_binance.jpg" },
   { chainId: 42161, name: "Arbitrum One", rpcUrl: "https://arb1.arbitrum.io/rpc", logo: "https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg" },
-  { chainId: 10, name: "Optimism", rpcUrl: "https://mainnet.optimism.io", logo: "https://icons.llamao.fi/icons/chains/rsz_optimism.jpg" },
+  { chainId: 43114, name: "Avalanche", rpcUrl: "https://api.avax.network/ext/bc/C/rpc", logo: "https://icons.llamao.fi/icons/chains/rsz_avalanche.jpg" },
   { chainId: 81457, name: "Blast", rpcUrl: "https://rpc.blast.io", logo: "https://icons.llamao.fi/icons/chains/rsz_blast.jpg" },
+  { chainId: 59144, name: "Linea Mainnet", rpcUrl: "https://rpc.linea.build", logo: "https://icons.llamao.fi/icons/chains/rsz_linea.jpg" },
+  { chainId: 5000, name: "Mantle", rpcUrl: "https://rpc.mantle.xyz", logo: "https://icons.llamao.fi/icons/chains/rsz_mantle.jpg" },
+  { chainId: 34443, name: "Mode Mainnet", rpcUrl: "https://mainnet.mode.network", logo: "https://icons.llamao.fi/icons/chains/rsz_mode.jpg" },
+  { chainId: 10, name: "OP Mainnet", rpcUrl: "https://mainnet.optimism.io", logo: "https://icons.llamao.fi/icons/chains/rsz_optimism.jpg" },
   { chainId: 137, name: "Polygon", rpcUrl: "https://polygon-rpc.com", logo: "https://icons.llamao.fi/icons/chains/rsz_polygon.jpg" },
   { chainId: 534352, name: "Scroll", rpcUrl: "https://rpc.scroll.io", logo: "https://icons.llamao.fi/icons/chains/rsz_scroll.jpg" },
-  { chainId: 59144, name: "Linea", rpcUrl: "https://rpc.linea.build", logo: "https://icons.llamao.fi/icons/chains/rsz_linea.jpg" },
-  { chainId: 324, name: "zkSync Era", rpcUrl: "https://mainnet.era.zksync.io", logo: "https://icons.llamao.fi/icons/chains/rsz_zksync%20era.jpg" },
+  { chainId: 1301, name: "Unichain", rpcUrl: "https://sepolia.unichain.org", logo: "https://icons.llamao.fi/icons/chains/rsz_unichain.jpg" },
 ];
 
 function getNativeTokenSymbol(chainId: number): string {
   switch (chainId) {
+    case 56: // BNB Chain
+      return "BNB";
     case 137: // Polygon
       return "MATIC";
+    case 43114: // Avalanche
+      return "AVAX";
+    case 5000: // Mantle
+      return "MNT";
     default:
       return "ETH";
   }
@@ -50,13 +60,17 @@ function getNativeTokenSymbol(chainId: number): string {
 const BLOCK_EXPLORERS: Record<number, string> = {
   1: "https://etherscan.io",
   8453: "https://basescan.org",
+  56: "https://bscscan.com",
   42161: "https://arbiscan.io",
-  10: "https://optimistic.etherscan.io",
+  43114: "https://snowtrace.io",
   81457: "https://blastscan.io",
+  59144: "https://lineascan.build",
+  5000: "https://explorer.mantle.xyz",
+  34443: "https://explorer.mode.network",
+  10: "https://optimistic.etherscan.io",
   137: "https://polygonscan.com",
   534352: "https://scrollscan.com",
-  59144: "https://lineascan.build",
-  324: "https://explorer.zksync.io",
+  1301: "https://unichain-sepolia.blockscout.com",
 };
 
 export function WalletDashboard() {
