@@ -71,9 +71,9 @@ export default function GettingStarted() {
                 <Image 
                   src="/images/burnerset.jpg" 
                   alt="Burner Card Set" 
-                  width={120} 
-                  height={120} 
-                  className="rounded-lg object-cover w-[120px] h-[120px]"
+                  width={96} 
+                  height={96} 
+                  className="rounded-lg object-cover w-24 h-24"
                 />
                 <div>
                   <p className="text-gray-900 font-medium group-hover:text-gray-700">Burner Card</p>
@@ -93,9 +93,9 @@ export default function GettingStarted() {
                 <Image 
                   src="/images/ACR1252U.png" 
                   alt="ACR1252U NFC Reader" 
-                  width={120} 
-                  height={120} 
-                  className="rounded-lg object-contain w-[120px] h-[120px]"
+                  width={96} 
+                  height={96} 
+                  className="rounded-lg object-contain w-24 h-24"
                 />
                 <div>
                   <p className="text-gray-900 font-medium group-hover:text-gray-700">USB NFC reader (ACR1252U or compatible)</p>
@@ -109,9 +109,9 @@ export default function GettingStarted() {
               <Image 
                 src="/images/nodejs.png" 
                 alt="Node.js" 
-                width={120} 
-                height={120} 
-                className="rounded-lg w-[120px] h-[120px] object-contain"
+                width={96} 
+                height={96} 
+                className="rounded-lg w-24 h-24 object-contain"
               />
               <div>
                 <p className="text-gray-900 font-medium">Node.js 18+</p>
