@@ -61,14 +61,26 @@ export default function GettingStarted() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Prerequisites</h2>
           <div className="space-y-3">
             {/* Burner Card */}
-            <div className="p-4 bg-white border border-gray-200 rounded-lg">
-              <p className="text-gray-900 font-medium">• Burner Card</p>
-              <p className="text-sm text-gray-600 mt-1">
-                <a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">
-                  Order here - 10% off →
-                </a>
-              </p>
-            </div>
+            <a 
+              href="https://arx-burner.myshopify.com/OPENBURNER" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <div className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all group">
+                <Image 
+                  src="/images/burnerset.jpg" 
+                  alt="Burner Card Set" 
+                  width={120} 
+                  height={120} 
+                  className="rounded-lg object-cover w-[120px] h-[120px]"
+                />
+                <div>
+                  <p className="text-gray-900 font-medium group-hover:text-gray-700">Burner Card</p>
+                  <p className="text-sm text-gray-500 mt-1">Order here - 10% off →</p>
+                </div>
+              </div>
+            </a>
             
             {/* NFC Reader */}
             <a 
@@ -81,20 +93,29 @@ export default function GettingStarted() {
                 <Image 
                   src="/images/ACR1252U.png" 
                   alt="ACR1252U NFC Reader" 
-                  width={80} 
-                  height={80} 
-                  className="rounded-lg"
+                  width={120} 
+                  height={120} 
+                  className="rounded-lg object-contain w-[120px] h-[120px]"
                 />
                 <div>
-                  <p className="text-gray-900 font-medium group-hover:text-gray-700">• USB NFC reader (ACR1252U or compatible)</p>
+                  <p className="text-gray-900 font-medium group-hover:text-gray-700">USB NFC reader (ACR1252U or compatible)</p>
                   <p className="text-sm text-gray-500 mt-1">Get on Amazon →</p>
                 </div>
               </div>
             </a>
             
             {/* Node.js */}
-            <div className="p-4 bg-white border border-gray-200 rounded-lg">
-              <p className="text-gray-900 font-medium">• Node.js 18+</p>
+            <div className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg">
+              <Image 
+                src="/images/nodejs-logo.svg" 
+                alt="Node.js" 
+                width={120} 
+                height={120} 
+                className="rounded-lg w-[120px] h-[120px]"
+              />
+              <div>
+                <p className="text-gray-900 font-medium">Node.js 18+</p>
+              </div>
             </div>
           </div>
         </section>
@@ -176,7 +197,7 @@ export default function GettingStarted() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Coming Soon</h2>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-gray-700 text-sm">
-              <strong>Token Swaps:</strong> Swap functionality is currently visible in the UI but disabled. Integration with swap protocols is planned for a future update.
+              <strong>Token Swaps:</strong> Swap functionality is currently visible in the UI but disabled. Integration with 0x Swap is planned for a future update.
             </p>
           </div>
         </section>
