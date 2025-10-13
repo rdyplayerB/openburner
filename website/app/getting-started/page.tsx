@@ -58,12 +58,37 @@ export default function GettingStarted() {
 
         {/* Prerequisites */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Prerequisites</h2>
-          <ul className="space-y-2 text-gray-600">
-            <li>• Burner Card (<a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">order here - 10% off</a>)</li>
-            <li>• USB NFC reader (ACR122U or compatible)</li>
-            <li>• Node.js 18+</li>
-          </ul>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Prerequisites</h2>
+          <div className="space-y-4">
+            <div className="text-gray-600">
+              • Burner Card (<a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">order here - 10% off</a>)
+            </div>
+            
+            <a 
+              href="https://amzn.to/3ISNwd7" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-100 transition-all group">
+                <Image 
+                  src="/images/ACR1252U.png" 
+                  alt="ACR1252U NFC Reader" 
+                  width={80} 
+                  height={80} 
+                  className="rounded-lg"
+                />
+                <div>
+                  <p className="text-gray-900 font-medium group-hover:text-gray-700">• USB NFC reader (ACR1252U or compatible)</p>
+                  <p className="text-sm text-gray-500 mt-1">Get on Amazon →</p>
+                </div>
+              </div>
+            </a>
+            
+            <div className="text-gray-600">
+              • Node.js 18+
+            </div>
+          </div>
         </section>
 
         {/* Install */}

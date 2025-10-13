@@ -44,7 +44,7 @@ This repository contains two applications:
 ### Prerequisites
 
 1. **Burner Card** - [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
-2. **Desktop NFC Reader** - ACR122U or compatible USB NFC reader
+2. **Desktop NFC Reader** - ACR1252U or compatible USB NFC reader ([Get on Amazon](https://amzn.to/3ISNwd7))
 3. **Burner Bridge** - Local WebSocket bridge software
 4. **Node.js 18+** - [Download](https://nodejs.org)
 

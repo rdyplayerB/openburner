@@ -26,7 +26,7 @@ Both work with the same Burner Ethereum card - your addresses and keys remain th
 
 ### Prerequisites
 - **Burner Card** - [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
-- **Desktop NFC Reader** - ACR122U or compatible USB reader
+- **Desktop NFC Reader** - ACR1252U or compatible USB reader ([Get on Amazon](https://amzn.to/3ISNwd7))
 - **Node.js 18+**
 
 ### Installation
