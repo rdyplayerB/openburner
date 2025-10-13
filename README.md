@@ -15,12 +15,12 @@ This repository contains two applications:
   - Requires local installation and Burner Ethereum card ([get one here](https://arx-burner.myshopify.com/OPENBURNER))
   - **Not deployed to the web** - runs on your machine
   
-- **`/website`** - **Marketing Website** (Deployed on Vercel)
+- **`/website`** - **Website** (Deployed on Vercel)
   - Public-facing website with documentation and installation guides
-  - Live at: [Coming soon]
+  - Live at: [openburner.xyz](https://openburner.xyz)
   - Source code for informational purposes only
 
-> **⚠️ Important**: The wallet application is designed to run **locally only**. This provides maximum security by eliminating remote attack vectors. Only the marketing website is deployed publicly.
+> **⚠️ Important**: The wallet application is designed to run **locally only**. This provides maximum security by eliminating remote attack vectors. Only the website is deployed publicly.
 
 ## ✨ Features
 
@@ -45,7 +45,7 @@ This repository contains two applications:
 
 1. **Burner Card** - [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
 2. **Desktop NFC Reader** - ACR1252U or compatible USB NFC reader ([Get on Amazon](https://amzn.to/3ISNwd7))
-3. **Burner Bridge** - Local WebSocket bridge software
+3. **HaLo Bridge** - Local WebSocket bridge software ([HaLo Tools](https://github.com/arx-research/libhalo/releases))
 4. **Node.js 18+** - [Download](https://nodejs.org)
 
 ### Installation
@@ -67,9 +67,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Burner Bridge Setup
+### HaLo Bridge Setup
 
-Install and run the Burner Bridge to connect your NFC reader. The bridge runs on `ws://127.0.0.1:32868/ws` by default.
+Install and run the HaLo Bridge to connect your NFC reader. The bridge runs on `ws://127.0.0.1:32868/ws` by default.
 
 See **[DOCS.md](DOCS.md)** for complete setup instructions.
 
@@ -80,7 +80,7 @@ See **[DOCS.md](DOCS.md)** for complete setup instructions.
 Complete guide covering:
 - Installation & setup
 - Architecture
-- Burner Bridge configuration
+- HaLo Bridge configuration
 - API reference
 - Security model
 - Troubleshooting
@@ -99,7 +99,7 @@ Complete guide covering:
               │ WebSocket (127.0.0.1:32868)
               ↓
 ┌─────────────────────────────────────────┐
-│         Burner Bridge (Local)           │
+│          HaLo Bridge (Local)            │
 │  • NFC Communication                    │
 │  • Command Routing                      │
 │  • PC/SC Interface                      │
@@ -204,7 +204,7 @@ openburner/
 │   ├── token-lists.ts           # Token metadata
 │   └── multicall.ts             # Batch RPC calls
 ├── store/                        # Zustand state management
-├── website/                      # Marketing website (Vercel)
+├── website/                      # Website (Vercel)
 ├── DOCS.md                       # Complete documentation
 └── DEPLOYMENT.md                 # Vercel deployment guide
 ```

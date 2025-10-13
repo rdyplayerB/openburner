@@ -9,11 +9,11 @@ export interface BurnerKeyInfo {
 
 /**
  * Get the Ethereum address from a Burner card via web browser
- * This uses Burner Bridge with USB NFC reader
+ * This uses HaLo Bridge with USB NFC reader
  */
 export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
   try {
-    console.log("Connecting to Burner Bridge...");
+    console.log("Connecting to HaLo Bridge...");
 
     // Connect to the bridge and wait for card detection
     await connectToBridge();

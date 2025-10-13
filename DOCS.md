@@ -2,7 +2,7 @@
 
 ## What is Burner?
 
-[Burner](https://burner.pro) is an affordable, credit-card-sized hardware wallet built for gifting and everyday crypto use. It uses the same secure chip technology found in traditional hardware wallets like Ledger or Trezor, but reimagines the hardware wallet experience with a seedless design, web-based interface, and NFC connectivity. Burner combines the security of cold storage with the convenience of a software wallet, offering an accessible self-custody solution for spending, saving, and gifting crypto securely.
+[Burner](https://burner.pro) is an affordable, credit-card-sized hardware wallet built for gifting and everyday crypto use. It uses the same secure chip technology found in traditional hardware wallets like Ledger or Trezor, but reimagines the hardware wallet experience with a seedless design, web-based interface, and NFC connectivity. Burner combines the security of cold storage with the convenience of a software wallet, offering an accessible self-custody solution for spending, saving, and gifting crypto securely.u
 
 ## What is OpenBurner?
 
@@ -43,9 +43,9 @@ cp env.example .env.local
 npm run dev
 ```
 
-### Burner Bridge Setup
+### HaLo Bridge Setup
 
-1. Download bridge from [Burner Gateway releases](https://github.com/arx-research/libburner/releases)
+1. Download bridge from [HaLo Tools releases](https://github.com/arx-research/libhalo/releases)
 2. Run the bridge executable (starts on `ws://127.0.0.1:32868/ws`)
 3. Grant consent: Visit `http://127.0.0.1:32868/consent?website=http://localhost:3000`
 4. Plug in NFC reader, tap your Burner Ethereum card
@@ -77,7 +77,7 @@ npm run dev
          │ WebSocket
          ↓
 ┌──────────────────┐
-│ Burner Bridge    │  Local WebSocket server (port 32868)
+│  HaLo Bridge     │  Local WebSocket server (port 32868)
 │   (localhost)    │  Routes commands to NFC reader
 └────────┬─────────┘
          │ PC/SC
@@ -99,7 +99,7 @@ npm run dev
 ## How It Works
 
 ### 1. Connection
-- Web app connects to Burner Bridge via WebSocket
+- Web app connects to HaLo Bridge via WebSocket
 - Bridge detects Burner Ethereum card on NFC reader
 - App fetches Ethereum address from card's secure element
 

@@ -1,4 +1,4 @@
-// Direct WebSocket communication with Burner Bridge
+// Direct WebSocket communication with HaLo Bridge
 // This provides direct communication with the bridge for Burner card operations
 
 const BRIDGE_WS_URL = "ws://127.0.0.1:32868/ws";
@@ -25,7 +25,7 @@ export async function connectToBridge(): Promise<void> {
     ws = new WebSocket(BRIDGE_WS_URL);
 
     ws.onopen = () => {
-      console.log("Connected to Burner Bridge");
+      console.log("Connected to HaLo Bridge");
     };
 
     ws.onmessage = (event: MessageEvent) => {
@@ -66,7 +66,7 @@ export async function connectToBridge(): Promise<void> {
 
     ws.onerror = (error: Event) => {
       console.error("Bridge connection error:", error);
-      reject(new Error("Failed to connect to Burner Bridge"));
+      reject(new Error("Failed to connect to HaLo Bridge"));
     };
 
     ws.onclose = () => {

@@ -167,7 +167,7 @@ export function WalletConnect() {
               )}
             </div>
             <span className={`font-medium ${bridgeConnected ? "text-slate-700" : "text-slate-500"}`}>
-              Burner Bridge running
+              HaLo Bridge running
             </span>
           </li>
           <li className="flex items-center gap-3.5">

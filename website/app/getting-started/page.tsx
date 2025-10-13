@@ -105,6 +105,28 @@ export default function GettingStarted() {
               </div>
             </a>
             
+            {/* HaLo Tools */}
+            <a 
+              href="https://github.com/arx-research/libhalo/releases" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all group">
+                <Image 
+                  src="/images/burneros.png" 
+                  alt="HaLo Tools" 
+                  width={96} 
+                  height={96} 
+                  className="rounded-lg object-cover w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24"
+                />
+                <div>
+                  <p className="text-sm sm:text-base text-gray-900 font-medium group-hover:text-gray-700">HaLo Tools (Bridge)</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Download from GitHub →</p>
+                </div>
+              </div>
+            </a>
+            
             {/* Node.js */}
             <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white border border-gray-200 rounded-lg">
               <Image 
@@ -149,16 +171,16 @@ export default function GettingStarted() {
             </div>
 
             <div>
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">3. Set up Burner Bridge</h3>
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">3. Set up HaLo Bridge</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-3">
                 Download the bridge from{' '}
                 <a
-                  href="https://github.com/arx-research/libburner/releases"
+                  href="https://github.com/arx-research/libhalo/releases"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:text-gray-900"
                 >
-                  Burner Gateway releases
+                  HaLo Tools releases
                 </a>
                 . Run it and grant consent:
               </p>
