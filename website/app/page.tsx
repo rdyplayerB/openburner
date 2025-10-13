@@ -14,6 +14,14 @@ export default function Home() {
               OpenBurner
             </Link>
             <div className="flex items-center gap-8">
+              <a
+                href="https://burner.pro"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm"
+              >
+                Get a Burner
+              </a>
               <Link href="/getting-started" className="text-gray-600 hover:text-gray-900 text-sm">
                 Docs
               </Link>
@@ -112,7 +120,7 @@ export default function Home() {
             Built with
           </h2>
           <p className="text-gray-600">
-            Next.js 14, TypeScript, ethers.js v6, Tailwind CSS
+            Next.js 14, React 18, TypeScript, ethers.js v6, libhalo (NFC), Zustand, Tailwind CSS
           </p>
         </div>
       </section>
@@ -152,10 +160,14 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-6 py-8">
           <p className="text-sm text-gray-600">
             By{' '}
-            <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900">
+            <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
               @rdyplayerB
             </a>
-            {' '}• MIT License
+            {' '}(
+            <a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
+              𝕏
+            </a>
+            ) • MIT License
           </p>
         </div>
       </footer>
