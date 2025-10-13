@@ -325,7 +325,7 @@ OpenBurner is open source under the MIT License. This means you can:
 
 ## Maintenance
 
-This project is actively maintained by [@rdyplayerB](https://github.com/rdyplayerB) ([𝕏](https://x.com/rdyplayerB)). Updates and improvements will be made over time.
+This project is actively maintained by [@rdyplayerB](https://github.com/rdyplayerB) — find me on [𝕏](https://x.com/rdyplayerB). Updates and improvements will be made over time.
 
 **Not accepting pull requests** - This is a personal project rather than a community-driven one. If you want to customize OpenBurner or add features, please fork the repository.
 
