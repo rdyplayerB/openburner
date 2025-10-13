@@ -1,6 +1,6 @@
 # OpenBurner 🔥
 
-A production-ready Web3 wallet with hardware-secured key storage using Burner cards (powered by HaLo NFC chips). Built with Next.js, TypeScript, and ethers.js.
+An open source Web3 wallet for Burner cards. Built with Next.js, TypeScript, and ethers.js.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
@@ -11,9 +11,9 @@ A production-ready Web3 wallet with hardware-secured key storage using Burner ca
 This repository contains two applications:
 
 - **`/` (Root)** - **Wallet Application** (Run locally only)
-  - The actual Web3 wallet with hardware-secured key storage
+  - Web3 wallet for Burner cards
   - Requires local installation and Burner card from [burner.pro](https://burner.pro)
-  - **Not deployed to the web** - runs on your machine for maximum security
+  - **Not deployed to the web** - runs on your machine
   
 - **`/website`** - **Marketing Website** (Deployed on Vercel)
   - Public-facing website with documentation and installation guides

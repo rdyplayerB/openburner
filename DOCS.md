@@ -1,6 +1,6 @@
 # OpenBurner Documentation
 
-> Hardware-secured Web3 wallet using HaLo NFC chips. Keys stay in hardware, never exposed.
+> An open source Web3 wallet for Burner cards. Keys stay in hardware, never exposed.
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ npm run dev
 1. Download bridge from [HaLo Gateway releases](https://github.com/arx-research/libhalo/releases)
 2. Run the bridge executable (starts on `ws://127.0.0.1:32868/ws`)
 3. Grant consent: Visit `http://127.0.0.1:32868/consent?website=http://localhost:3000`
-4. Plug in NFC reader, tap HaLo chip
+4. Plug in NFC reader, tap Burner card
 
 ## Architecture
 
@@ -48,12 +48,12 @@ npm run dev
          │ NFC
          ↓
 ┌──────────────────┐
-│   HaLo Chip      │  Secure element (EAL6+)
+│   Burner Card    │  Secure element (EAL6+)
 │   (Hardware)     │  Stores keys, signs transactions
 └──────────────────┘
 ```
 
-**Key Security Property**: Private keys never leave the HaLo chip. Only public keys and signatures are exposed.
+**Key Security Property**: Private keys never leave the Burner card. Only public keys and signatures are exposed.
 
 ## How It Works
 
@@ -75,7 +75,7 @@ npm run dev
 
 ## Key Code APIs
 
-### Connect to HaLo Chip
+### Connect to Burner Card
 
 ```typescript
 import { connectHaloChip } from '@/lib/halo';
@@ -148,7 +148,7 @@ openburner/
 │   ├── token-list.tsx
 │   └── send-token.tsx
 ├── lib/                    # Core libraries
-│   ├── halo.ts            # HaLo chip integration
+│   ├── halo.ts            # Burner card integration
 │   ├── halo-bridge.ts     # Bridge WebSocket client
 │   ├── multicall.ts       # Batch RPC calls
 │   ├── price-oracle.ts    # Price fetching
@@ -167,7 +167,7 @@ openburner/
 ### What's Your Responsibility
 ⚠️ **Transaction verification** - Always verify recipient address  
 ⚠️ **RPC endpoint trust** - Use trusted RPC providers  
-⚠️ **Physical security** - Keep your HaLo chip secure  
+⚠️ **Physical security** - Keep your Burner card secure  
 ⚠️ **Bridge security** - Only run bridge on trusted local machine
 
 ### Attack Surface
