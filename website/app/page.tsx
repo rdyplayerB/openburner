@@ -269,6 +269,66 @@ export default function Home() {
                 OpenBurner runs locally on your machine and requires a desktop browser with NFC support and an NFC reader.
               </p>
             </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">How can I support OpenBurner?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                If you find OpenBurner useful, there are a few ways you can help:
+              </p>
+              <ul className="text-sm text-gray-600 leading-relaxed mt-2 space-y-2 ml-4 list-disc">
+                <li>
+                  Share your feedback by{' '}
+                  <a href="https://github.com/rdyplayerB/openburner/issues" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    opening an issue
+                  </a>
+                  , reaching out on{' '}
+                  <a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    X
+                  </a>
+                  ,{' '}
+                  <a href="https://warpcast.com/rdyplayerb" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    Farcaster
+                  </a>
+                  , or{' '}
+                  <a href="mailto:rdyplayerB@gmail.com" className="text-gray-900 underline hover:text-gray-700">
+                    email me
+                  </a>
+                </li>
+                <li>
+                  You can also find me in the{' '}
+                  <a href="https://t.me/useburner" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    official Burner Telegram channel
+                  </a>
+                  {' '}(@rdyplayerB)
+                </li>
+                <li>
+                  Share OpenBurner on{' '}
+                  <a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    X
+                  </a>
+                  {' '}or{' '}
+                  <a href="https://warpcast.com/rdyplayerb" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    Farcaster
+                  </a>
+                </li>
+                <li>
+                  Use the{' '}
+                  <a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    affiliate link to get a Burner (10% off)
+                  </a>
+                  {' '}or the{' '}
+                  <a href="https://amzn.to/3VBakY3" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                    Amazon affiliate link for the recommended USB NFC reader
+                  </a>
+                </li>
+                <li>
+                  Support development with a donation to <em>rdyplayerB.eth</em>
+                </li>
+                <li>
+                  Fork the project and experiment with your own ideas
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>

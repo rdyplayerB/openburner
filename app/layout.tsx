@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "OpenBurner",
   description: "Simple Web3 Wallet with HaLo Chip Integration",
+  icons: {
+    icon: '/openburnerlogo.ico',
+  },
 };
 
 export default function RootLayout({

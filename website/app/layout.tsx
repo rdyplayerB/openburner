@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   description: "An open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Extends Burner use across BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain.",
   keywords: ["web3", "wallet", "hardware wallet", "Burner", "Burner Ethereum", "NFC", "ethereum", "crypto", "EVM", "multi-chain"],
   authors: [{ name: "@rdyplayerB" }],
+  icons: {
+    icon: '/images/openburnerlogo.ico',
+  },
   openGraph: {
     title: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
     description: "An open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Extends Burner use across multiple EVM chains.",
