@@ -91,98 +91,86 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Supported Networks - Compact */}
+      <section className="max-w-4xl mx-auto px-6 pb-20">
+        <div className="flex gap-2 justify-center flex-wrap max-w-xl mx-auto">
+          {[
+            { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg', isBurnerOS: true },
+            { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg', isBurnerOS: true },
+            { name: 'BNB Chain', logo: 'https://icons.llamao.fi/icons/chains/rsz_binance.jpg', isBurnerOS: false },
+            { name: 'Arbitrum One', logo: 'https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg', isBurnerOS: true },
+            { name: 'Avalanche', logo: 'https://icons.llamao.fi/icons/chains/rsz_avalanche.jpg', isBurnerOS: false },
+            { name: 'Blast', logo: 'https://icons.llamao.fi/icons/chains/rsz_blast.jpg', isBurnerOS: false },
+            { name: 'Linea', logo: 'https://icons.llamao.fi/icons/chains/rsz_linea.jpg', isBurnerOS: false },
+            { name: 'Mantle', logo: 'https://icons.llamao.fi/icons/chains/rsz_mantle.jpg', isBurnerOS: false },
+            { name: 'Mode', logo: 'https://icons.llamao.fi/icons/chains/rsz_mode.jpg', isBurnerOS: false },
+            { name: 'Optimism', logo: 'https://icons.llamao.fi/icons/chains/rsz_optimism.jpg', isBurnerOS: true },
+            { name: 'Polygon', logo: 'https://icons.llamao.fi/icons/chains/rsz_polygon.jpg', isBurnerOS: false },
+            { name: 'Scroll', logo: 'https://icons.llamao.fi/icons/chains/rsz_scroll.jpg', isBurnerOS: false },
+            { name: 'Unichain', logo: 'https://icons.llamao.fi/icons/chains/rsz_unichain.jpg', isBurnerOS: false },
+            { name: 'Custom RPC', logo: '', isBurnerOS: false, isCustom: true },
+          ].map((network) => (
+            <div
+              key={network.name}
+              className="group relative"
+              title={network.name}
+            >
+              <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow border border-gray-200">
+                {network.isCustom ? (
+                  <Plus className="w-4 h-4 text-gray-400" strokeWidth={2.5} />
+                ) : (
+                  <img
+                    src={network.logo}
+                    alt={network.name}
+                    className="w-5 h-5 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `<span class="text-xs font-bold text-gray-700">${network.name[0]}</span>`;
+                      }
+                    }}
+                  />
+                )}
+              </div>
+              {network.isBurnerOS && (
+                <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-sm border border-gray-200 flex items-center justify-center">
+                  <Image
+                    src="/images/burneros.png"
+                    alt="Supported by BurnerOS"
+                    width={10}
+                    height={10}
+                    className="w-2.5 h-2.5"
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-center gap-1.5 mt-4">
+          <Image
+            src="/images/burneros.png"
+            alt="Available in BurnerOS"
+            width={10}
+            height={10}
+            className="w-2.5 h-2.5"
+          />
+          <span className="text-xs text-gray-400">Available in BurnerOS</span>
+        </div>
+      </section>
+
       {/* What it does */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
+      <section className="max-w-4xl mx-auto px-6 py-20 border-t border-gray-200">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
           What it does
         </h2>
-        <div className="space-y-6 text-gray-600 leading-relaxed">
+        <div className="text-gray-600 leading-relaxed">
           <p>
             OpenBurner extends Burner's utility by adding support for chains beyond what BurnerOS currently offers. 
             Supports everything BurnerOS does (Ethereum, Base, Arbitrum, Optimism), plus BNB Chain, Avalanche, 
             Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM-compatible chain.
           </p>
-          <p>
-            Your Burner Ethereum card stores the keys. The wallet runs on your machine and connects to RPC endpoints you configure.
-          </p>
-        </div>
-      </section>
-
-      {/* Supported Networks */}
-      <section className="border-t border-gray-200 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-            Supports any EVM-compatible networks
-          </h2>
-          
-          <div className="flex gap-4 justify-center flex-wrap mb-6 max-w-3xl mx-auto">
-            {[
-              { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg', isBurnerOS: true },
-              { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg', isBurnerOS: true },
-              { name: 'BNB Chain', logo: 'https://icons.llamao.fi/icons/chains/rsz_binance.jpg', isBurnerOS: false },
-              { name: 'Arbitrum One', logo: 'https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg', isBurnerOS: true },
-              { name: 'Avalanche', logo: 'https://icons.llamao.fi/icons/chains/rsz_avalanche.jpg', isBurnerOS: false },
-              { name: 'Blast', logo: 'https://icons.llamao.fi/icons/chains/rsz_blast.jpg', isBurnerOS: false },
-              { name: 'Linea', logo: 'https://icons.llamao.fi/icons/chains/rsz_linea.jpg', isBurnerOS: false },
-              { name: 'Mantle', logo: 'https://icons.llamao.fi/icons/chains/rsz_mantle.jpg', isBurnerOS: false },
-              { name: 'Mode', logo: 'https://icons.llamao.fi/icons/chains/rsz_mode.jpg', isBurnerOS: false },
-              { name: 'Optimism', logo: 'https://icons.llamao.fi/icons/chains/rsz_optimism.jpg', isBurnerOS: true },
-              { name: 'Polygon', logo: 'https://icons.llamao.fi/icons/chains/rsz_polygon.jpg', isBurnerOS: false },
-              { name: 'Scroll', logo: 'https://icons.llamao.fi/icons/chains/rsz_scroll.jpg', isBurnerOS: false },
-              { name: 'Unichain', logo: 'https://icons.llamao.fi/icons/chains/rsz_unichain.jpg', isBurnerOS: false },
-              { name: 'Custom RPC', logo: '', isBurnerOS: false, isCustom: true },
-            ].map((network) => (
-              <div
-                key={network.name}
-                className="flex flex-col items-center gap-2 w-[60px] group relative"
-              >
-                <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center group-hover:shadow-xl transition-shadow border border-gray-200">
-                  {network.isCustom ? (
-                    <Plus className="w-5 h-5 text-gray-400" strokeWidth={2.5} />
-                  ) : (
-                    <img
-                      src={network.logo}
-                      alt={network.name}
-                      className="w-7 h-7 rounded-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
-                        }
-                      }}
-                    />
-                  )}
-                </div>
-                <span className="text-xs text-gray-600 font-medium text-center leading-tight whitespace-nowrap">
-                  {network.name}
-                </span>
-                {network.isBurnerOS && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center">
-                    <Image
-                      src="/images/burneros.png"
-                      alt="Supported by BurnerOS"
-                      width={14}
-                      height={14}
-                      className="w-[14px] h-[14px]"
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Image
-              src="/images/burneros.png"
-              alt="Available in BurnerOS"
-              width={12}
-              height={12}
-              className="w-3 h-3"
-            />
-            <span className="text-xs text-gray-400">Available in BurnerOS</span>
-          </div>
         </div>
       </section>
 
