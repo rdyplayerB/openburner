@@ -166,7 +166,7 @@ export default function Home() {
                     />
                   )}
                 </div>
-                <span className="text-xs text-gray-600 font-medium text-center leading-tight">
+                <span className="text-xs text-gray-600 font-medium text-center leading-tight whitespace-nowrap">
                   {network.name}
                 </span>
                 {network.isBurnerOS && (
