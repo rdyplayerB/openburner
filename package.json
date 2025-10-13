@@ -1,0 +1,36 @@
+{
+  "name": "openburner",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@arx-research/libhalo": "^1.15.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "ethers": "^6.13.2",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.545.0",
+    "next": "14.2.13",
+    "qrcode.react": "^4.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^3.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.13",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5"
+  }
+}
