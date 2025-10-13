@@ -1,4 +1,4 @@
-# OpenBurner 🔥
+# 🔥 OpenBurner
 
 An open source Web3 wallet for Burner Ethereum hardware wallets. Built with Next.js, TypeScript, and ethers.js.
 
