@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/previewcard.png",
+        url: "/images/previewcard.jpg",
         width: 1200,
         height: 630,
         alt: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
     description: "An open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Use your Burner across multiple EVM chains.",
-    images: ["/images/previewcard.png"],
+    images: ["/images/previewcard.jpg"],
   },
 };
 
