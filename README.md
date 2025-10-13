@@ -121,8 +121,6 @@ Complete guide covering:
 ✅ **Protected**: Private keys, signing operations, key generation  
 ⚠️ **User Responsibility**: Transaction verification, RPC selection, physical chip security
 
-See [Security Documentation](docs/technical/SECURITY.md) for details.
-
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -233,38 +231,41 @@ This project is licensed under the MIT License. You can:
 
 See the [LICENSE](LICENSE) file for full terms.
 
-## 🔧 Forking & Customization
+## Maintenance
 
-This is a personal project maintained by [@rdyplayerB](https://github.com/rdyplayerB). **Pull requests are not being accepted.**
+This project is actively maintained by [@rdyplayerB](https://github.com/rdyplayerB) — find me on [𝕏](https://x.com/rdyplayerB) / [Farcaster](https://farcaster.xyz/rdyplayerb). Updates and improvements will be made over time.
 
-However, you're encouraged to fork OpenBurner for your own use:
+**Not accepting pull requests** - This is a personal project rather than a community-driven one. If you want to customize OpenBurner or add features, please fork the repository.
+
+## Forking & Customization
+
+You're encouraged to fork OpenBurner for your own use:
 
 1. Fork the repository
-2. Customize for your needs
-3. Build and deploy your version
+2. Modify chain configurations in `components/chain-selector.tsx`
+3. Update token lists in `lib/token-lists.ts`
+4. Customize UI in `components/` and `app/`
+5. Deploy to Vercel or run locally
 
-This allows you to create your own variant while keeping the original project focused.
+**Use cases for forking:**
+- Add support for specific L2s or custom chains
+- Build a branded wallet for your project
+- Experiment with new Burner card features
+- Create specialized tools (NFT minting, DAO voting, etc.)
 
-## 🔗 Resources
+**Code structure:**
+- `app/` - Next.js pages and routing
+- `components/` - React components for UI
+- `lib/` - Core libraries (Burner, multicall, pricing)
+- `store/` - Zustand state management
 
-### Official Links
+## Links
+
+- **GitHub**: https://github.com/rdyplayerB/openburner
 - **Get a Burner Card**: [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
-- **LibBurner**: [github.com/arx-research/libburner](https://github.com/arx-research/libburner)
-- **ethers.js**: [docs.ethers.org](https://docs.ethers.org)
-- **Next.js**: [nextjs.org](https://nextjs.org)
-
-### Community
-- **Discord**: [Join our Discord](#)
-- **Twitter**: [@OpenBurner](#)
-- **Issues**: [GitHub Issues](https://github.com/rdyplayerB/openburner/issues)
-
-## 🙏 Acknowledgments
-
-- [Arx Research](https://arx.org) for Burner card technology
-- [ethers.js](https://docs.ethers.org) for Ethereum interactions
-- [CoinGecko](https://www.coingecko.com) for price data API
-- [Next.js](https://nextjs.org) team for the amazing framework
+- **LibBurner Documentation**: https://github.com/arx-research/libburner
+- **ethers.js Docs**: https://docs.ethers.org
 
 ---
 
-**Made with ❤️ by the OpenBurner team**
+**Questions?** Open an issue on [GitHub](https://github.com/rdyplayerB/openburner/issues)
