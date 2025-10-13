@@ -37,13 +37,13 @@ export default function Home() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-32">
         <div className="max-w-3xl">
-          <p className="text-xl md:text-2xl text-gray-600 leading-relaxed mb-8">
-            An open source Web3 wallet for Burner cards.
-          </p>
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
+            An open source Web3 wallet for Burner cards
+          </h1>
           <div className="flex gap-4 flex-wrap">
             <Link 
               href="/getting-started" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-orange-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl"
             >
               Get Started
             </Link>
@@ -51,7 +51,7 @@ export default function Home() {
               href="https://github.com/rdyplayerB/openburner"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-900 rounded-md hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-900 px-8 py-4 rounded-lg font-semibold hover:border-gray-400 transition-all"
             >
               <Github size={20} />
               View on GitHub
@@ -75,11 +75,11 @@ export default function Home() {
                 custom EVM-compatible chain.
               </p>
             </div>
-            <div className="bg-white p-8 rounded-lg border border-gray-200">
+            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-lg">
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Lock size={24} className="text-gray-700" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Lock size={24} className="text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Hardware-secured keys</h3>
@@ -87,8 +87,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Layers size={24} className="text-gray-700" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Layers size={24} className="text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Multi-chain support</h3>
@@ -96,8 +96,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Zap size={24} className="text-gray-700" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Zap size={24} className="text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Open source</h3>
@@ -129,11 +129,11 @@ export default function Home() {
       </section>
 
       {/* Tech Stack */}
-      <section className="bg-gray-900 py-24 text-white">
+      <section className="bg-gradient-to-br from-gray-900 to-gray-800 py-24 text-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-4xl md:text-5xl font-serif mb-6">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
                 Tech stack
               </h2>
               <p className="text-gray-300 leading-relaxed text-lg">
@@ -200,33 +200,34 @@ export default function Home() {
       </section>
 
       {/* Contributing */}
-      <section className="bg-gray-50 py-24">
+      <section className="py-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <Cpu size={48} className="mx-auto mb-6 text-gray-900" />
-          <h2 className="text-4xl md:text-5xl font-serif mb-6 text-gray-900">
-            Contribute
-          </h2>
-          <p className="text-xl text-gray-600 leading-relaxed mb-8 max-w-2xl mx-auto">
-            This is a community project. Add features, fix bugs, improve docs. 
-            All contributions welcome.
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <a
-              href="https://github.com/rdyplayerB/openburner/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-900 rounded-md hover:bg-white transition-colors"
-            >
-              Open an issue
-            </a>
-            <a
-              href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-900 rounded-md hover:bg-white transition-colors"
-            >
-              Read the docs
-            </a>
+          <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-12 text-white">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Contribute
+            </h2>
+            <p className="text-xl mb-8 text-orange-50 max-w-2xl mx-auto">
+              This is a community project. Add features, fix bugs, improve docs. 
+              All contributions welcome.
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <a
+                href="https://github.com/rdyplayerB/openburner/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold hover:bg-orange-50 transition-all"
+              >
+                Open an issue
+              </a>
+              <a
+                href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all"
+              >
+                Read the docs
+              </a>
+            </div>
           </div>
         </div>
       </section>
