@@ -1,6 +1,6 @@
 'use client';
 
-import { Github } from 'lucide-react';
+import { Github, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -141,25 +141,30 @@ export default function Home() {
               { name: 'Polygon', logo: 'https://icons.llamao.fi/icons/chains/rsz_polygon.jpg', isBurnerOS: false },
               { name: 'Scroll', logo: 'https://icons.llamao.fi/icons/chains/rsz_scroll.jpg', isBurnerOS: false },
               { name: 'Unichain', logo: 'https://icons.llamao.fi/icons/chains/rsz_unichain.jpg', isBurnerOS: false },
+              { name: 'Custom RPC', logo: '', isBurnerOS: false, isCustom: true },
             ].map((network) => (
               <div
                 key={network.name}
                 className="flex flex-col items-center gap-2 w-[60px] group relative"
               >
                 <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center group-hover:shadow-xl transition-shadow border border-gray-200">
-                  <img
-                    src={network.logo}
-                    alt={network.name}
-                    className="w-7 h-7 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
-                      }
-                    }}
-                  />
+                  {network.isCustom ? (
+                    <Plus className="w-5 h-5 text-gray-400" strokeWidth={2.5} />
+                  ) : (
+                    <img
+                      src={network.logo}
+                      alt={network.name}
+                      className="w-7 h-7 rounded-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
+                        }
+                      }}
+                    />
+                  )}
                 </div>
                 <span className="text-xs text-gray-600 font-medium text-center leading-tight">
                   {network.name}
