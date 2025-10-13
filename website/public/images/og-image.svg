@@ -1,0 +1,18 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="white"/>
+  
+  <!-- Logo (flame) -->
+  <g transform="translate(520, 180)">
+    <path d="M80 0C80 0 50 30 50 60C50 82.0914 67.9086 100 90 100C112.091 100 130 82.0914 130 60C130 40 110 20 110 20C110 20 120 35 120 50C120 61.0457 111.046 70 100 70C88.9543 70 80 61.0457 80 50C80 35 90 20 90 20L80 0Z" fill="#FF6B35"/>
+    <path d="M90 20C90 20 70 35 70 50C70 61.0457 78.9543 70 90 70C90 70 90 45 90 20Z" fill="#FFE5D9"/>
+  </g>
+  
+  <!-- Text: OpenBurner -->
+  <text x="600" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" text-anchor="middle" fill="black" letter-spacing="-1">OpenBurner</text>
+  
+  <!-- Slogan -->
+  <text x="600" y="410" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="400" text-anchor="middle" fill="#6B7280">An open source Web3 wallet for</text>
+  <text x="600" y="450" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="400" text-anchor="middle" fill="#6B7280">Burner Ethereum hardware wallets</text>
+</svg>
+

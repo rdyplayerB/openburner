@@ -10,6 +10,20 @@ export const metadata: Metadata = {
     title: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
     description: "An open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Extends Burner use across multiple EVM chains.",
     type: "website",
+    images: [
+      {
+        url: "/images/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OpenBurner - Open Source Web3 Wallet for Burner Ethereum Hardware Wallets",
+    description: "An open-source Web3 wallet designed specifically for Burner Ethereum hardware wallets. Extends Burner use across multiple EVM chains.",
+    images: ["/images/og-image.svg"],
   },
 };
 
