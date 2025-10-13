@@ -9,7 +9,7 @@ export default function Home() {
     <main className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center gap-2">
               <Image 
@@ -17,24 +17,25 @@ export default function Home() {
                 alt="OpenBurner logo" 
                 width={28} 
                 height={28} 
-                className="w-7 h-7"
+                className="w-6 h-6 sm:w-7 sm:h-7"
               />
-              <span className="text-xl font-bold text-black tracking-tight mt-0.5">OpenBurner</span>
+              <span className="text-lg sm:text-xl font-bold text-black tracking-tight mt-0.5">OpenBurner</span>
             </Link>
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
               <a
                 href="https://arx-burner.myshopify.com/OPENBURNER"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-gray-900 text-sm"
+                className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm"
               >
-                Get a Burner
+                <span className="hidden sm:inline">Get a Burner</span>
+                <span className="sm:hidden">Burner</span>
               </a>
               <a
                 href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-gray-900 text-sm"
+                className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm"
               >
                 Docs
               </a>
@@ -42,7 +43,7 @@ export default function Home() {
                 href="https://github.com/rdyplayerB/openburner"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-gray-900 text-sm"
+                className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm"
               >
                 GitHub
               </a>
@@ -53,19 +54,19 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50/30 to-blue-50/20">
-        <div className="max-w-4xl mx-auto px-6 pt-20 pb-12">
-          <div className="grid md:grid-cols-[1.3fr,1fr] gap-10 items-start animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 md:pt-20 pb-8 sm:pb-12">
+          <div className="grid md:grid-cols-[1.3fr,1fr] gap-8 md:gap-10 items-start animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
                 An open source Web3 wallet for Burner Ethereum hardware wallets
               </h1>
-              <p className="text-xl text-gray-600 mb-8">
+              <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8">
                 Extends Burner use across any EVM-compatible chain.
               </p>
-              <div className="flex gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8">
                 <Link
                   href="/getting-started"
-                  className="px-8 py-3.5 bg-gray-900 text-white rounded-lg text-base font-semibold hover:bg-gray-800 transition-all hover:shadow-lg hover:scale-105 active:scale-100"
+                  className="px-6 sm:px-8 py-3 sm:py-3.5 bg-gray-900 text-white rounded-lg text-sm sm:text-base font-semibold hover:bg-gray-800 transition-all hover:shadow-lg hover:scale-105 active:scale-100 text-center"
                 >
                   Get Started
                 </Link>
@@ -73,14 +74,14 @@ export default function Home() {
                   href="https://github.com/rdyplayerB/openburner"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 border border-gray-300 text-gray-700 rounded-lg text-base font-medium hover:bg-gray-50 hover:border-gray-400 transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 border border-gray-300 text-gray-700 rounded-lg text-sm sm:text-base font-medium hover:bg-gray-50 hover:border-gray-400 transition-all"
                 >
                   <Github size={18} />
                   GitHub
                 </a>
               </div>
             </div>
-            <div className="flex flex-col gap-10 mt-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+            <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 md:mt-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
               <div className="flex justify-center md:justify-end relative">
                 <div className="absolute inset-0 bg-blue-400/20 blur-3xl rounded-full scale-75 -z-10"></div>
                 <Image 
@@ -95,7 +96,7 @@ export default function Home() {
               {/* Supported Networks - Icon Grid */}
               <div className="flex flex-col gap-2.5 items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-2"></div>
-              <div className="flex gap-2.5">
+              <div className="flex gap-2 sm:gap-2.5 flex-wrap justify-center">
               {[
                 { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg' },
                 { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg' },
@@ -130,7 +131,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div className="flex gap-2.5 items-center">
+            <div className="flex gap-2 sm:gap-2.5 items-center flex-wrap justify-center">
               {[
                 { name: 'Mantle', logo: 'https://icons.llamao.fi/icons/chains/rsz_mantle.jpg' },
                 { name: 'Mode', logo: 'https://icons.llamao.fi/icons/chains/rsz_mode.jpg' },
@@ -178,13 +179,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* What it does */}
-      <section className="max-w-4xl mx-auto px-6 pt-12 pb-20 border-t border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          What it does
-        </h2>
-        <div className="text-gray-600 leading-relaxed">
-          <p>
+      {/* Key Features */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-12 sm:pb-20 border-t border-gray-200">
+        <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-2xl p-6 sm:p-8 border border-gray-100">
+          <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
             OpenBurner extends Burner's utility by adding support for chains beyond what BurnerOS currently offers. 
             Supports everything BurnerOS does (Ethereum, Base, Arbitrum, Optimism), plus BNB Chain, Avalanche, 
             Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM-compatible chain.
@@ -194,8 +192,8 @@ export default function Home() {
 
       {/* FAQ */}
       <section className="border-t border-gray-200 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-20">
-          <h2 className="text-2xl font-bold text-gray-900 mb-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-8 sm:mb-12">
             Frequently Asked Questions
           </h2>
           <div className="space-y-8">
@@ -277,11 +275,11 @@ export default function Home() {
 
       {/* License & Forking */}
       <section className="border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-20">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
             Open Source & Forking
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
             OpenBurner is MIT licensed. You can use it, modify it, fork it, and build your own version. This is a personal project - pull requests are not being accepted, but you're encouraged to fork and customize for your own needs. Feel free to report issues if you encounter bugs or have suggestions.
           </p>
           <div className="flex gap-4 flex-wrap">
@@ -315,8 +313,8 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <p className="text-sm text-gray-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <p className="text-xs sm:text-sm text-gray-600">
             By{' '}
             <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
               @rdyplayerB
