@@ -1,5 +1,9 @@
 # OpenBurner Documentation
 
+## What is Burner?
+
+[Burner](https://burner.me) is an affordable, credit-card-sized hardware wallet built for gifting and everyday crypto use. It uses the same secure chip technology found in premium devices like Ledger or Trezor, but reimagines the hardware wallet experience with a seedless design, web-based interface, and NFC connectivity. Burner combines the security of cold storage with the simplicity of modern fintech, offering an accessible self-custody solution for cryptocurrencies.
+
 ## What is OpenBurner?
 
 OpenBurner is a wallet application for Burner Ethereum hardware wallets. It runs locally on your machine. Private keys remain in the card's secure element.
