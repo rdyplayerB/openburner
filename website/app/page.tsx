@@ -153,12 +153,12 @@ export default function Home() {
         <div className="flex items-center justify-center gap-1.5 mt-4">
           <Image
             src="/images/burneros.png"
-            alt="Supported"
+            alt="Supported in BurnerOS"
             width={10}
             height={10}
             className="w-2.5 h-2.5"
           />
-          <span className="text-xs text-gray-400">Supported</span>
+          <span className="text-xs text-gray-400">Supported in BurnerOS</span>
         </div>
       </section>
 
