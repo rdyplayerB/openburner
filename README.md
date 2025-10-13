@@ -6,6 +6,22 @@ A production-ready Web3 wallet with hardware-secured key storage using HaLo NFC 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## 📂 Repository Structure
+
+This repository contains two applications:
+
+- **`/` (Root)** - **Wallet Application** (Run locally only)
+  - The actual Web3 wallet with hardware-secured key storage
+  - Requires local installation and HaLo NFC chip
+  - **Not deployed to the web** - runs on your machine for maximum security
+  
+- **`/website`** - **Marketing Website** (Deployed on Vercel)
+  - Public-facing website with documentation and installation guides
+  - Live at: [Coming soon]
+  - Source code for informational purposes only
+
+> **⚠️ Important**: The wallet application is designed to run **locally only**. This provides maximum security by eliminating remote attack vectors. Only the marketing website is deployed publicly.
+
 ## ✨ Features
 
 ### Core Functionality
@@ -36,8 +52,8 @@ A production-ready Web3 wallet with hardware-secured key storage using HaLo NFC 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/OpenBurner.git
-cd OpenBurner
+git clone https://github.com/rdyplayerB/openburner.git
+cd openburner
 
 # Install dependencies
 npm install

@@ -1,0 +1,28 @@
+# Exclude wallet app from Vercel deployment
+# Only deploy the website directory
+
+# Wallet app directories
+/app
+/components
+/lib
+/store
+
+# Wallet app config files
+/next.config.mjs
+/tsconfig.json
+/tailwind.config.ts
+/postcss.config.mjs
+/package.json
+/package-lock.json
+
+# Documentation (already linked from website)
+/docs
+
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Other files to exclude
+/node_modules
+
