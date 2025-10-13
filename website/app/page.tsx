@@ -53,7 +53,7 @@ export default function Home() {
 
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-6 py-20">
-        <div className="grid md:grid-cols-[1.4fr,1fr] gap-12 items-center">
+        <div className="grid md:grid-cols-[1.3fr,1fr] gap-10 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
               An open source Web3 wallet for Burner Ethereum hardware wallets
@@ -83,8 +83,8 @@ export default function Home() {
             <Image 
               src="/images/Burner.jpg" 
               alt="OpenBurner app interface showing wallet and NFC card" 
-              width={380} 
-              height={570} 
+              width={420} 
+              height={630} 
               className="rounded-2xl shadow-2xl max-w-full h-auto"
             />
           </div>
