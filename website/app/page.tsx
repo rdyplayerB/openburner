@@ -2,6 +2,7 @@
 
 import { Github } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -39,29 +40,42 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-          An open source Web3 wallet for Burner cards
-        </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-2xl">
-          Extends BurnerOS with support for Blast, Scroll, Linea, zkSync Era, and any custom EVM chain.
-        </p>
-        <div className="flex gap-4">
-          <Link 
-            href="/getting-started" 
-            className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-          >
-            Get Started
-          </Link>
-          <a
-            href="https://github.com/rdyplayerB/openburner"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-900 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            <Github size={18} />
-            GitHub
-          </a>
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="grid md:grid-cols-[1.2fr,1fr] gap-16 items-center">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+              An open source Web3 wallet for Burner cards
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Extends BurnerOS with support for Blast, Scroll, Linea, zkSync Era, and any custom EVM chain.
+            </p>
+            <div className="flex gap-4">
+              <Link 
+                href="/getting-started" 
+                className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                Get Started
+              </Link>
+              <a
+                href="https://github.com/rdyplayerB/openburner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-900 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                <Github size={18} />
+                GitHub
+              </a>
+            </div>
+          </div>
+          <div className="flex justify-center md:justify-end">
+            <Image 
+              src="/images/Burner.jpg" 
+              alt="OpenBurner app interface showing wallet and NFC card" 
+              width={500} 
+              height={750} 
+              className="rounded-2xl shadow-2xl max-w-full h-auto"
+            />
+          </div>
         </div>
       </section>
 
