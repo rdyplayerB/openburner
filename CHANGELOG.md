@@ -29,9 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Documentation Organization** - Moved all docs to `/docs` directory
-  - `/docs/setup` - Installation and configuration guides
-  - `/docs/technical` - Technical architecture and APIs
-  - `/docs/guides` - User-facing guides
+  - `DOCS.md` - Complete documentation in single file
   - Updated README.md with better overview and navigation
 
 - **Architecture Documentation** - Updated with current implementation

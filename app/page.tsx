@@ -180,10 +180,10 @@ export default function Home() {
               Report an issue
             </Link>
             <Link 
-              href="https://github.com/yourusername/OpenBurner/blob/main/docs/technical/ARCHITECTURE.md" 
+              href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md" 
               className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-900 rounded-md hover:bg-gray-50 transition-colors"
             >
-              Read the architecture
+              Read the docs
             </Link>
           </div>
         </div>

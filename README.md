@@ -69,35 +69,21 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### HaLo Bridge Setup
 
-Install and run the HaLo Bridge to connect your NFC reader:
+Install and run the HaLo Bridge to connect your NFC reader. The bridge runs on `ws://127.0.0.1:32868/ws` by default.
 
-```bash
-# See detailed instructions in docs/setup/bridge-setup.md
-```
-
-The bridge runs on `ws://127.0.0.1:32868/ws` by default.
+See **[DOCS.md](DOCS.md)** for complete setup instructions.
 
 ## 📖 Documentation
 
-### Getting Started
-- **[Setup Guide](docs/setup/SETUP_GUIDE.md)** - Complete installation and configuration
-- **[Bridge Setup](docs/setup/BRIDGE_SETUP.md)** - HaLo Bridge configuration
-- **[Gateway Setup](docs/setup/GATEWAY_SETUP.md)** - Mobile gateway configuration
-- **[Environment Setup](docs/setup/ENV_SETUP.md)** - Environment variables and API keys
+**[→ Read the full documentation](DOCS.md)**
 
-### Technical Documentation
-- **[Architecture Overview](docs/technical/ARCHITECTURE.md)** - System design and components
-- **[API Reference](docs/technical/API_REFERENCE.md)** - Code APIs and interfaces
-- **[Security Model](docs/technical/SECURITY.md)** - Security considerations
-- **[Price Oracle](docs/technical/PRICE_ORACLE.md)** - CoinGecko integration details
-- **[Caching Strategy](docs/technical/CACHING.md)** - Performance optimizations
-
-### User Guides
-- **[User Guide](docs/guides/USER_GUIDE.md)** - How to use the wallet
-- **[Network Management](docs/guides/NETWORKS.md)** - Adding and switching networks
-- **[Token Management](docs/guides/TOKENS.md)** - Managing ERC-20 tokens
-
-See **[docs/README.md](docs/README.md)** for complete documentation index.
+Complete guide covering:
+- Installation & setup
+- Architecture
+- HaLo Bridge configuration
+- API reference
+- Security model
+- Troubleshooting
 
 ## 🏗️ Architecture
 
@@ -207,31 +193,18 @@ HaLo chips provide hardware wallet-level security in an NFC form factor:
 
 ```
 openburner/
-├── app/                          # Next.js app directory
-│   ├── page.tsx                 # Main entry point
-│   ├── layout.tsx               # Root layout
-│   └── globals.css              # Global styles
+├── app/                          # Wallet app (Next.js)
 ├── components/                   # React components
-│   ├── wallet-connect.tsx       # HaLo connection UI
-│   ├── wallet-dashboard.tsx     # Main dashboard
-│   ├── token-list.tsx           # Token balance display
-│   ├── send-token.tsx           # Transfer UI
-│   ├── chain-selector.tsx       # Network selector
-│   └── pin-input.tsx            # PIN entry component
-├── lib/                         # Utility libraries
-│   ├── halo.ts                  # HaLo high-level API
-│   ├── halo-bridge.ts           # WebSocket bridge client
+├── lib/                          # Core libraries
+│   ├── halo.ts                  # HaLo chip integration
+│   ├── halo-bridge.ts           # Bridge WebSocket client
 │   ├── price-oracle.ts          # CoinGecko integration
 │   ├── token-lists.ts           # Token metadata
-│   ├── multicall.ts             # Batch RPC calls
-│   └── utils.ts                 # Helper functions
-├── store/                       # State management
-│   └── wallet-store.ts          # Zustand store
-├── docs/                        # Documentation
-│   ├── setup/                   # Setup guides
-│   ├── technical/               # Technical docs
-│   └── guides/                  # User guides
-└── .env.local                   # Environment config
+│   └── multicall.ts             # Batch RPC calls
+├── store/                        # Zustand state management
+├── website/                      # Marketing website (Vercel)
+├── DOCS.md                       # Complete documentation
+└── DEPLOYMENT.md                 # Vercel deployment guide
 ```
 
 ## 🧪 Development
@@ -260,8 +233,6 @@ npm start
 NEXT_PUBLIC_COINGECKO_API_KEY=
 NEXT_PUBLIC_COINGECKO_API_URL=https://api.coingecko.com/api/v3
 ```
-
-See [ENV_SETUP.md](docs/setup/ENV_SETUP.md) for complete configuration options.
 
 ## 🤝 Contributing
 

@@ -212,7 +212,7 @@ export default function GettingStarted() {
                     The HaLo Bridge enables communication between your browser and the NFC reader. Follow the setup guide in the repository:
                   </p>
                   <a
-                    href="https://github.com/rdyplayerB/openburner/blob/main/docs/setup/BRIDGE_SETUP.md"
+                    href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md#halo-bridge-setup"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center space-x-2 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 mb-4"
@@ -328,7 +328,7 @@ export default function GettingStarted() {
           
           <div className="grid md:grid-cols-2 gap-6">
             <a
-              href="https://github.com/rdyplayerB/openburner/blob/main/docs/README.md"
+              href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:shadow-lg transition-all group"
@@ -340,7 +340,7 @@ export default function GettingStarted() {
                 <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-orange-500 transition-colors" />
               </div>
               <p className="text-gray-600 dark:text-gray-400">
-                Comprehensive guides, API reference, and technical documentation
+                Complete guide with setup, architecture, API reference, and troubleshooting
               </p>
             </a>
 
