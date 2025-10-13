@@ -1,5 +1,5 @@
-// Direct WebSocket communication with HaLo Bridge
-// This bypasses execHaloCmdWeb which has issues with options
+// Direct WebSocket communication with Burner Bridge
+// This provides direct communication with the bridge for Burner card operations
 
 const BRIDGE_WS_URL = "ws://127.0.0.1:32868/ws";
 
@@ -25,7 +25,7 @@ export async function connectToBridge(): Promise<void> {
     ws = new WebSocket(BRIDGE_WS_URL);
 
     ws.onopen = () => {
-      console.log("Connected to HaLo Bridge");
+      console.log("Connected to Burner Bridge");
     };
 
     ws.onmessage = (event: MessageEvent) => {
@@ -34,7 +34,7 @@ export async function connectToBridge(): Promise<void> {
 
       if (msg.event === "handle_added") {
         currentHandle = msg.data.handle;
-        console.log("Chip detected, handle:", currentHandle);
+        console.log("Burner card detected, handle:", currentHandle);
         resolve();
       } else if (msg.event === "exec_success" && msg.uid) {
         const callback = messageCallbacks.get(msg.uid);
@@ -51,7 +51,7 @@ export async function connectToBridge(): Promise<void> {
             console.log("🔐 PIN required - opening consent page...");
             // Open consent page in a new window for PIN entry
             const consentUrl = `http://localhost:32868/consent?uid=${msg.uid}`;
-            window.open(consentUrl, "HaLo PIN", "width=400,height=600");
+            window.open(consentUrl, "Burner PIN", "width=400,height=600");
             // Don't delete callback - wait for consent completion
             return;
           }
@@ -66,7 +66,7 @@ export async function connectToBridge(): Promise<void> {
 
     ws.onerror = (error: Event) => {
       console.error("Bridge connection error:", error);
-      reject(new Error("Failed to connect to HaLo Bridge"));
+      reject(new Error("Failed to connect to Burner Bridge"));
     };
 
     ws.onclose = () => {
@@ -77,7 +77,7 @@ export async function connectToBridge(): Promise<void> {
     // Timeout if no chip detected within 10 seconds
     setTimeout(() => {
       if (!currentHandle) {
-        reject(new Error("No chip detected. Please place HaLo chip on reader."));
+        reject(new Error("No Burner card detected. Please place Burner card on reader."));
       }
     }, 10000);
   });
@@ -86,7 +86,7 @@ export async function connectToBridge(): Promise<void> {
 export async function execBridgeCommand(command: any): Promise<any> {
   return new Promise((resolve, reject) => {
     if (!ws || !currentHandle) {
-      reject(new Error("Not connected to bridge or no chip present"));
+      reject(new Error("Not connected to bridge or no card present"));
       return;
     }
 

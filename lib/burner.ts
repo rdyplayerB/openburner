@@ -1,21 +1,21 @@
 import { ethers } from "ethers";
-import { connectToBridge, execBridgeCommand, disconnectBridge } from "./halo-bridge";
+import { connectToBridge, execBridgeCommand, disconnectBridge } from "./burner-bridge";
 
-export interface HaloKeyInfo {
+export interface BurnerKeyInfo {
   address: string;
   publicKey: string;
   keySlot?: number; // Which key slot was used
 }
 
 /**
- * Get the Ethereum address from a HaLo chip via web browser
- * This uses HaLo Bridge with USB NFC reader
+ * Get the Ethereum address from a Burner card via web browser
+ * This uses Burner Bridge with USB NFC reader
  */
-export async function getHaloAddress(): Promise<HaloKeyInfo> {
+export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
   try {
-    console.log("Connecting to HaLo Bridge...");
+    console.log("Connecting to Burner Bridge...");
 
-    // Connect to the bridge and wait for chip detection
+    // Connect to the bridge and wait for card detection
     await connectToBridge();
 
     // Execute get_pkeys command
@@ -23,7 +23,7 @@ export async function getHaloAddress(): Promise<HaloKeyInfo> {
       name: "get_pkeys",
     });
 
-    console.log("Full result from chip:", result);
+    console.log("Full result from card:", result);
     console.log("Available addresses:", result.etherAddresses);
     console.log("Available public keys:", result.publicKeys);
 
@@ -155,15 +155,15 @@ export async function getHaloAddress(): Promise<HaloKeyInfo> {
       keySlot: 1,
     };
   } catch (error: any) {
-    console.error("Error reading HaLo chip:", error);
-    throw new Error(error.message || "Failed to read HaLo chip");
+    console.error("Error reading Burner card:", error);
+    throw new Error(error.message || "Failed to read Burner card");
   }
 }
 
 /**
- * Sign a transaction using the HaLo chip
+ * Sign a transaction using the Burner card
  */
-export async function signTransactionWithHalo(
+export async function signTransactionWithBurner(
   transaction: ethers.TransactionRequest,
   keySlot: number = 1,
   pin?: string
@@ -186,10 +186,10 @@ export async function signTransactionWithHalo(
 
     const txHash = tx.unsignedHash;
 
-    // Remove '0x' prefix for HaLo
+    // Remove '0x' prefix for Burner
     const digest = txHash.slice(2);
 
-    // Sign with HaLo chip via Bridge
+    // Sign with Burner card via Bridge
     console.log(`Signing with key slot ${keySlot}...`);
     const command: any = {
       name: "sign",
@@ -218,9 +218,10 @@ export async function signTransactionWithHalo(
     // Return signed transaction
     return tx.serialized;
   } catch (error: any) {
-    console.error("Error signing with HaLo chip:", error);
+    console.error("Error signing with Burner card:", error);
     throw new Error(error.message || "Failed to sign transaction");
   } finally {
     disconnectBridge();
   }
 }
+

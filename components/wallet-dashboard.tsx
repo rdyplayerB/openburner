@@ -417,14 +417,19 @@ export function WalletDashboard() {
               Send
             </button>
 
-            <button
-              disabled
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium text-sm"
-              title="Coming soon"
-            >
-              <Repeat2 className="w-4 h-4" />
-              Swap
-            </button>
+            <div className="flex-1 relative group">
+              <button
+                disabled
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium text-sm"
+              >
+                <Repeat2 className="w-4 h-4" />
+                Swap
+              </button>
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                Coming soon
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
 
             <button
               onClick={() => setShowReceiveModal(true)}

@@ -12,7 +12,7 @@ This repository contains two applications:
 
 - **`/` (Root)** - **Wallet Application** (Run locally only)
   - Web3 wallet for Burner Ethereum hardware wallets
-  - Requires local installation and Burner Ethereum card from [burner.pro/eth](https://burner.pro/eth)
+  - Requires local installation and Burner Ethereum card ([get one here](https://arx-burner.myshopify.com/OPENBURNER))
   - **Not deployed to the web** - runs on your machine
   
 - **`/website`** - **Marketing Website** (Deployed on Vercel)
@@ -35,7 +35,7 @@ This repository contains two applications:
 ### Technical Highlights
 - **Multicall3 Integration** - Batch RPC calls for efficient balance queries
 - **Advanced Caching** - Multi-tier price caching with stale-while-revalidate
-- **HaLo Chip Integration** - NFC-based hardware wallet support
+- **Burner Card Integration** - NFC-based hardware wallet support
 - **Modern Stack** - Next.js 14, TypeScript, Tailwind CSS, ethers.js v6
 - **State Persistence** - localStorage-backed state management with Zustand
 
@@ -43,9 +43,9 @@ This repository contains two applications:
 
 ### Prerequisites
 
-1. **Burner Ethereum Card** - [Order from burner.pro/eth](https://burner.pro/eth)
+1. **Burner Card** - [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
 2. **Desktop NFC Reader** - ACR122U or compatible USB NFC reader
-3. **HaLo Bridge** - Local WebSocket bridge software
+3. **Burner Bridge** - Local WebSocket bridge software
 4. **Node.js 18+** - [Download](https://nodejs.org)
 
 ### Installation
@@ -67,9 +67,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### HaLo Bridge Setup
+### Burner Bridge Setup
 
-Install and run the HaLo Bridge to connect your NFC reader. The bridge runs on `ws://127.0.0.1:32868/ws` by default.
+Install and run the Burner Bridge to connect your NFC reader. The bridge runs on `ws://127.0.0.1:32868/ws` by default.
 
 See **[DOCS.md](DOCS.md)** for complete setup instructions.
 
@@ -80,7 +80,7 @@ See **[DOCS.md](DOCS.md)** for complete setup instructions.
 Complete guide covering:
 - Installation & setup
 - Architecture
-- HaLo Bridge configuration
+- Burner Bridge configuration
 - API reference
 - Security model
 - Troubleshooting
@@ -99,7 +99,7 @@ Complete guide covering:
               │ WebSocket (127.0.0.1:32868)
               ↓
 ┌─────────────────────────────────────────┐
-│         HaLo Bridge (Local)             │
+│         Burner Bridge (Local)           │
 │  • NFC Communication                    │
 │  • Command Routing                      │
 │  • PC/SC Interface                      │
@@ -108,7 +108,7 @@ Complete guide covering:
               │ NFC (13.56 MHz)
               ↓
 ┌─────────────────────────────────────────┐
-│       HaLo NFC Chip (Secure Element)    │
+│       Burner NFC Chip (Secure Element)  │
 │  • Private Key Storage                  │
 │  • Transaction Signing                  │
 │  • ECDSA Operations                     │
@@ -151,7 +151,7 @@ See [Security Documentation](docs/technical/SECURITY.md) for details.
 - **Price Data**: CoinGecko API with multi-tier caching
 
 ### Hardware Integration
-- **libhalo**: @arx-research/libhalo 1.15
+- **libburner**: @arx-research/libburner 1.0
 - **Transport**: WebSocket bridge on port 32868
 - **Protocol**: PC/SC for NFC reader communication
 
@@ -185,7 +185,7 @@ Automatically detects popular ERC-20 tokens on 9 different chains using Multical
 - **73-81% API call reduction** vs naive implementation
 
 ### Hardware Security
-HaLo chips provide hardware wallet-level security in an NFC form factor:
+Burner cards provide hardware wallet-level security in an NFC form factor:
 - Private keys generated on-chip
 - Tamper-resistant secure element
 - Physical tap required for signing
@@ -198,8 +198,8 @@ openburner/
 ├── app/                          # Wallet app (Next.js)
 ├── components/                   # React components
 ├── lib/                          # Core libraries
-│   ├── halo.ts                  # HaLo chip integration
-│   ├── halo-bridge.ts           # Bridge WebSocket client
+│   ├── burner.ts                # Burner card integration
+│   ├── burner-bridge.ts         # Bridge WebSocket client
 │   ├── price-oracle.ts          # CoinGecko integration
 │   ├── token-lists.ts           # Token metadata
 │   └── multicall.ts             # Batch RPC calls
@@ -262,8 +262,8 @@ This allows you to create your own variant while keeping the original project fo
 ## 🔗 Resources
 
 ### Official Links
-- **Get a Burner Ethereum Card**: [burner.pro/eth](https://burner.pro/eth)
-- **LibHaLo**: [github.com/arx-research/libhalo](https://github.com/arx-research/libhalo)
+- **Get a Burner Card**: [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
+- **LibBurner**: [github.com/arx-research/libburner](https://github.com/arx-research/libburner)
 - **ethers.js**: [docs.ethers.org](https://docs.ethers.org)
 - **Next.js**: [nextjs.org](https://nextjs.org)
 
@@ -274,7 +274,7 @@ This allows you to create your own variant while keeping the original project fo
 
 ## 🙏 Acknowledgments
 
-- [Arx Research](https://arx.org) for HaLo chip technology
+- [Arx Research](https://arx.org) for Burner card technology
 - [ethers.js](https://docs.ethers.org) for Ethereum interactions
 - [CoinGecko](https://www.coingecko.com) for price data API
 - [Next.js](https://nextjs.org) team for the amazing framework

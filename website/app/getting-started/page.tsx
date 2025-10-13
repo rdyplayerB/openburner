@@ -31,7 +31,7 @@ export default function GettingStarted() {
         <section className="mb-16">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Prerequisites</h2>
           <ul className="space-y-2 text-gray-600">
-            <li>• Burner Ethereum Card from <a href="https://burner.pro/eth" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">burner.pro</a></li>
+            <li>• Burner Card (<a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">order here - 10% off</a>)</li>
             <li>• USB NFC reader (ACR122U or compatible)</li>
             <li>• Node.js 18+</li>
           </ul>
@@ -65,16 +65,16 @@ export default function GettingStarted() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-3">3. Set up HaLo Bridge</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">3. Set up Burner Bridge</h3>
               <p className="text-gray-600 mb-3">
                 Download the bridge from{' '}
                 <a
-                  href="https://github.com/arx-research/libhalo/releases"
+                  href="https://github.com/arx-research/libburner/releases"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:text-gray-900"
                 >
-                  HaLo Gateway releases
+                  Burner Gateway releases
                 </a>
                 . Run it and grant consent:
               </p>

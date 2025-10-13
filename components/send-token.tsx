@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useWalletStore } from "@/store/wallet-store";
 import { ethers } from "ethers";
-import { signTransactionWithHalo } from "@/lib/halo";
+import { signTransactionWithBurner } from "@/lib/burner";
 import { PinInput } from "./pin-input";
 import { CheckCircle, ExternalLink, Clock, X } from "lucide-react";
 
@@ -164,7 +164,7 @@ export function SendToken({
 
       // Sign with Burner using PIN
       console.log("🔐 Signing transaction with Burner...");
-      const signedTx = await signTransactionWithHalo(transaction, keySlot || 1, enteredPin);
+      const signedTx = await signTransactionWithBurner(transaction, keySlot || 1, enteredPin);
 
       // Hide PIN input on success
       setShowPinInput(false);

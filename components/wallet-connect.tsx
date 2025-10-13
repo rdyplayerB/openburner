@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getHaloAddress } from "@/lib/halo";
+import Image from "next/image";
+import { getBurnerAddress } from "@/lib/burner";
 import { useWalletStore } from "@/store/wallet-store";
-import { Flame, Nfc, Loader2, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { Nfc, Loader2, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 
 const BRIDGE_WS_URL = "ws://127.0.0.1:32868/ws";
 
@@ -93,10 +94,10 @@ export function WalletConnect() {
     setError(null);
 
     try {
-      const { address, publicKey, keySlot } = await getHaloAddress();
+      const { address, publicKey, keySlot } = await getBurnerAddress();
       setWallet(address, publicKey, keySlot);
     } catch (err: any) {
-      setError(err.message || "Failed to connect HaLo chip");
+      setError(err.message || "Failed to connect Burner card");
     } finally {
       setIsConnecting(false);
     }
@@ -107,12 +108,18 @@ export function WalletConnect() {
       <div className="text-center px-10 pt-12 pb-10">
         {/* Icon and Header */}
         <div className="mb-10">
-          <div className="w-28 h-28 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[2rem] mx-auto flex items-center justify-center mb-7 shadow-2xl ring-1 ring-slate-900/10">
-            <Flame className="w-14 h-14 text-orange-400" strokeWidth={2.5} />
+          <div className="flex items-center justify-center gap-3 mb-7">
+            <Image 
+              src="/images/openburnerlogo.svg" 
+              alt="OpenBurner logo" 
+              width={64} 
+              height={64} 
+              className="w-16 h-16"
+            />
+            <h1 className="text-[2.75rem] font-bold text-black mb-0 tracking-tight leading-none mt-1">
+              OpenBurner
+            </h1>
           </div>
-          <h1 className="text-[2.75rem] font-bold text-slate-900 mb-3 tracking-tight leading-none">
-            OpenBurner
-          </h1>
           <p className="text-slate-500 text-[1.0625rem] font-medium">
             Tap your chip to continue
           </p>
@@ -160,7 +167,7 @@ export function WalletConnect() {
               )}
             </div>
             <span className={`font-medium ${bridgeConnected ? "text-slate-700" : "text-slate-500"}`}>
-              HaLo Bridge running
+              Burner Bridge running
             </span>
           </li>
           <li className="flex items-center gap-3.5">

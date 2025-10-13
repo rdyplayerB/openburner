@@ -25,7 +25,7 @@ Both work with the same Burner Ethereum card - your addresses and keys remain th
 ## Quick Start
 
 ### Prerequisites
-- **Burner Ethereum Card** - [Order from burner.pro/eth](https://burner.pro/eth)
+- **Burner Card** - [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
 - **Desktop NFC Reader** - ACR122U or compatible USB reader
 - **Node.js 18+**
 
@@ -39,9 +39,9 @@ cp env.example .env.local
 npm run dev
 ```
 
-### HaLo Bridge Setup
+### Burner Bridge Setup
 
-1. Download bridge from [HaLo Gateway releases](https://github.com/arx-research/libhalo/releases)
+1. Download bridge from [Burner Gateway releases](https://github.com/arx-research/libburner/releases)
 2. Run the bridge executable (starts on `ws://127.0.0.1:32868/ws`)
 3. Grant consent: Visit `http://127.0.0.1:32868/consent?website=http://localhost:3000`
 4. Plug in NFC reader, tap your Burner Ethereum card
@@ -56,7 +56,7 @@ npm run dev
 
 **Web3 Libraries:**
 - ethers.js (blockchain interactions)
-- libhalo (Burner card communication via WebSocket)
+- libburner (Burner card communication via WebSocket)
 - Multicall3 (efficient batch RPC calls)
 
 **APIs:**
@@ -73,7 +73,7 @@ npm run dev
          │ WebSocket
          ↓
 ┌──────────────────┐
-│   HaLo Bridge    │  Local WebSocket server (port 32868)
+│ Burner Bridge    │  Local WebSocket server (port 32868)
 │   (localhost)    │  Routes commands to NFC reader
 └────────┬─────────┘
          │ PC/SC
@@ -95,7 +95,7 @@ npm run dev
 ## How It Works
 
 ### 1. Connection
-- Web app connects to HaLo Bridge via WebSocket
+- Web app connects to Burner Bridge via WebSocket
 - Bridge detects Burner Ethereum card on NFC reader
 - App fetches Ethereum address from card's secure element
 
@@ -116,17 +116,17 @@ npm run dev
 ### Connect to Burner Ethereum Card
 
 ```typescript
-import { getHaloAddress } from '@/lib/halo';
+import { getBurnerAddress } from '@/lib/burner';
 
-const { address, publicKey, keySlot } = await getHaloAddress();
+const { address, publicKey, keySlot } = await getBurnerAddress();
 ```
 
 ### Sign Transaction
 
 ```typescript
-import { signTransactionWithHalo } from '@/lib/halo';
+import { signTransactionWithBurner } from '@/lib/burner';
 
-const signedTx = await signTransactionWithHalo(unsignedTx, keySlot, pin);
+const signedTx = await signTransactionWithBurner(unsignedTx, keySlot, pin);
 await provider.broadcastTransaction(signedTx);
 ```
 
@@ -198,8 +198,8 @@ openburner/
 │   ├── token-list.tsx
 │   └── send-token.tsx
 ├── lib/                    # Core libraries
-│   ├── halo.ts            # Burner card integration
-│   ├── halo-bridge.ts     # Bridge WebSocket client
+│   ├── burner.ts          # Burner card integration
+│   ├── burner-bridge.ts   # Bridge WebSocket client
 │   ├── multicall.ts       # Batch RPC calls
 │   ├── price-oracle.ts    # Price fetching
 │   └── token-lists.ts     # Token metadata
@@ -294,7 +294,7 @@ You're encouraged to fork OpenBurner for your own use:
 **Code structure:**
 - `app/` - Next.js pages and routing
 - `components/` - React components for UI
-- `lib/` - Core libraries (Halo, multicall, pricing)
+- `lib/` - Core libraries (Burner, multicall, pricing)
 - `store/` - Zustand state management
 - `website/` - Marketing/landing page
 
@@ -302,8 +302,8 @@ You're encouraged to fork OpenBurner for your own use:
 
 - **Website**: https://openburner.vercel.app
 - **GitHub**: https://github.com/rdyplayerB/openburner
-- **Get a Burner Ethereum Card**: https://burner.pro/eth
-- **LibHaLo Documentation**: https://github.com/arx-research/libhalo
+- **Get a Burner Card**: [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
+- **LibBurner Documentation**: https://github.com/arx-research/libburner
 - **ethers.js Docs**: https://docs.ethers.org
 
 ---

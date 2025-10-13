@@ -1,6 +1,6 @@
 'use client';
 
-import { Github, Flame } from 'lucide-react';
+import { Github } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -12,14 +12,18 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#1e293b] rounded-lg flex items-center justify-center">
-                <Flame className="w-5 h-5 text-orange-400" strokeWidth={2.5} />
-              </div>
-              <span className="font-medium text-gray-900">OpenBurner</span>
+              <Image 
+                src="/images/openburnerlogo.svg" 
+                alt="OpenBurner logo" 
+                width={28} 
+                height={28} 
+                className="w-7 h-7"
+              />
+              <span className="text-xl font-bold text-black tracking-tight mt-0.5">OpenBurner</span>
             </Link>
             <div className="flex items-center gap-8">
               <a
-                href="https://burner.pro/eth"
+                href="https://arx-burner.myshopify.com/OPENBURNER"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-gray-900 text-sm"
@@ -188,18 +192,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stack */}
-      <section className="border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-20">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Built with
-          </h2>
-          <p className="text-gray-600">
-            ethers.js, libhalo, Multicall3, CoinGecko API
-          </p>
-        </div>
-      </section>
-
       {/* FAQ */}
       <section className="border-t border-gray-200 bg-gray-50">
         <div className="max-w-4xl mx-auto px-6 py-20">
@@ -217,9 +209,9 @@ export default function Home() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">Do I need a Burner card to use this?</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Yes, OpenBurner requires a Burner Ethereum hardware wallet. The card contains a secure element that stores your private keys, which never leave the hardware. You can get a Burner Ethereum card at{' '}
-                <a href="https://burner.pro/eth" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
-                  burner.pro/eth
+                Yes, OpenBurner requires a Burner hardware wallet. The card contains a secure element that stores your private keys, which never leave the hardware. You can{' '}
+                <a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
+                  get a Burner card here (10% off)
                 </a>.
               </p>
             </div>
@@ -234,7 +226,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">Is it secure?</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Yes. Your private keys never leave the Burner card's secure element. All signing happens on the hardware. OpenBurner communicates with the card using the libhalo library (the same one BurnerOS uses) and simply requests signatures when needed. The wallet code is open source and can be audited by anyone.
+                Yes. Your private keys never leave the Burner card's secure element. All signing happens on the hardware. OpenBurner communicates with the card using the libburner library (the same one BurnerOS uses) and simply requests signatures when needed. The wallet code is open source and can be audited by anyone.
               </p>
             </div>
 
@@ -263,6 +255,13 @@ export default function Home() {
                 <a href="https://github.com/rdyplayerB/openburner" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
                   GitHub
                 </a>.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">What is OpenBurner built with?</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                OpenBurner uses ethers.js for blockchain interactions, libburner for hardware wallet communication, Multicall3 for efficient batch RPC calls, and the CoinGecko API for real-time token prices.
               </p>
             </div>
 
