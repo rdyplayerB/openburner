@@ -377,5 +377,3 @@ If you find OpenBurner useful, there are a few ways you can help:
 
 Built by [@rdyplayerB](https://github.com/rdyplayerB) ([𝕏](https://x.com/rdyplayerB) / [Farcaster](https://farcaster.xyz/rdyplayerb)) • MIT License
 
-**Questions?** Open an issue on [GitHub](https://github.com/rdyplayerB/openburner/issues)
-
