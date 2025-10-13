@@ -137,7 +137,7 @@ export default function Home() {
                 {network.name}
               </span>
               {network.isBurnerOS && (
-                <div className="absolute -top-[1px] right-0 w-3 h-3 bg-white rounded-full shadow-sm border border-gray-200 flex items-center justify-center">
+                <div className="absolute -top-[1px] right-[8px] w-3 h-3 bg-white rounded-full shadow-sm border border-gray-200 flex items-center justify-center">
                   <Image
                     src="/images/burneros.png"
                     alt="Supported by BurnerOS"
