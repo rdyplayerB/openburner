@@ -59,7 +59,7 @@ export default function Home() {
               An open source Web3 wallet for Burner Ethereum hardware wallets
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Extends Burner use across BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain.
+              Extends Burner use across any EVM-compatible chain.
             </p>
             <div className="flex gap-4">
               <Link
