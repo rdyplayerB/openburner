@@ -185,6 +185,60 @@ OpenBurner supports **everything BurnerOS does** (Ethereum, Base, Arbitrum, Opti
 
 Add any custom network via the UI network selector.
 
+## Token Management
+
+### Hardcoded Token Lists
+
+OpenBurner currently uses **hardcoded token lists** rather than a dynamic token list service. The following popular tokens are pre-configured for each network:
+
+**Ethereum Mainnet:**
+- USDC, USDT, DAI, WETH, WBTC, AAVE, UNI, LINK
+
+**Base:**
+- USDC, DAI, WETH, USDbC, cbBTC, cbETH, wstETH
+
+**Arbitrum One:**
+- USDC, USDT, DAI, WETH, WBTC, ARB, LINK
+
+**Optimism:**
+- USDC, USDT, DAI, WETH, WBTC, OP
+
+**Polygon:**
+- USDC, USDT, DAI, WETH, WBTC, WMATIC
+
+**Blast:**
+- USDB, WETH
+
+**Scroll:**
+- USDC, USDT, WETH
+
+**Linea:**
+- USDC, USDT, WETH
+
+**zkSync Era:**
+- USDC, USDT, WETH
+
+### Adding Custom Tokens
+
+**Important:** There is currently no token list service or UI for adding custom tokens. If you need to track tokens that aren't in the hardcoded lists above, you must:
+
+1. Fork the repository
+2. Edit `lib/token-lists.ts`
+3. Add your token addresses to the appropriate chain ID
+4. Rebuild and run your custom version
+
+**Example** - Adding a custom token to Ethereum:
+
+```typescript
+// In lib/token-lists.ts
+1: [
+  { address: "0xYourTokenAddress", symbol: "TOKEN", name: "Your Token", decimals: 18 },
+  // ... existing tokens
+]
+```
+
+This limitation is intentional to keep the app simple and local-first. Future versions may include a dynamic token management UI.
+
 ## Project Structure
 
 ```
