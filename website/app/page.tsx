@@ -96,7 +96,7 @@ export default function Home() {
               {/* Supported Networks - Icon Grid */}
               <div className="flex flex-col gap-2.5 items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-2"></div>
-              <div className="flex gap-2 sm:gap-2.5 flex-wrap justify-center">
+              <div className="flex gap-3 sm:gap-3.5 flex-wrap justify-center">
               {[
                 { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg' },
                 { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg' },
@@ -110,28 +110,28 @@ export default function Home() {
                   key={network.name}
                   className="group relative flex flex-col items-center"
                 >
-                  <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
+                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
                     <img
                       src={network.logo}
                       alt={network.name}
-                      className="w-5 h-5 rounded-full object-cover"
+                      className="w-7 h-7 rounded-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
                         const parent = target.parentElement;
                         if (parent) {
-                          parent.innerHTML = `<span class="text-xs font-bold text-gray-700">${network.name[0]}</span>`;
+                          parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
                         }
                       }}
                     />
                   </div>
-                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     {network.name}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="flex gap-2 sm:gap-2.5 items-center flex-wrap justify-center">
+            <div className="flex gap-3 sm:gap-3.5 items-center flex-wrap justify-center">
               {[
                 { name: 'Mantle', logo: 'https://icons.llamao.fi/icons/chains/rsz_mantle.jpg' },
                 { name: 'Mode', logo: 'https://icons.llamao.fi/icons/chains/rsz_mode.jpg' },
@@ -144,31 +144,31 @@ export default function Home() {
                   key={network.name}
                   className="group relative flex flex-col items-center"
                 >
-                  <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
+                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
                     <img
                       src={network.logo}
                       alt={network.name}
-                      className="w-5 h-5 rounded-full object-cover"
+                      className="w-7 h-7 rounded-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
                         const parent = target.parentElement;
                         if (parent) {
-                          parent.innerHTML = `<span class="text-xs font-bold text-gray-700">${network.name[0]}</span>`;
+                          parent.innerHTML = `<span class="text-sm font-bold text-gray-700">${network.name[0]}</span>`;
                         }
                       }}
                     />
                   </div>
-                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     {network.name}
                   </span>
                 </div>
               ))}
               <div className="group relative flex flex-col items-center">
-                <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
-                  <Plus className="w-3.5 h-3.5 text-gray-400" strokeWidth={2.5} />
+                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
+                  <Plus className="w-5 h-5 text-gray-400" strokeWidth={2.5} />
                 </div>
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <span className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   Custom RPC
                 </span>
               </div>
