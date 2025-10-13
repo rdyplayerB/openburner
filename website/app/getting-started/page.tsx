@@ -243,6 +243,15 @@ export default function GettingStarted() {
               </div>
               <div className="text-gray-600">
                 <p className="font-serif text-xl text-gray-900">OpenBurner</p>
+                <p className="text-sm">
+                  Created by{' '}
+                  <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">
+                    Brent Oshiro
+                  </a>
+                  {' '}(<a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">
+                    @rdyplayerB
+                  </a>)
+                </p>
                 <p className="text-sm">MIT License</p>
               </div>
             </div>

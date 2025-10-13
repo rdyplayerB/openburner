@@ -38,7 +38,7 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-32">
         <div className="max-w-3xl">
           <p className="text-xl md:text-2xl text-gray-600 leading-relaxed mb-8">
-            An open source Web3 wallet built on Burner cards with hardware-secured NFC chips.
+            An open source Web3 wallet for Burner cards.
           </p>
           <div className="flex gap-4 flex-wrap">
             <Link 
@@ -69,9 +69,10 @@ export default function Home() {
                 Extending Burner
               </h2>
               <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                We're fans of Burner and created this to extend its utility. Supports everything 
-                BurnerOS does (Ethereum, Base, Arbitrum, Optimism, Polygon), plus Blast, Scroll, 
-                Linea, zkSync Era, and any custom EVM-compatible chain.
+                OpenBurner extends Burner's utility by adding support for chains beyond what 
+                BurnerOS currently offers. Supports everything BurnerOS does (Ethereum, Base, 
+                Arbitrum, Optimism, Polygon), plus Blast, Scroll, Linea, zkSync Era, and any 
+                custom EVM-compatible chain.
               </p>
             </div>
             <div className="bg-white p-8 rounded-lg border border-gray-200">
@@ -240,6 +241,15 @@ export default function Home() {
               </div>
               <div className="text-gray-600">
                 <p className="font-serif text-xl text-gray-900">OpenBurner</p>
+                <p className="text-sm">
+                  Created by{' '}
+                  <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">
+                    Brent Oshiro
+                  </a>
+                  {' '}(<a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">
+                    @rdyplayerB
+                  </a>)
+                </p>
                 <p className="text-sm">MIT License</p>
               </div>
             </div>
