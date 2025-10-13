@@ -121,7 +121,7 @@ export function WalletConnect() {
             </h1>
           </div>
           <p className="text-slate-500 text-[1.0625rem] font-medium">
-            Tap your chip to continue
+            Place Burner on reader to connect
           </p>
         </div>
 

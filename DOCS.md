@@ -354,11 +354,9 @@ You're encouraged to fork OpenBurner for your own use:
 - `components/` - React components for UI
 - `lib/` - Core libraries (Burner, multicall, pricing)
 - `store/` - Zustand state management
-- `website/` - Marketing/landing page
 
 ## Links
 
-- **Website**: https://openburner.xyz
 - **GitHub**: https://github.com/rdyplayerB/openburner
 - **Get a Burner Card**: [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
 - **LibBurner Documentation**: https://github.com/arx-research/libburner

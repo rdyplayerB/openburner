@@ -6,20 +6,9 @@ An open source Web3 wallet for Burner Ethereum hardware wallets. Built with Next
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📂 Repository Structure
+## 📂 About
 
-This repository contains two applications:
-
-- **`/` (Root)** - **Wallet Application** (Run locally only)
-  - Web3 wallet for Burner Ethereum hardware wallets
-  - Requires local installation and Burner Ethereum card ([get one here](https://arx-burner.myshopify.com/OPENBURNER))
-  - **Not deployed to the web** - runs on your machine
-  
-- **`/website`** - **Website**
-  - Public-facing website with documentation and installation guides
-  - Live at: [openburner.xyz](https://openburner.xyz)
-
-> **⚠️ Important**: The wallet application is designed to run **locally only**. This provides maximum security by eliminating remote attack vectors. Only the website is deployed publicly.
+OpenBurner is a locally-run wallet application for Burner Ethereum hardware wallets. It is designed to run **locally only** on your machine, providing maximum security by eliminating remote attack vectors. Your private keys remain secure in the Burner card's secure element and never leave the hardware.
 
 ## ✨ Features
 
@@ -194,7 +183,7 @@ Burner cards provide hardware wallet-level security in an NFC form factor:
 
 ```
 openburner/
-├── app/                          # Wallet app (Next.js)
+├── app/                          # Next.js app pages
 ├── components/                   # React components
 ├── lib/                          # Core libraries
 │   ├── burner.ts                # Burner card integration
@@ -203,9 +192,7 @@ openburner/
 │   ├── token-lists.ts           # Token metadata
 │   └── multicall.ts             # Batch RPC calls
 ├── store/                        # Zustand state management
-├── website/                      # Website
-├── DOCS.md                       # Complete documentation
-└── DEPLOYMENT.md                 # Vercel deployment guide
+└── DOCS.md                       # Complete documentation
 ```
 
 ## 🧪 Development

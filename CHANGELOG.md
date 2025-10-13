@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Project Structure** - Removed `/website` directory
+  - Consolidated to single application running from root directory
+  - Updated all documentation to reflect new structure
+  - Removed DEPLOYMENT.md (was specific to website deployment)
+
 ### Added
 - **Price Oracle Integration** - Real-time cryptocurrency prices from CoinGecko
   - Multi-tier caching (memory + localStorage)
