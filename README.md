@@ -107,43 +107,9 @@ Complete guide covering:
 └─────────────────────────────────────────┘
 ```
 
-## 🔒 Security Model
+## 🔒 Security
 
-### Hardware Security Layer
-- **Secure Element** - EAL6+ certified tamper-resistant chip
-- **Private Keys** - Generated and stored on-chip, never exposed
-- **On-Chip Signing** - Cryptographic operations happen in hardware
-- **Physical Security** - Requires physical chip tap to sign
-
-### Application Security
-- **No Key Exposure** - Only public keys/addresses handled by app
-- **Transaction Review** - User verifies all transaction details
-- **HTTPS RPCs** - Encrypted communication with blockchain nodes
-- **Local Bridge** - Bridge only accessible on localhost
-
-### Attack Surface
-✅ **Protected**: Private keys, signing operations, key generation  
-⚠️ **User Responsibility**: Transaction verification, RPC selection, physical chip security
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS 3.4
-- **State**: Zustand 4.5 with localStorage persistence
-- **UI Components**: Lucide React icons, Framer Motion animations
-
-### Blockchain
-- **Library**: ethers.js v6
-- **Networks**: EVM-compatible chains
-- **Standards**: ERC-20, EIP-1559, Multicall3
-- **Price Data**: CoinGecko API with multi-tier caching
-
-### Hardware Integration
-- **libburner**: @arx-research/libburner 1.0
-- **Transport**: WebSocket bridge on port 32868
-- **Protocol**: PC/SC for NFC reader communication
+Your private keys never leave the Burner card's secure element (EAL6+ certified). All signing happens on-chip. The app only handles public keys and coordinates transactions via the local bridge.
 
 ## 📊 Supported Networks
 
@@ -162,67 +128,6 @@ Complete guide covering:
 - Unichain
 
 **Plus any custom EVM-compatible chain via Custom RPC configuration**
-
-## 🎯 Key Features Explained
-
-### Multi-Chain Token Detection
-Automatically detects popular ERC-20 tokens on 9 different chains using Multicall3 for efficient batch queries.
-
-### Advanced Price Caching
-- **Multi-tier caching**: Memory + localStorage
-- **Differential durations**: Stablecoins cached 30min, major tokens 5min, others 3min
-- **Stale-while-revalidate**: Instant UI updates while fetching fresh data
-- **73-81% API call reduction** vs naive implementation
-
-### Hardware Security
-Burner cards provide hardware wallet-level security in an NFC form factor:
-- Private keys generated on-chip
-- Tamper-resistant secure element
-- Physical tap required for signing
-- Up to 9 separate key slots
-
-## 📁 Project Structure
-
-```
-openburner/
-├── app/                          # Next.js app pages
-├── components/                   # React components
-├── lib/                          # Core libraries
-│   ├── burner.ts                # Burner card integration
-│   ├── burner-bridge.ts         # Bridge WebSocket client
-│   ├── price-oracle.ts          # CoinGecko integration
-│   ├── token-lists.ts           # Token metadata
-│   └── multicall.ts             # Batch RPC calls
-├── store/                        # Zustand state management
-└── DOCS.md                       # Complete documentation
-```
-
-## 🧪 Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server (with hot reload)
-npm run dev
-
-# Type checking
-npm run lint
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-### Environment Variables
-
-```env
-# CoinGecko API (optional, free tier works without key)
-NEXT_PUBLIC_COINGECKO_API_KEY=
-NEXT_PUBLIC_COINGECKO_API_URL=https://api.coingecko.com/api/v3
-```
 
 ## 📝 License & Usage
 
