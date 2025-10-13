@@ -91,7 +91,7 @@ export default function Home() {
             </div>
             
             {/* Supported Networks - Icon Grid */}
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2.5 items-center">
               <div className="flex gap-2.5">
               {[
                 { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg' },
@@ -121,7 +121,7 @@ export default function Home() {
                       }}
                     />
                   </div>
-                  <span className="absolute -bottom-6 text-[9px] text-gray-600 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     {network.name}
                   </span>
                 </div>
@@ -155,16 +155,18 @@ export default function Home() {
                       }}
                     />
                   </div>
-                  <span className="absolute -bottom-6 text-[9px] text-gray-600 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     {network.name}
                   </span>
                 </div>
               ))}
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-lg hover:scale-110 transition-all border border-gray-200">
+              <div className="group relative flex flex-col items-center">
+                <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all border border-gray-200">
                   <Plus className="w-3.5 h-3.5 text-gray-400" strokeWidth={2.5} />
                 </div>
-                <span className="text-[9px] text-gray-600 font-medium text-center leading-tight whitespace-nowrap">Custom RPC</span>
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  Custom RPC
+                </span>
               </div>
             </div>
           </div>
