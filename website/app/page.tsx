@@ -209,7 +209,7 @@ export default function Home() {
               <p className="text-sm text-gray-600 leading-relaxed">
                 Yes, OpenBurner requires a Burner hardware wallet. The card contains a secure element that stores your private keys, which never leave the hardware. You can{' '}
                 <a href="https://arx-burner.myshopify.com/OPENBURNER" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
-                  get a Burner card here (10% off)
+                  get a Burner Ethereum here (10% off)
                 </a>.
               </p>
             </div>
@@ -315,13 +315,17 @@ export default function Home() {
       <footer className="border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <p className="text-xs sm:text-sm text-gray-600">
-            By{' '}
+            Built by{' '}
             <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
               @rdyplayerB
             </a>
             {' '}(
             <a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
               𝕏
+            </a>
+            {' / '}
+            <a href="https://farcaster.xyz/rdyplayerb" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
+              Farcaster
             </a>
             ) • MIT License
           </p>

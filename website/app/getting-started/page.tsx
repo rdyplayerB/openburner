@@ -77,7 +77,7 @@ export default function GettingStarted() {
                   className="rounded-lg object-cover w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24"
                 />
                 <div>
-                  <p className="text-sm sm:text-base text-gray-900 font-medium group-hover:text-gray-700">Burner Card</p>
+                  <p className="text-sm sm:text-base text-gray-900 font-medium group-hover:text-gray-700">Burner Ethereum</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">Order here - 10% off →</p>
                 </div>
               </div>
@@ -225,13 +225,17 @@ export default function GettingStarted() {
       <footer className="border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <p className="text-xs sm:text-sm text-gray-600">
-            By{' '}
+            Built by{' '}
             <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
               @rdyplayerB
             </a>
             {' '}(
             <a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
               𝕏
+            </a>
+            {' / '}
+            <a href="https://farcaster.xyz/rdyplayerb" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
+              Farcaster
             </a>
             ) • MIT License
           </p>
