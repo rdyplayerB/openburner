@@ -354,7 +354,7 @@ You're encouraged to fork OpenBurner for your own use:
 
 ## Links
 
-- **Website**: https://openburner.vercel.app
+- **Website**: https://openburner.xyz
 - **GitHub**: https://github.com/rdyplayerB/openburner
 - **Get a Burner Card**: [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
 - **LibBurner Documentation**: https://github.com/arx-research/libburner
