@@ -1,7 +1,7 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function GettingStarted() {
   return (
@@ -10,13 +10,42 @@ export default function GettingStarted() {
       <nav className="border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-medium text-gray-900">
-              OpenBurner
+            <Link href="/" className="flex items-center gap-2">
+              <Image 
+                src="/images/openburnerlogo.svg" 
+                alt="OpenBurner logo" 
+                width={28} 
+                height={28} 
+                className="w-7 h-7"
+              />
+              <span className="text-xl font-bold text-black tracking-tight mt-0.5">OpenBurner</span>
             </Link>
-            <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm">
-              <ArrowLeft size={16} />
-              Back
-            </Link>
+            <div className="flex items-center gap-8">
+              <a
+                href="https://arx-burner.myshopify.com/OPENBURNER"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm"
+              >
+                Get a Burner
+              </a>
+              <a
+                href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm"
+              >
+                Docs
+              </a>
+              <a
+                href="https://github.com/rdyplayerB/openburner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm"
+              >
+                GitHub
+              </a>
+            </div>
           </div>
         </div>
       </nav>
@@ -142,10 +171,14 @@ export default function GettingStarted() {
         <div className="max-w-4xl mx-auto px-6 py-8">
           <p className="text-sm text-gray-600">
             By{' '}
-            <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900">
+            <a href="https://github.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
               @rdyplayerB
             </a>
-            {' '}• MIT License
+            {' '}(
+            <a href="https://x.com/rdyplayerB" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 underline">
+              𝕏
+            </a>
+            ) • MIT License
           </p>
         </div>
       </footer>
