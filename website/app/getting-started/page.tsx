@@ -31,7 +31,7 @@ export default function GettingStarted() {
         <section className="mb-16">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Prerequisites</h2>
           <ul className="space-y-2 text-gray-600">
-            <li>• Burner card from <a href="https://burner.pro" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">burner.pro</a></li>
+            <li>• Burner Ethereum Card from <a href="https://burner.pro/eth" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-900">burner.pro</a></li>
             <li>• USB NFC reader (ACR122U or compatible)</li>
             <li>• Node.js 18+</li>
           </ul>
@@ -103,10 +103,20 @@ export default function GettingStarted() {
         <section className="mb-16">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Next steps</h2>
           <ul className="space-y-2 text-gray-600">
-            <li>• Tap your Burner card on the NFC reader</li>
+            <li>• Tap your Burner Ethereum Card on the NFC reader</li>
             <li>• Configure networks (Ethereum, Base, etc.)</li>
             <li>• View balances and send transactions</li>
           </ul>
+        </section>
+
+        {/* Coming Soon */}
+        <section className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Coming Soon</h2>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-gray-700 text-sm">
+              <strong>Token Swaps:</strong> Swap functionality is currently visible in the UI but disabled. Integration with swap protocols is planned for a future update.
+            </p>
+          </div>
         </section>
 
         {/* Help */}

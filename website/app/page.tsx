@@ -1,6 +1,6 @@
 'use client';
 
-import { Github } from 'lucide-react';
+import { Github, Flame } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -11,8 +11,11 @@ export default function Home() {
       <nav className="border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-medium text-gray-900">
-              OpenBurner
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-[#1e293b] rounded-lg flex items-center justify-center">
+                <Flame className="w-5 h-5 text-orange-400" strokeWidth={2.5} />
+              </div>
+              <span className="font-medium text-gray-900">OpenBurner</span>
             </Link>
             <div className="flex items-center gap-8">
               <a
@@ -55,14 +58,12 @@ export default function Home() {
               Extends Burner use across BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain.
             </p>
             <div className="flex gap-4">
-              <a
-                href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/getting-started"
                 className="px-6 py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
               >
                 Get Started
-              </a>
+              </Link>
               <a
                 href="https://github.com/rdyplayerB/openburner"
                 target="_blank"
@@ -282,9 +283,9 @@ export default function Home() {
             Open Source & Forking
           </h2>
           <p className="text-gray-600 mb-6">
-            OpenBurner is MIT licensed. You can use it, modify it, fork it, and build your own version. This is a personal project - pull requests are not being accepted, but you're encouraged to fork and customize for your own needs.
+            OpenBurner is MIT licensed. You can use it, modify it, fork it, and build your own version. This is a personal project - pull requests are not being accepted, but you're encouraged to fork and customize for your own needs. Feel free to report issues if you encounter bugs or have suggestions.
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <a
               href="https://github.com/rdyplayerB/openburner"
               target="_blank"
@@ -300,6 +301,14 @@ export default function Home() {
               className="text-sm text-gray-900 hover:underline"
             >
               Read the docs →
+            </a>
+            <a
+              href="https://github.com/rdyplayerB/openburner/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-gray-900 hover:underline"
+            >
+              Report an issue →
             </a>
           </div>
         </div>

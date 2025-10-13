@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWalletStore } from "@/store/wallet-store";
 import { ethers } from "ethers";
 import { signTransactionWithHalo } from "@/lib/halo";
 import { PinInput } from "./pin-input";
+import { CheckCircle, ExternalLink, Clock, X } from "lucide-react";
 
 interface Token {
   address: string;
@@ -18,6 +19,23 @@ const ERC20_ABI = [
   "function transfer(address to, uint256 amount) returns (bool)",
 ];
 
+// Block explorer URLs for each chain
+const BLOCK_EXPLORERS: Record<number, string> = {
+  1: "https://etherscan.io",
+  8453: "https://basescan.org",
+  56: "https://bscscan.com",
+  42161: "https://arbiscan.io",
+  43114: "https://snowtrace.io",
+  81457: "https://blastscan.io",
+  59144: "https://lineascan.build",
+  5000: "https://explorer.mantle.xyz",
+  34443: "https://explorer.mode.network",
+  10: "https://optimistic.etherscan.io",
+  137: "https://polygonscan.com",
+  534352: "https://scrollscan.com",
+  1301: "https://unichain-sepolia.blockscout.com",
+};
+
 export function SendToken({
   token,
   onClose,
@@ -27,15 +45,52 @@ export function SendToken({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const { address, rpcUrl, chainId, keySlot } = useWalletStore();
+  const { address, rpcUrl, chainId, keySlot, chainName } = useWalletStore();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const [showPinInput, setShowPinInput] = useState(false);
   const [pin, setPin] = useState<string | null>(null);
   const [pinError, setPinError] = useState<string | null>(null);
+  const [lastUsedAddress, setLastUsedAddress] = useState<string | null>(null);
+
+  // Load last used address on mount
+  useEffect(() => {
+    const stored = localStorage.getItem("lastRecipientAddress");
+    if (stored) {
+      setLastUsedAddress(stored);
+    }
+  }, []);
+
+  // Save recipient address to localStorage
+  function saveLastUsedAddress(addr: string) {
+    try {
+      localStorage.setItem("lastRecipientAddress", addr);
+      setLastUsedAddress(addr);
+    } catch (error) {
+      console.warn("Failed to save last used address:", error);
+    }
+  }
+
+  // Use last used address
+  function useLastAddress() {
+    if (lastUsedAddress) {
+      setRecipient(lastUsedAddress);
+    }
+  }
+
+  // Clear last used address
+  function clearLastUsedAddress() {
+    try {
+      localStorage.removeItem("lastRecipientAddress");
+      setLastUsedAddress(null);
+    } catch (error) {
+      console.warn("Failed to clear last used address:", error);
+    }
+  }
 
   function handleSend() {
     // Validate inputs first
@@ -107,8 +162,8 @@ export function SendToken({
         };
       }
 
-      // Sign with HaLo chip using PIN
-      console.log("🔐 Signing transaction with HaLo chip...");
+      // Sign with Burner using PIN
+      console.log("🔐 Signing transaction with Burner...");
       const signedTx = await signTransactionWithHalo(transaction, keySlot || 1, enteredPin);
 
       // Hide PIN input on success
@@ -122,10 +177,12 @@ export function SendToken({
       await txResponse.wait();
       console.log("Transaction confirmed!");
 
-      onSuccess();
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      // Save recipient address for future use
+      saveLastUsedAddress(recipient);
+
+      // Show confirmation screen - don't call onSuccess yet
+      // onSuccess will be called when user clicks "Return to Wallet"
+      setIsConfirmed(true);
     } catch (err: any) {
       console.error("Error sending token:", err);
       
@@ -146,6 +203,85 @@ export function SendToken({
     setShowPinInput(false);
     setPinError(null);
     setPin(null);
+  }
+
+  function getExplorerTxUrl(chainId: number, txHash: string): string {
+    const baseUrl = BLOCK_EXPLORERS[chainId] || "https://etherscan.io";
+    return `${baseUrl}/tx/${txHash}`;
+  }
+
+  function handleReturnToWallet() {
+    // Refresh balance before closing
+    onSuccess();
+    onClose();
+  }
+
+  // If transaction is confirmed, show confirmation screen
+  if (isConfirmed && txHash) {
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl p-8 max-w-md w-full">
+          {/* Success Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-12 h-12 text-green-600" />
+            </div>
+          </div>
+
+          {/* Success Message */}
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">
+            Transaction Confirmed!
+          </h2>
+          <p className="text-slate-600 text-center mb-6">
+            Your {amount} {token.symbol} has been sent successfully
+          </p>
+
+          {/* Transaction Details */}
+          <div className="bg-slate-50 rounded-xl p-4 mb-6">
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Recipient</p>
+                <p className="text-sm font-mono text-slate-900 break-all">
+                  {recipient}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Amount</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {amount} {token.symbol}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Network</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {chainName}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <a
+              href={getExplorerTxUrl(chainId, txHash)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors font-medium"
+            >
+              <span>View on Block Explorer</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
+            
+            <button
+              onClick={handleReturnToWallet}
+              className="w-full px-6 py-3 border border-slate-300 text-slate-900 rounded-xl hover:bg-slate-50 transition-colors font-medium"
+            >
+              Return to Wallet
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -194,6 +330,24 @@ export function SendToken({
               placeholder="0x..."
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
             />
+            {lastUsedAddress && lastUsedAddress !== recipient && (
+              <div className="mt-2 flex items-center justify-between">
+                <button
+                  onClick={useLastAddress}
+                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  <Clock className="w-3 h-3" />
+                  <span>Last used: {lastUsedAddress.slice(0, 6)}...{lastUsedAddress.slice(-4)}</span>
+                </button>
+                <button
+                  onClick={clearLastUsedAddress}
+                  className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Clear saved address"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
           </div>
 
           <div>
@@ -223,12 +377,12 @@ export function SendToken({
             </div>
           )}
 
-          {txHash && (
-            <div className="p-3 bg-green-50 border border-green-100 rounded-lg">
-              <p className="text-xs text-green-700 font-medium mb-1">
-                Transaction submitted!
+          {txHash && !isConfirmed && (
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+              <p className="text-xs text-blue-700 font-medium mb-1">
+                Transaction broadcasting...
               </p>
-              <p className="text-xs text-green-600 font-mono break-all">
+              <p className="text-xs text-blue-600 font-mono break-all">
                 {txHash}
               </p>
             </div>
@@ -270,8 +424,8 @@ export function SendToken({
 
           <p className="text-xs text-slate-400 text-center">
             {isSending 
-              ? "Signing with your HaLo chip..." 
-              : "Tap your HaLo chip to sign the transaction"
+              ? "Signing with your Burner..." 
+              : "Tap your Burner to sign the transaction"
             }
           </p>
         </div>

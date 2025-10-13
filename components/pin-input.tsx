@@ -78,7 +78,7 @@ export function PinInput({ onSubmit, onCancel, isVisible, error }: PinInputProps
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-slate-900 mb-2">Enter PIN</h3>
           <p className="text-slate-600 text-sm">
-            Enter your 6-digit HaLo chip PIN to authorize this transaction
+            Enter your 6-digit Burner PIN to authorize this transaction
           </p>
         </div>
 
@@ -124,7 +124,7 @@ export function PinInput({ onSubmit, onCancel, isVisible, error }: PinInputProps
         </div>
 
         <p className="text-xs text-center text-slate-400 mt-4">
-          🔒 Your PIN is sent directly to your HaLo chip
+          🔒 Your PIN is sent directly to your Burner
         </p>
       </div>
     </div>
