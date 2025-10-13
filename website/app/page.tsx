@@ -93,7 +93,7 @@ export default function Home() {
 
       {/* Supported Networks - Compact */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
-        <div className="flex gap-3 justify-center flex-wrap max-w-3xl mx-auto">
+        <div className="flex gap-2 justify-center max-w-4xl mx-auto">
           {[
             { name: 'Ethereum', logo: 'https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg', isBurnerOS: true },
             { name: 'Base', logo: 'https://icons.llamao.fi/icons/chains/rsz_base.jpg', isBurnerOS: true },
@@ -112,16 +112,16 @@ export default function Home() {
           ].map((network) => (
             <div
               key={network.name}
-              className="flex flex-col items-center gap-1.5 w-[55px] group relative"
+              className="flex flex-col items-center gap-1 w-[50px] group relative"
             >
-              <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow border border-gray-200">
+              <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow border border-gray-200">
                 {network.isCustom ? (
-                  <Plus className="w-4 h-4 text-gray-400" strokeWidth={2.5} />
+                  <Plus className="w-3.5 h-3.5 text-gray-400" strokeWidth={2.5} />
                 ) : (
                   <img
                     src={network.logo}
                     alt={network.name}
-                    className="w-5 h-5 rounded-full object-cover"
+                    className="w-[18px] h-[18px] rounded-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
@@ -133,24 +133,24 @@ export default function Home() {
                   />
                 )}
               </div>
-              <span className="text-[10px] text-gray-600 font-medium text-center leading-tight whitespace-nowrap">
+              <span className="text-[9px] text-gray-600 font-medium text-center leading-tight">
                 {network.name}
               </span>
               {network.isBurnerOS && (
-                <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-sm border border-gray-200 flex items-center justify-center">
+                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-white rounded-full shadow-sm border border-gray-200 flex items-center justify-center">
                   <Image
                     src="/images/burneros.png"
                     alt="Supported by BurnerOS"
-                    width={10}
-                    height={10}
-                    className="w-2.5 h-2.5"
+                    width={8}
+                    height={8}
+                    className="w-2 h-2"
                   />
                 </div>
               )}
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-center gap-1.5 mt-4">
+        <div className="flex items-center justify-center gap-1.5 mt-3">
           <Image
             src="/images/burneros.png"
             alt="Supported in BurnerOS"
