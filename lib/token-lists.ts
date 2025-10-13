@@ -93,21 +93,3 @@ export const TOKEN_LISTS: Record<number, TokenInfo[]> = {
 export function getTokenListForChain(chainId: number): TokenInfo[] {
   return TOKEN_LISTS[chainId] || [];
 }
-
-// Helper to get a reliable RPC with fallback
-export function getRPCForChain(chainId: number, primaryRPC: string): string[] {
-  const rpcFallbacks: Record<number, string[]> = {
-    8453: [
-      primaryRPC,
-      "https://base.llamarpc.com",
-      "https://base-mainnet.public.blastapi.io",
-      "https://base.blockpi.network/v1/rpc/public",
-    ],
-    1: [primaryRPC, "https://eth.llamarpc.com", "https://ethereum.publicnode.com"],
-    42161: [primaryRPC, "https://arb1.arbitrum.io/rpc", "https://arbitrum.llamarpc.com"],
-    10: [primaryRPC, "https://mainnet.optimism.io", "https://optimism.llamarpc.com"],
-  };
-  
-  return rpcFallbacks[chainId] || [primaryRPC];
-}
-

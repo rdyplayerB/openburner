@@ -14,11 +14,11 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. It runs
 
 **BurnerOS** is the official wallet from Burner that supports Ethereum, Base, Arbitrum, and Optimism.
 
-**OpenBurner** is a community-built alternative that:
+**OpenBurner** is an alternative that:
 - Supports all BurnerOS chains + many more (BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, etc.)
 - Allows you to add any custom EVM-compatible chain
 - Runs locally on your machine with full control over RPC endpoints
-- Is completely open source for transparency and customization
+- Is open source (MIT licensed)
 
 Both work with the same Burner Ethereum card - your addresses and keys remain the same.
 
@@ -116,29 +116,31 @@ npm run dev
 ### Connect to Burner Ethereum Card
 
 ```typescript
-import { connectHaloChip } from '@/lib/halo';
+import { getHaloAddress } from '@/lib/halo';
 
-const { address, publicKey } = await connectHaloChip();
+const { address, publicKey, keySlot } = await getHaloAddress();
 ```
 
 ### Sign Transaction
 
 ```typescript
-import { signTransaction } from '@/lib/halo';
+import { signTransactionWithHalo } from '@/lib/halo';
 
-const signedTx = await signTransaction(unsignedTx);
-await provider.sendTransaction(signedTx);
+const signedTx = await signTransactionWithHalo(unsignedTx, keySlot, pin);
+await provider.broadcastTransaction(signedTx);
 ```
 
 ### Get Token Balances
 
 ```typescript
-import { getTokenBalances } from '@/lib/multicall';
+import { batchGetBalances } from '@/lib/multicall';
+import { ethers } from 'ethers';
 
-const balances = await getTokenBalances(
-  address,
-  chainId,
-  rpcUrl
+const provider = new ethers.JsonRpcProvider(rpcUrl);
+const balances = await batchGetBalances(
+  provider,
+  tokenAddresses,
+  walletAddress
 );
 ```
 
@@ -148,9 +150,10 @@ const balances = await getTokenBalances(
 import { getTokenPrices } from '@/lib/price-oracle';
 
 const prices = await getTokenPrices([
-  'ethereum',
-  'usd-coin'
+  'ETH',
+  'USDC'
 ]);
+// Returns: { ETH: 2500.00, USDC: 1.00 }
 ```
 
 ## Environment Variables
@@ -255,23 +258,38 @@ npm run lint
 npm run build
 ```
 
-## Contributing
+## License & Usage
 
-OpenBurner is a community-driven project. Contributions are welcome!
+OpenBurner is open source under the MIT License. This means you can:
 
-**Ways to contribute:**
-- Add support for new chains
-- Improve UI/UX
-- Fix bugs
-- Improve documentation
-- Add features (token swaps, NFT support, etc.)
+- Use it for personal or commercial purposes
+- Modify and customize the code
+- Fork and build your own version
+- Distribute your modified versions
 
-**Getting started:**
+**No warranty is provided.** See the LICENSE file for full terms.
+
+## Maintenance
+
+This project is actively maintained by [@rdyplayerB](https://github.com/rdyplayerB). Updates and improvements will be made over time.
+
+**Not accepting pull requests** - This is a personal project rather than a community-driven one. If you want to customize OpenBurner or add features, please fork the repository.
+
+## Forking & Customization
+
+You're encouraged to fork OpenBurner for your own use:
+
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes
-4. Test thoroughly with a Burner Ethereum card
-5. Submit a pull request
+2. Modify chain configurations in `components/chain-selector.tsx`
+3. Update token lists in `lib/token-lists.ts`
+4. Customize UI in `components/` and `app/`
+5. Deploy to Vercel or run locally
+
+**Use cases for forking:**
+- Add support for specific L2s or custom chains
+- Build a branded wallet for your project
+- Experiment with new Burner card features
+- Create specialized tools (NFT minting, DAO voting, etc.)
 
 **Code structure:**
 - `app/` - Next.js pages and routing
@@ -279,22 +297,6 @@ OpenBurner is a community-driven project. Contributions are welcome!
 - `lib/` - Core libraries (Halo, multicall, pricing)
 - `store/` - Zustand state management
 - `website/` - Marketing/landing page
-
-## Forking for Your Own Use
-
-Want to customize OpenBurner for your specific needs?
-
-1. Fork the repo
-2. Modify chain configurations in `components/chain-selector.tsx`
-3. Update token lists in `lib/token-lists.ts`
-4. Customize UI in `components/` and `app/`
-5. Deploy to Vercel or run locally
-
-**Use cases:**
-- Add support for specific L2s or custom chains
-- Build a branded wallet for your project
-- Experiment with new Burner card features
-- Create specialized tools (NFT minting, DAO voting, etc.)
 
 ## Links
 

@@ -26,7 +26,7 @@ This repository contains two applications:
 
 ### Core Functionality
 - 🔐 **Hardware-Secured Keys** - Private keys never leave the secure element chip
-- 🌐 **Multi-Chain Support** - Extends BurnerOS chains (Ethereum, Base, Arbitrum, Optimism) + BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM chain
+- 🌐 **Multi-Chain Support** - Extends Burner use across Ethereum, Base, Arbitrum, Optimism, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM chain
 - 💰 **Token Management** - View balances for ETH and ERC-20 tokens
 - 💸 **Send Transactions** - Native and ERC-20 transfers with hardware signing
 - 📊 **Real-Time Prices** - CoinGecko integration with intelligent caching
@@ -236,19 +236,28 @@ NEXT_PUBLIC_COINGECKO_API_KEY=
 NEXT_PUBLIC_COINGECKO_API_URL=https://api.coingecko.com/api/v3
 ```
 
-## 🤝 Contributing
+## 📝 License & Usage
 
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+This project is licensed under the MIT License. You can:
+
+- Use it for personal or commercial purposes
+- Modify and customize the code
+- Fork and build your own version
+- Distribute your modified versions
+
+See the [LICENSE](LICENSE) file for full terms.
+
+## 🔧 Forking & Customization
+
+This is a personal project maintained by [@rdyplayerB](https://github.com/rdyplayerB). **Pull requests are not being accepted.**
+
+However, you're encouraged to fork OpenBurner for your own use:
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Customize for your needs
+3. Build and deploy your version
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This allows you to create your own variant while keeping the original project focused.
 
 ## 🔗 Resources
 

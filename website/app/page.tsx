@@ -52,7 +52,7 @@ export default function Home() {
               An open source Web3 wallet for Burner Ethereum hardware wallets
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Extends BurnerOS with support for BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain.
+              Extends Burner use across BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, Unichain, and any custom EVM chain.
             </p>
             <div className="flex gap-4">
               <a
@@ -226,7 +226,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">How is this different from BurnerOS?</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                BurnerOS is the official wallet app from Burner that supports Ethereum, Base, Arbitrum, and Optimism. OpenBurner is a community-built alternative that supports those same chains plus many more (including BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, and Unichain), and allows you to add any custom EVM-compatible chain. It runs locally on your machine and gives you full control over which RPC endpoints you use.
+                BurnerOS is the official wallet app from Burner that supports Ethereum, Base, Arbitrum, and Optimism. OpenBurner is an alternative that supports those same chains plus many more (including BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, and Unichain), and allows you to add any custom EVM-compatible chain. It runs locally on your machine and gives you full control over which RPC endpoints you use.
               </p>
             </div>
 
@@ -258,7 +258,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">Is this open source?</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Yes! OpenBurner is MIT licensed and completely open source. You can view the code, contribute features, report issues, or fork it for your own use on{' '}
+                Yes. OpenBurner is MIT licensed. You can view the code, modify it, and fork it for your own use on{' '}
                 <a href="https://github.com/rdyplayerB/openburner" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:text-gray-700">
                   GitHub
                 </a>.
@@ -275,23 +275,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contribute */}
+      {/* License & Forking */}
       <section className="border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-20">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Contribute
+            Open Source & Forking
           </h2>
           <p className="text-gray-600 mb-6">
-            This is a community project. Add features, fix bugs, improve docs. All contributions welcome.
+            OpenBurner is MIT licensed. You can use it, modify it, fork it, and build your own version. This is a personal project - pull requests are not being accepted, but you're encouraged to fork and customize for your own needs.
           </p>
           <div className="flex gap-4">
             <a
-              href="https://github.com/rdyplayerB/openburner/issues"
+              href="https://github.com/rdyplayerB/openburner"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-gray-900 hover:underline"
             >
-              Open an issue →
+              View on GitHub →
             </a>
             <a
               href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
