@@ -91,17 +91,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Install */}
-      <section className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-gray-900 rounded-lg p-6 overflow-x-auto">
-          <code className="text-green-400 font-mono text-sm">
-            git clone https://github.com/rdyplayerB/openburner.git
-            <br />
-            cd openburner && npm install && npm run dev
-          </code>
-        </div>
-      </section>
-
       {/* What it does */}
       <section className="max-w-4xl mx-auto px-6 py-20">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
