@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useWalletStore } from "@/store/wallet-store";
 import { ethers } from "ethers";
-import { Plus, Send, X, RefreshCw } from "lucide-react";
+import { Plus, Send, RefreshCw, X } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
 import { getTokenPrices, clearPriceCache } from "@/lib/price-oracle";
-import { batchGetTokenImages, getTokenImage } from "@/lib/token-icons";
+import { batchGetTokenImages, getTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
 import { motion } from "framer-motion";
 
 interface Token {
@@ -49,10 +49,12 @@ function getNativeTokenInfo(chainId: number): { symbol: string; name: string } {
 
 export function TokenList({ 
   onSendToken, 
-  onRefresh 
+  onRefresh,
+  onTokensLoaded
 }: { 
   onSendToken: (token: Token) => void;
   onRefresh?: () => void;
+  onTokensLoaded?: (tokens: Token[], images: { [symbol: string]: string }, prices: { [symbol: string]: number }) => void;
 }) {
   const { address, rpcUrl, chainId } = useWalletStore();
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -72,6 +74,11 @@ export function TokenList({
     return num.toFixed(2);
   }
   const loadingRef = useRef(false);
+  
+  // Preload common token images on first mount (runs once)
+  useEffect(() => {
+    preloadCommonTokenImages();
+  }, []);
 
   useEffect(() => {
     // Check cache first (no expiration)
@@ -82,8 +89,14 @@ export function TokenList({
       console.log("📦 Using cached token data");
       setTokens(cached);
       // Load prices and images for cached tokens
-      loadPricesForTokens(cached);
-      loadImagesForTokens(cached);
+      loadPricesForTokens(cached).then(prices => {
+        loadImagesForTokens(cached).then(images => {
+          // Report cached data to parent
+          if (onTokensLoaded) {
+            onTokensLoaded(cached, images, prices);
+          }
+        });
+      });
       return;
     }
     
@@ -100,8 +113,10 @@ export function TokenList({
       const prices = await getTokenPrices(symbols);
       console.log("✅ Prices loaded:", prices);
       setTokenPrices(prices);
+      return prices;
     } catch (err) {
       console.error("Error loading prices:", err);
+      return {};
     }
   }
 
@@ -128,8 +143,10 @@ export function TokenList({
       console.log(`📊 [Token List] Success rate: ${Math.round((Object.keys(imagesObj).length / tokensToFetch.length) * 100)}%`);
       setTokenImages(imagesObj);
       console.log(`💾 [Token List] Token images state updated`);
+      return imagesObj;
     } catch (err) {
       console.error("❌ [Token List] Error loading token images:", err);
+      return {};
     }
   }
 
@@ -260,10 +277,15 @@ export function TokenList({
       tokenCache.set(cacheKey, tokenData);
       
       // Load prices and images for all tokens
-      await Promise.all([
+      const [prices, images] = await Promise.all([
         loadPricesForTokens(tokenData),
         loadImagesForTokens(tokenData)
       ]);
+      
+      // Report loaded data to parent
+      if (onTokensLoaded) {
+        onTokensLoaded(tokenData, images, prices);
+      }
       
       setError(null);
     } catch (err: any) {
@@ -345,10 +367,22 @@ export function TokenList({
       
       // Fetch image for the new token
       getTokenImage(symbol, newTokenAddress, chainId).then(imageUrl => {
+        const updatedImages = { ...tokenImages };
         if (imageUrl) {
-          setTokenImages(prev => ({ ...prev, [symbol.toUpperCase()]: imageUrl }));
+          updatedImages[symbol.toUpperCase()] = imageUrl;
+          setTokenImages(updatedImages);
         }
-      }).catch(err => console.warn("Could not load image for new token:", err));
+        // Report updated data to parent
+        if (onTokensLoaded) {
+          onTokensLoaded(updatedTokens, updatedImages, tokenPrices);
+        }
+      }).catch(err => {
+        console.warn("Could not load image for new token:", err);
+        // Report updated data to parent even without image
+        if (onTokensLoaded) {
+          onTokensLoaded(updatedTokens, tokenImages, tokenPrices);
+        }
+      });
       
       // Clear form
       setNewTokenAddress("");
@@ -372,6 +406,11 @@ export function TokenList({
     // Update cache
     const cacheKey = `${chainId}_${address}`;
     tokenCache.set(cacheKey, updatedTokens);
+    
+    // Report updated data to parent
+    if (onTokensLoaded) {
+      onTokensLoaded(updatedTokens, tokenImages, tokenPrices);
+    }
     
     console.log(`🗑️ Token removed from list (no auto-refresh)`);
   }
@@ -479,7 +518,8 @@ export function TokenList({
                   delay: index * 0.05,
                   ease: "easeOut"
                 }}
-                className="flex items-center justify-between p-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 hover:border-slate-200 dark:hover:border-slate-600 group cursor-pointer hover:scale-[1.01]"
+                onClick={() => onSendToken(token)}
+                className="flex items-center justify-between p-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   {/* Token Icon */}
@@ -533,32 +573,13 @@ export function TokenList({
                       )}
                     </p>
                   </div>
-                </div>
-                
-                {/* Actions */}
-                <div className="flex gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSendToken(token);
-                    }}
-                    className="p-2.5 text-slate-600 hover:text-white hover:bg-brand-orange rounded-lg transition-all duration-150 shadow-sm hover:shadow-md active:scale-95"
-                    title={`Send ${token.symbol}`}
-                  >
-                    <Send className="w-4 h-4" strokeWidth={2.5} />
-                  </button>
-                  {isCustomToken && !isPopularToken && !isNative && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveToken(token.address);
-                      }}
-                      className="p-2.5 text-slate-400 hover:text-white hover:bg-red-500 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md active:scale-95"
-                      title="Remove custom token"
-                    >
-                      <X className="w-4 h-4" strokeWidth={2.5} />
-                    </button>
-                  )}
+                  
+                  {/* Send indicator on hover */}
+                  <div className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg">
+                      <Send className="w-4 h-4" strokeWidth={2.5} />
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             );

@@ -43,7 +43,7 @@ const pendingRequests = new Map<string, Promise<{ [symbol: string]: number }>>()
 const STABLECOINS = new Set(['USDC', 'USDT', 'DAI', 'USDB', 'USDbC']);
 
 // Major tokens (less volatile, cache medium)
-const MAJOR_TOKENS = new Set(['ETH', 'WETH', 'BTC', 'WBTC', 'MATIC', 'WMATIC', 'BNB']);
+const MAJOR_TOKENS = new Set(['ETH', 'WETH', 'BTC', 'WBTC', 'cbBTC', 'MATIC', 'WMATIC', 'BNB']);
 
 // Map token symbols to CoinGecko IDs
 const SYMBOL_TO_COINGECKO_ID: { [symbol: string]: string } = {
@@ -63,7 +63,9 @@ const SYMBOL_TO_COINGECKO_ID: { [symbol: string]: string } = {
   // Wrapped tokens
   WETH: "weth",
   WBTC: "wrapped-bitcoin",
+  cbBTC: "coinbase-wrapped-btc",
   WMATIC: "wmatic",
+  cbETH: "coinbase-wrapped-staked-eth",
   
   // DeFi tokens
   UNI: "uniswap",

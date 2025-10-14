@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useWalletStore } from "@/store/wallet-store";
 import { TokenList } from "./token-list";
 import { SendToken } from "./send-token";
+import { TokenSelector } from "./token-selector";
 import { Toast } from "./toast";
 import { ethers } from "ethers";
 import { Copy, LogOut, CheckCircle, ChevronDown, Plus, Network, Send, Download, Repeat2, QrCode, ExternalLink, X } from "lucide-react";
@@ -92,6 +93,10 @@ export function WalletDashboard() {
   const customFormRef = useRef<HTMLDivElement>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [availableTokens, setAvailableTokens] = useState<Token[]>([]);
+  const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
+  const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
 
   useEffect(() => {
     console.log("\n═══════════════════════════════════════════════════════");
@@ -419,18 +424,7 @@ export function WalletDashboard() {
           {/* Quick Actions */}
           <div className="flex gap-2">
             <button
-              onClick={() => {
-                // Open send modal with native token
-                const nativeSymbol = getNativeTokenSymbol(chainId);
-                const nativeToken = {
-                  address: "native",
-                  symbol: nativeSymbol,
-                  name: nativeSymbol === "MATIC" ? "Polygon" : "Ethereum",
-                  decimals: 18,
-                  balance: balance
-                };
-                setSelectedToken(nativeToken);
-              }}
+              onClick={() => setShowTokenSelector(true)}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white transition-all duration-150 font-semibold text-sm shadow-md hover:shadow-glow-orange active:scale-95"
             >
               <Send className="w-4 h-4" strokeWidth={2.5} />
@@ -466,7 +460,7 @@ export function WalletDashboard() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowReceiveModal(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-card-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Receive <span className="text-brand-orange">{getNativeTokenSymbol(chainId)}</span></h2>
+              <h2 className="text-xl font-bold text-slate-900">Receive <span className="text-brand-orange">Tokens</span></h2>
               <button
                 onClick={() => setShowReceiveModal(false)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -477,7 +471,7 @@ export function WalletDashboard() {
 
             <div className="mb-6">
               <p className="text-sm text-slate-600 mb-4">
-                Send only {chainName} assets to this address. Sending assets from other networks will result in permanent loss.
+                Send only <span className="font-semibold">{chainName}</span> assets to this address. Sending assets from other networks will result in permanent loss.
               </p>
               
               {/* QR Code */}
@@ -524,8 +518,27 @@ export function WalletDashboard() {
 
       {/* Token List */}
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700 shadow-card hover:shadow-card-hover transition-shadow overflow-hidden">
-        <TokenList onSendToken={setSelectedToken} onRefresh={loadBalance} />
+        <TokenList 
+          onSendToken={setSelectedToken} 
+          onRefresh={loadBalance}
+          onTokensLoaded={(tokens, images, prices) => {
+            setAvailableTokens(tokens);
+            setTokenImages(images);
+            setTokenPrices(prices);
+          }}
+        />
       </div>
+
+      {/* Token Selector Modal */}
+      {showTokenSelector && (
+        <TokenSelector
+          tokens={availableTokens}
+          onSelectToken={setSelectedToken}
+          onClose={() => setShowTokenSelector(false)}
+          tokenImages={tokenImages}
+          tokenPrices={tokenPrices}
+        />
+      )}
 
       {/* Send Token Modal */}
       {selectedToken && (
