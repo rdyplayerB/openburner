@@ -103,11 +103,13 @@ export function TokenList({
       // Load prices and images for cached tokens
       loadPricesForTokens(cached, false).then(prices => {
         loadImagesForTokens(cached).then(images => {
-          // Set timestamp from actual cached data
-          const timestamp = getOldestPriceTimestamp(cached.map(t => t.symbol));
-          if (timestamp) {
-            console.log("🕐 Cached load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
-            setLastPriceUpdate(timestamp);
+          // Set timestamp from actual cached data (only if not already set)
+          if (!lastPriceUpdate) {
+            const timestamp = getOldestPriceTimestamp(cached.map(t => t.symbol));
+            if (timestamp) {
+              console.log("🕐 Cached load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
+              setLastPriceUpdate(timestamp);
+            }
           }
           
           // Report cached data to parent
@@ -335,11 +337,13 @@ export function TokenList({
         loadImagesForTokens(tokenData)
       ]);
       
-      // Set timestamp from actual cached data on initial load
-      const timestamp = getOldestPriceTimestamp(tokenData.map(t => t.symbol));
-      if (timestamp) {
-        console.log("🕐 Initial load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
-        setLastPriceUpdate(timestamp);
+      // Set timestamp from actual cached data on initial load (only if not already set)
+      if (!lastPriceUpdate) {
+        const timestamp = getOldestPriceTimestamp(tokenData.map(t => t.symbol));
+        if (timestamp) {
+          console.log("🕐 Initial load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
+          setLastPriceUpdate(timestamp);
+        }
       }
       
       // Report loaded data to parent
