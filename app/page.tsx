@@ -9,7 +9,7 @@ export default function Home() {
   const { isConnected } = useWalletStore();
 
   return (
-    <main className={`min-h-screen p-4 transition-colors duration-700 ${isConnected ? 'bg-connected bg-bg-base dark:bg-slate-900' : 'bg-bg-base dark:bg-slate-900'}`}>
+    <main className="min-h-screen p-4 transition-colors duration-700 bg-connected bg-bg-base dark:bg-slate-900">
       {/* Theme Toggle - Fixed Position */}
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
