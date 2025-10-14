@@ -220,7 +220,7 @@ export function SendToken({
   if (isConfirmed && txHash) {
     return (
       <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl p-8 max-w-md w-full">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-8 max-w-md w-full">
           {/* Success Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
@@ -230,10 +230,10 @@ export function SendToken({
 
           {/* Success Message */}
           <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">
-            Transaction Confirmed!
+            Transaction <span className="text-brand-orange">Confirmed!</span>
           </h2>
           <p className="text-slate-600 text-center mb-6">
-            Your {amount} {token.symbol} has been sent successfully
+            Your <span className="font-semibold text-slate-900">{amount} {token.symbol}</span> has been sent successfully
           </p>
 
           {/* Transaction Details */}
@@ -266,15 +266,15 @@ export function SendToken({
               href={getExplorerTxUrl(chainId, txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors font-medium"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl transition-all duration-150 font-semibold shadow-md hover:shadow-glow-orange active:scale-95"
             >
               <span>View on Block Explorer</span>
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-4 h-4" strokeWidth={2.5} />
             </a>
             
             <button
               onClick={handleReturnToWallet}
-              className="w-full px-6 py-3 border border-slate-300 text-slate-900 rounded-xl hover:bg-slate-50 transition-colors font-medium"
+              className="w-full px-6 py-3 border-2 border-slate-200 text-slate-900 rounded-xl hover:bg-slate-50 hover:border-brand-orange/30 transition-all duration-150 font-semibold active:scale-95"
             >
               Return to Wallet
             </button>
@@ -286,10 +286,10 @@ export function SendToken({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl p-6 max-w-md w-full">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-6 max-w-md w-full">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Send {token.symbol}
+          <h2 className="text-lg font-bold text-slate-900">
+            Send <span className="text-brand-orange">{token.symbol}</span>
           </h2>
           <button
             onClick={onClose}
@@ -391,7 +391,7 @@ export function SendToken({
           <button
             onClick={handleSend}
             disabled={!recipient || !amount || isSending}
-            className="w-full bg-slate-900 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-3 px-4 rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-glow-orange active:scale-95"
           >
             {isSending ? (
               <>

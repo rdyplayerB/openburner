@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { getBurnerAddress } from "@/lib/burner";
 import { useWalletStore } from "@/store/wallet-store";
@@ -14,10 +14,18 @@ export function WalletConnect() {
   const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
   const [readerConnected, setReaderConnected] = useState<boolean | null>(null);
   const { setWallet } = useWalletStore();
+  
+  // Use ref to track connecting state for interval callback
+  const isConnectingRef = useRef(false);
 
   useEffect(() => {
     checkBridgeAndReader();
-    const interval = setInterval(checkBridgeAndReader, 3000);
+    // Only check status when NOT connecting to avoid WebSocket conflicts
+    const interval = setInterval(() => {
+      if (!isConnectingRef.current) {
+        checkBridgeAndReader();
+      }
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -90,21 +98,49 @@ export function WalletConnect() {
   }
 
   async function handleConnect() {
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.log("🚀 [WalletConnect] CONNECT BUTTON CLICKED");
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("⏰ [WalletConnect] Timestamp:", new Date().toISOString());
+    
     setIsConnecting(true);
+    isConnectingRef.current = true;
     setError(null);
 
     try {
+      console.log("📞 [WalletConnect] Calling getBurnerAddress()...");
+      const connectStart = Date.now();
       const { address, publicKey, keySlot } = await getBurnerAddress();
+      const connectDuration = Date.now() - connectStart;
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log(`✅ [WalletConnect] getBurnerAddress() returned in ${connectDuration}ms`);
+      console.log("═══════════════════════════════════════════════════════");
+      console.log(`   Address: ${address}`);
+      console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
+      console.log(`   Key Slot: ${keySlot}`);
+      
+      console.log("\n💾 [WalletConnect] Calling setWallet() to update store...");
       setWallet(address, publicKey, keySlot);
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log("🎉 [WalletConnect] CONNECTION SUCCESSFUL!");
+      console.log("═══════════════════════════════════════════════════════\n");
     } catch (err: any) {
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.error("❌ [WalletConnect] CONNECTION FAILED!");
+      console.log("═══════════════════════════════════════════════════════");
+      console.error("Error:", err);
       setError(err.message || "Failed to connect Burner card");
     } finally {
       setIsConnecting(false);
+      isConnectingRef.current = false;
+      console.log("🏁 [WalletConnect] Connection attempt finished\n");
     }
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl max-w-md mx-auto overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700/60 shadow-card-lg max-w-md mx-auto overflow-hidden">
       <div className="text-center px-10 pt-12 pb-10">
         {/* Icon and Header */}
         <div className="mb-10">
@@ -114,13 +150,13 @@ export function WalletConnect() {
               alt="OpenBurner logo" 
               width={64} 
               height={64} 
-              className="w-16 h-16"
+              className="w-16 h-16 drop-shadow-sm"
             />
-            <h1 className="text-[2.75rem] font-bold text-black mb-0 tracking-tight leading-none mt-1">
-              OpenBurner
+            <h1 className="text-[2.75rem] font-bold text-black dark:text-white mb-0 tracking-tight leading-none mt-1">
+              Open<span className="text-[#FF6B35]">Burner</span>
             </h1>
           </div>
-          <p className="text-slate-500 text-[1.0625rem] font-medium">
+          <p className="text-slate-500 dark:text-slate-300 text-[1.0625rem] font-medium">
             Run HaLo Bridge, then place Burner on NFC reader to connect
           </p>
         </div>
@@ -129,7 +165,7 @@ export function WalletConnect() {
         <button
           onClick={handleConnect}
           disabled={isConnecting}
-          className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white font-semibold py-[1.125rem] px-6 rounded-[0.875rem] hover:from-slate-800 hover:to-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl text-[1.0625rem] active:scale-[0.98]"
+          className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-[1.125rem] px-6 rounded-[0.875rem] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-glow-orange text-[1.0625rem] active:scale-[0.98]"
         >
           {isConnecting ? (
             <>
@@ -146,41 +182,41 @@ export function WalletConnect() {
 
         {/* Error State */}
         {error && (
-          <div className="mt-5 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
-            <AlertCircle className="w-[1.125rem] h-[1.125rem] text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-red-700 text-[0.9375rem] text-left font-medium leading-relaxed">{error}</p>
+          <div className="mt-5 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-start gap-3">
+            <AlertCircle className="w-[1.125rem] h-[1.125rem] text-amber-warning flex-shrink-0 mt-0.5" />
+            <p className="text-amber-800 dark:text-amber-200 text-[0.9375rem] text-left font-medium leading-relaxed">{error}</p>
           </div>
         )}
       </div>
 
       {/* Requirements List */}
-      <div className="bg-gradient-to-b from-slate-50/80 to-slate-50 px-10 py-7 border-t border-slate-200/60">
+      <div className="bg-gradient-to-b from-slate-50/80 to-slate-50 dark:from-slate-800/80 dark:to-slate-800 px-10 py-7 border-t border-slate-200/60 dark:border-slate-700/60">
         <ul className="text-[0.9375rem] space-y-3.5">
           <li className="flex items-center gap-3.5">
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               {bridgeConnected === null ? (
-                <Loader2 className="w-[1.125rem] h-[1.125rem] text-slate-400 animate-spin" strokeWidth={2.5} />
+                <Loader2 className="w-[1.125rem] h-[1.125rem] text-slate-400 dark:text-slate-500 animate-spin" strokeWidth={2.5} />
               ) : bridgeConnected ? (
-                <CheckCircle className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />
+                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-500" strokeWidth={2.5} />
               ) : (
-                <XCircle className="w-5 h-5 text-red-500" strokeWidth={2.5} />
+                <XCircle className="w-5 h-5 text-amber-warning dark:text-amber-400" strokeWidth={2.5} />
               )}
             </div>
-            <span className={`font-medium ${bridgeConnected ? "text-slate-700" : "text-slate-500"}`}>
+            <span className={`font-medium ${bridgeConnected ? "text-slate-700 dark:text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>
               HaLo Bridge running
             </span>
           </li>
           <li className="flex items-center gap-3.5">
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               {readerConnected === null ? (
-                <Loader2 className="w-[1.125rem] h-[1.125rem] text-slate-400 animate-spin" strokeWidth={2.5} />
+                <Loader2 className="w-[1.125rem] h-[1.125rem] text-slate-400 dark:text-slate-500 animate-spin" strokeWidth={2.5} />
               ) : readerConnected ? (
-                <CheckCircle className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />
+                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-500" strokeWidth={2.5} />
               ) : (
-                <XCircle className="w-5 h-5 text-red-500" strokeWidth={2.5} />
+                <XCircle className="w-5 h-5 text-amber-warning dark:text-amber-400" strokeWidth={2.5} />
               )}
             </div>
-            <span className={`font-medium ${readerConnected ? "text-slate-700" : "text-slate-500"}`}>
+            <span className={`font-medium ${readerConnected ? "text-slate-700 dark:text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>
               NFC reader & chip detected
             </span>
           </li>

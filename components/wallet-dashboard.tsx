@@ -4,10 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { useWalletStore } from "@/store/wallet-store";
 import { TokenList } from "./token-list";
 import { SendToken } from "./send-token";
+import { Toast } from "./toast";
 import { ethers } from "ethers";
 import { Copy, LogOut, CheckCircle, ChevronDown, Plus, Network, Send, Download, Repeat2, QrCode, ExternalLink, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { getTokenPrice } from "@/lib/price-oracle";
+import Image from "next/image";
 
 interface Token {
   address: string;
@@ -74,7 +76,7 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 };
 
 export function WalletDashboard() {
-  const { address, balance, rpcUrl, chainName, chainId, disconnect, setBalance, setChain } =
+  const { address, balance, rpcUrl, chainName, chainId, disconnect, setBalance, setChain, publicKey, keySlot } =
     useWalletStore();
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
@@ -88,8 +90,22 @@ export function WalletDashboard() {
   const [receiveAddressCopied, setReceiveAddressCopied] = useState(false);
   const [nativeTokenPrice, setNativeTokenPrice] = useState<number>(0);
   const customFormRef = useRef<HTMLDivElement>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.log("📊 [WalletDashboard] COMPONENT MOUNTED/UPDATED");
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("Current wallet state:");
+    console.log(`  Address: ${address}`);
+    console.log(`  Public Key: ${publicKey?.substring(0, 40)}...`);
+    console.log(`  Key Slot: ${keySlot}`);
+    console.log(`  Chain: ${chainName} (${chainId})`);
+    console.log(`  RPC URL: ${rpcUrl}`);
+    console.log(`  Balance: ${balance}`);
+    console.log("═══════════════════════════════════════════════════════\n");
+    
     if (address && rpcUrl) {
       loadBalance();
     }
@@ -152,6 +168,8 @@ export function WalletDashboard() {
   function handleCopyAddress() {
     navigator.clipboard.writeText(address || "");
     setCopied(true);
+    setToastMessage("Address copied!");
+    setShowToast(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -189,6 +207,8 @@ export function WalletDashboard() {
   function handleCopyReceiveAddress() {
     navigator.clipboard.writeText(address || "");
     setReceiveAddressCopied(true);
+    setToastMessage("Address copied!");
+    setShowToast(true);
     setTimeout(() => setReceiveAddressCopied(false), 2000);
   }
 
@@ -199,7 +219,7 @@ export function WalletDashboard() {
         <div className="relative network-dropdown">
           <button
             onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
-            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all"
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-card hover:shadow-card-hover hover:border-brand-orange/30 dark:hover:border-brand-orange/40 transition-all"
           >
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100">
               {(() => {
@@ -223,12 +243,12 @@ export function WalletDashboard() {
                 );
               })()}
             </div>
-            <span className="font-semibold text-sm text-slate-900">{chainName}</span>
+            <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{chainName}</span>
             <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${showNetworkDropdown ? "rotate-180" : ""}`} />
           </button>
           
           {showNetworkDropdown && (
-            <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-2xl z-50 p-2 max-h-96 overflow-y-auto">
+            <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-card-lg z-50 p-2 max-h-96 overflow-y-auto">
                   <div className="mb-1 px-3 py-2">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Networks</p>
                   </div>
@@ -239,7 +259,7 @@ export function WalletDashboard() {
                         onClick={() => handleChainSelect(chain)}
                         className={`w-full text-left px-3 py-2.5 rounded-lg transition-all text-xs flex items-center gap-3 ${
                           chainId === chain.chainId
-                            ? "bg-slate-900 text-white shadow-sm"
+                            ? "bg-brand-orange text-white shadow-sm"
                             : "hover:bg-slate-50 text-slate-900"
                         }`}
                       >
@@ -312,7 +332,7 @@ export function WalletDashboard() {
                         <button
                           onClick={handleCustomChain}
                           disabled={!customRpc || !customChainId || !customName}
-                          className="w-full bg-slate-900 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full bg-brand-orange text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-brand-orange-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                         >
                           Add Network
                         </button>
@@ -325,31 +345,31 @@ export function WalletDashboard() {
 
         <button
           onClick={disconnect}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 hover:shadow-md transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 shadow-card hover:shadow-card-hover transition-all"
           title="Disconnect"
         >
-          <LogOut className="w-4 h-4" />
-          <span className="text-sm font-medium">Disconnect</span>
+          <LogOut className="w-4 h-4" strokeWidth={2.5} />
+          <span className="text-sm font-semibold">Disconnect</span>
         </button>
       </div>
 
       {/* Main Balance Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-gradient-to-b from-white to-bg-base dark:from-slate-800 dark:to-slate-800 rounded-2xl border border-black/[0.04] dark:border-slate-700 shadow-card-lg hover:shadow-card-hover transition-shadow p-6">
           {/* Address Bar */}
-          <div className="flex items-center justify-between mb-6 pb-5 border-b border-slate-200">
+          <div className="flex items-center justify-between mb-6 pb-5 border-b border-slate-100 dark:border-slate-700">
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 flex-shrink-0">
-                <div className="w-6 h-6 rounded-full bg-slate-800" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#FF6B35] flex-shrink-0 shadow-sm">
+                <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-800" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-slate-500 font-medium mb-0.5">Wallet Address</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">Wallet Address</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-mono font-semibold text-slate-900 truncate">
+                  <p className="text-sm font-mono font-semibold text-slate-900 dark:text-slate-100 token-opacity truncate">
                     {address ? formatAddress(address) : ""}
                   </p>
                   <button
                     onClick={handleCopyAddress}
-                    className="text-slate-400 hover:text-slate-900 transition-colors flex-shrink-0"
+                    className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 transition-colors flex-shrink-0"
                     title={copied ? "Copied!" : "Copy address"}
                   >
                     {copied ? (
@@ -374,24 +394,24 @@ export function WalletDashboard() {
 
           {/* Balance Display */}
           <div className="mb-6">
-            <p className="text-sm text-slate-500 font-medium mb-2">Total Balance</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold mb-2 uppercase tracking-wide text-xs opacity-60">Total Balance</p>
             <div className="flex items-baseline gap-3 mb-1">
-              <p className="text-5xl font-bold text-slate-900 tracking-tight">
+              <p className="text-5xl font-bold text-slate-900 dark:text-slate-100 balance-number">
                 {isLoadingBalance ? (
-                  <span className="text-slate-300">...</span>
+                  <span className="text-slate-300 dark:text-slate-600">...</span>
                 ) : (
                   formatBalance(balance)
                 )}
               </p>
-              <p className="text-2xl font-semibold text-slate-600">{getNativeTokenSymbol(chainId)}</p>
+              <p className="text-2xl font-semibold text-slate-600 dark:text-slate-400 token-opacity">{getNativeTokenSymbol(chainId)}</p>
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {isLoadingBalance ? (
                 "≈ $... USD"
               ) : nativeTokenPrice > 0 ? (
                 `≈ $${(parseFloat(balance) * nativeTokenPrice).toFixed(2)} USD`
               ) : (
-                <span className="text-slate-400">Price unavailable</span>
+                <span className="text-slate-400 dark:text-slate-500">Price unavailable</span>
               )}
             </p>
           </div>
@@ -411,31 +431,31 @@ export function WalletDashboard() {
                 };
                 setSelectedToken(nativeToken);
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition-all font-medium text-sm"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white transition-all duration-150 font-semibold text-sm shadow-md hover:shadow-glow-orange active:scale-95"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4" strokeWidth={2.5} />
               Send
             </button>
 
             <div className="flex-1 relative group">
               <button
                 disabled
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium text-sm"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed font-semibold text-sm"
               >
-                <Repeat2 className="w-4 h-4" />
+                <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
                 Swap
               </button>
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                Coming soon
+                Planned
                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <button
               onClick={() => setShowReceiveModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition-all font-medium text-sm"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white transition-all duration-150 font-semibold text-sm shadow-md hover:shadow-lg active:scale-95"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4" strokeWidth={2.5} />
               Receive
             </button>
           </div>
@@ -443,10 +463,10 @@ export function WalletDashboard() {
 
       {/* Receive Modal */}
       {showReceiveModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowReceiveModal(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowReceiveModal(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-card-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Receive {getNativeTokenSymbol(chainId)}</h2>
+              <h2 className="text-xl font-bold text-slate-900">Receive <span className="text-brand-orange">{getNativeTokenSymbol(chainId)}</span></h2>
               <button
                 onClick={() => setShowReceiveModal(false)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -494,7 +514,7 @@ export function WalletDashboard() {
 
             <button
               onClick={() => setShowReceiveModal(false)}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
+              className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-glow-orange"
             >
               Done
             </button>
@@ -503,7 +523,7 @@ export function WalletDashboard() {
       )}
 
       {/* Token List */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700 shadow-card hover:shadow-card-hover transition-shadow overflow-hidden">
         <TokenList onSendToken={setSelectedToken} onRefresh={loadBalance} />
       </div>
 
@@ -518,6 +538,34 @@ export function WalletDashboard() {
           }}
         />
       )}
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+
+      {/* Footer Branding */}
+      <div className="mt-8 pt-6 border-t border-slate-200/60 dark:border-slate-700/60">
+        <a 
+          href="https://openburner.xyz" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 opacity-50 hover:opacity-100 transition-opacity"
+        >
+          <Image 
+            src="/images/openburnerlogo.svg" 
+            alt="OpenBurner" 
+            width={20} 
+            height={20} 
+            className="w-5 h-5"
+          />
+          <span className="text-sm font-semibold text-slate-900 dark:text-slate-200">
+            Open<span className="text-[#FF6B35]">Burner</span>
+          </span>
+        </a>
+      </div>
     </div>
   );
 }

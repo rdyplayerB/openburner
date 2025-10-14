@@ -10,6 +10,8 @@
  * 5. Differential cache duration based on token type
  */
 
+import { coinGeckoLimiter } from "./coingecko-rate-limiter";
+
 interface TokenPrice {
   usd: number;
   lastUpdated: number;
@@ -176,7 +178,7 @@ async function fetchPricesFromCoinGecko(coinIds: string[]): Promise<CoinGeckoRes
   }
   
   try {
-    const response = await fetch(url, { headers });
+    const response = await coinGeckoLimiter.fetch(url, { headers });
     
     if (!response.ok) {
       if (response.status === 429) {

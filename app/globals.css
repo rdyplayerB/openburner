@@ -2,25 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
-
 :root {
-  --foreground: #000000;
-  --background: #ffffff;
+  --foreground: #1E1E1E;
+  --background: #FAFAFA;
+  --brand-orange: #E4572E;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-.font-serif {
-  font-family: 'Playfair Display', Georgia, serif;
 }
 
 @layer utilities {
@@ -35,6 +27,130 @@ body {
     background: linear-gradient(white, white) padding-box,
                 linear-gradient(135deg, #667eea 0%, #764ba2 100%) border-box;
     border: 2px solid transparent;
+  }
+
+  .orange-glow-line {
+    position: relative;
+  }
+  
+  .orange-glow-line::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #E4572E, #FF8C61, #E4572E);
+    border-radius: 2px;
+    box-shadow: 0 2px 12px rgba(228, 87, 46, 0.4);
+  }
+
+  .pulse-orange {
+    animation: pulseOrange 3s ease-in-out infinite;
+  }
+
+  .balance-number {
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    letter-spacing: -0.01em;
+  }
+
+  .token-opacity {
+    opacity: 0.8;
+  }
+
+  .pulse-nfc {
+    animation: pulseNFC 2s ease-in-out infinite;
+  }
+
+  .toast-slide-in {
+    animation: toastSlideIn 0.3s ease-out;
+  }
+
+  .toast-slide-out {
+    animation: toastSlideOut 0.3s ease-in;
+  }
+}
+
+@keyframes pulseOrange {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulseNFC {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Connected state background animation */
+.bg-connected {
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-connected::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at center,
+    rgba(228, 87, 46, 0.08) 0%,
+    rgba(228, 87, 46, 0.04) 25%,
+    transparent 50%
+  );
+  animation: rotateGlow 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotateGlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(228, 87, 46, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(228, 87, 46, 0.5), 0 0 40px rgba(228, 87, 46, 0.3);
   }
 }
 

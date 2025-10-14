@@ -27,21 +27,51 @@ export const useWalletStore = create<WalletState>()(
       chainName: "Ethereum",
       isConnected: false,
       balance: "0",
-      setWallet: (address, publicKey, keySlot) =>
-        set({ address, publicKey, keySlot: keySlot || 1, isConnected: true }),
+      setWallet: (address, publicKey, keySlot) => {
+        console.log("🔐 [Wallet Store] setWallet called:");
+        console.log(`  Address: ${address}`);
+        console.log(`  Public Key: ${publicKey}`);
+        console.log(`  Key Slot: ${keySlot || 1}`);
+        set({ address, publicKey, keySlot: keySlot || 1, isConnected: true });
+        console.log("✅ [Wallet Store] Wallet state updated and persisted to localStorage");
+      },
       setChain: (chainId, rpcUrl, chainName) => {
-        console.log(`Switching to chain: ${chainName} (ID: ${chainId})`);
+        console.log(`🌐 [Wallet Store] Switching to chain: ${chainName} (ID: ${chainId})`);
+        console.log(`  RPC URL: ${rpcUrl}`);
         set({ chainId, rpcUrl, chainName, balance: "0" });
       },
-      setBalance: (balance) => set({ balance }),
-      disconnect: () =>
+      setBalance: (balance) => {
+        console.log(`💰 [Wallet Store] Setting balance: ${balance}`);
+        set({ balance });
+      },
+      disconnect: () => {
+        console.log("🔌 [Wallet Store] DISCONNECT called");
+        console.log("  Current state before disconnect:");
+        const currentState = useWalletStore.getState();
+        console.log(`    Address: ${currentState.address}`);
+        console.log(`    Public Key: ${currentState.publicKey}`);
+        console.log(`    Key Slot: ${currentState.keySlot}`);
+        console.log(`    Chain: ${currentState.chainName} (${currentState.chainId})`);
+        console.log(`    Balance: ${currentState.balance}`);
+        
         set({
           address: null,
           publicKey: null,
           keySlot: null,
           isConnected: false,
           balance: "0",
-        }),
+        });
+        
+        console.log("✅ [Wallet Store] Wallet disconnected and cleared from state");
+        console.log("📦 [Wallet Store] localStorage should now contain null values for wallet data");
+        
+        // Verify localStorage was updated
+        setTimeout(() => {
+          const stored = localStorage.getItem("openburner-storage");
+          console.log("🔍 [Wallet Store] Verifying localStorage after disconnect:");
+          console.log(stored);
+        }, 100);
+      },
     }),
     {
       name: "openburner-storage",

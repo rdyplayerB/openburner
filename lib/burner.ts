@@ -13,19 +13,30 @@ export interface BurnerKeyInfo {
  */
 export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
   try {
-    console.log("Connecting to HaLo Bridge...");
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("🎯 [Burner] getBurnerAddress() STARTED");
+    console.log("═══════════════════════════════════════════════════════");
+    console.log("⏰ [Burner] Timestamp:", new Date().toISOString());
+    console.log("🔌 [Burner] Connecting to HaLo Bridge...");
 
     // Connect to the bridge and wait for card detection
+    const connectStart = Date.now();
     await connectToBridge();
+    const connectDuration = Date.now() - connectStart;
+    console.log(`✅ [Burner] Bridge connected in ${connectDuration}ms`);
 
     // Execute get_pkeys command
+    console.log("📡 [Burner] Executing get_pkeys command...");
+    const getPkeysStart = Date.now();
     const result = await execBridgeCommand({
       name: "get_pkeys",
     });
+    const getPkeysDuration = Date.now() - getPkeysStart;
+    console.log(`✅ [Burner] get_pkeys completed in ${getPkeysDuration}ms`);
 
-    console.log("Full result from card:", result);
-    console.log("Available addresses:", result.etherAddresses);
-    console.log("Available public keys:", result.publicKeys);
+    console.log("📋 [Burner] Full result from card:", result);
+    console.log("📬 [Burner] Available addresses:", result.etherAddresses);
+    console.log("🔑 [Burner] Available public keys:", result.publicKeys);
 
     // Manually verify address computation for key slot 1
     const pubKey1 = result.publicKeys['1'];
@@ -34,80 +45,32 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
     console.log("Bridge-provided address for key 1:", result.etherAddresses['1']);
     console.log("Do they match?", computedAddr1.toLowerCase() === result.etherAddresses['1'].toLowerCase());
 
-    // Try reading NDEF record (dynamic URL) - this is what mobile apps typically use
+    // SKIP NDEF read - it causes 30s timeout and disconnects the bridge
+    // We'll scan all key slots instead to find the primary wallet
+    console.log("ℹ️ [Burner] Skipping NDEF read to avoid timeouts");
+    console.log("ℹ️ [Burner] Will scan key slots (1-9) to find primary wallet instead");
     let expectedAddress: string | null = null;
-    try {
-      console.log("Trying to read NDEF record...");
-      const ndefResult = await execBridgeCommand({
-        name: "read_ndef",
-      });
-      console.log("NDEF result:", ndefResult);
-      console.log("NDEF result keys:", Object.keys(ndefResult));
-      console.log("NDEF result stringified:", JSON.stringify(ndefResult, null, 2));
-      
-      // Check if there's a pkN (additional public key) in the NDEF
-      if (ndefResult.qs && ndefResult.qs.pkN) {
-        console.log("Found pkN in NDEF:", ndefResult.qs.pkN);
-        
-        // pkN has a special format: 080004 + 64 bytes of public key
-        // The 08 00 04 is a header, where 04 indicates uncompressed public key
-        try {
-          let pkN = ndefResult.qs.pkN;
-          
-          // Strip the 080004 header (first 6 hex chars / 3 bytes)
-          if (pkN.startsWith('080004') || pkN.startsWith('080002')) {
-            pkN = pkN.slice(6); // Remove header
-            console.log("Stripped pkN header, remaining:", pkN);
-            
-            // Now prepend 04 for standard uncompressed public key format
-            pkN = '04' + pkN;
-            console.log("Formatted pkN as uncompressed key:", pkN);
-            
-            const addrFromPkN = ethers.computeAddress("0x" + pkN);
-            console.log("✅ Primary address from pkN:", addrFromPkN);
-            
-            // Use this pkN address to find the correct key slot
-            // Store it for use below
-            expectedAddress = addrFromPkN;
-          }
-        } catch (e) {
-          console.log("Could not derive address from pkN:", e);
-        }
-      }
-      
-      // Also check pk1 and pk2 from NDEF (just to be thorough)
-      if (ndefResult.qs) {
-        ['pk1', 'pk2'].forEach((keyName, idx) => {
-          if (ndefResult.qs[keyName]) {
-            const addr = ethers.computeAddress("0x" + ndefResult.qs[keyName]);
-            console.log(`Address from NDEF ${keyName}:`, addr);
-          }
-        });
-      }
-      
-      // Parse the NDEF URL for logging
-      const ndefUrl = ndefResult.ndef || ndefResult.url || ndefResult.uri || ndefResult;
-      if (ndefUrl && typeof ndefUrl === 'string') {
-        console.log("NDEF URL:", ndefUrl);
-      }
-    } catch (e) {
-      console.log("Could not read NDEF:", e);
-    }
 
     // Check all key slots (1-9) to find available addresses
-    console.log("\n🔍 Checking all key slots for available addresses...");
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.log("🔍 [Burner] SCANNING ALL KEY SLOTS (1-9)");
+    console.log("═══════════════════════════════════════════════════════");
     const availableSlots: Array<{ keyNo: number; address: string; publicKey: string }> = [];
     
     for (let keyNo = 1; keyNo <= 9; keyNo++) {
       try {
+        console.log(`📍 [Burner] Checking key slot ${keyNo}...`);
+        const keyInfoStart = Date.now();
         const keyInfo = await execBridgeCommand({
           name: "get_key_info",
           keyNo,
         });
+        const keyInfoDuration = Date.now() - keyInfoStart;
         
         if (keyInfo.publicKey) {
           const addr = ethers.computeAddress("0x" + keyInfo.publicKey);
-          console.log(`Key slot ${keyNo}: ${addr}`);
+          console.log(`✅ [Burner] Key slot ${keyNo} (${keyInfoDuration}ms): ${addr}`);
+          console.log(`   Public Key: ${keyInfo.publicKey.substring(0, 20)}...`);
           availableSlots.push({
             keyNo,
             address: addr,
@@ -116,26 +79,48 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
           
           // If we have an expected address from pkN, check if it matches
           if (expectedAddress && addr.toLowerCase() === expectedAddress.toLowerCase()) {
-            console.log(`✅ pkN address matches key slot ${keyNo}!`);
+            console.log(`🎯 [Burner] ✅ pkN address MATCHES key slot ${keyNo}!`);
           }
+        } else {
+          console.log(`⚠️ [Burner] Key slot ${keyNo}: No public key found`);
         }
       } catch (e) {
-        console.log(`Key slot ${keyNo}: Not available or not initialized`);
+        console.log(`❌ [Burner] Key slot ${keyNo}: Not available or not initialized`);
+        console.log(`   Error:`, e);
       }
     }
 
-    console.log(`\n📊 Found ${availableSlots.length} available key slots`);
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.log(`📊 [Burner] SCAN COMPLETE - Found ${availableSlots.length} available key slots`);
+    console.log("═══════════════════════════════════════════════════════");
+    availableSlots.forEach((slot, idx) => {
+      console.log(`${idx + 1}. Slot ${slot.keyNo}: ${slot.address}`);
+    });
 
     // Strategy: Use the highest numbered key slot (typically the user's main address)
     // Key slots are often used as: 1-2 for internal/system, higher numbers for user wallets
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.log("🎯 [Burner] SELECTING KEY SLOT");
+    console.log("═══════════════════════════════════════════════════════");
+    
     if (availableSlots.length > 0) {
       const bestSlot = availableSlots[availableSlots.length - 1]; // Highest numbered slot
-      console.log(`✅ Using key slot ${bestSlot.keyNo} (highest available) - Address: ${bestSlot.address}`);
+      console.log(`✅ [Burner] SELECTED: Key slot ${bestSlot.keyNo} (highest available)`);
+      console.log(`   Address: ${bestSlot.address}`);
+      console.log(`   Public Key: ${bestSlot.publicKey.substring(0, 40)}...`);
+      console.log(`   Strategy: Using highest numbered slot as primary wallet`);
       
       if (expectedAddress && bestSlot.address.toLowerCase() !== expectedAddress.toLowerCase()) {
-        console.log(`ℹ️ Note: pkN address (${expectedAddress}) differs from selected key slot address`);
-        console.log(`ℹ️ pkN might be an attestation key rather than the wallet key`);
+        console.log(`⚠️ [Burner] Note: pkN address (${expectedAddress}) differs from selected key slot address`);
+        console.log(`ℹ️ [Burner] pkN might be an attestation key rather than the wallet key`);
       }
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log("🎉 [Burner] getBurnerAddress() COMPLETED SUCCESSFULLY");
+      console.log("═══════════════════════════════════════════════════════");
+      
+      // Clean up bridge connection
+      disconnectBridge();
       
       return {
         address: bestSlot.address,
@@ -144,18 +129,30 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
       };
     }
 
-    // Last resort fallback to key slot 1
-    const address = result.etherAddresses['1'];
-    const publicKeyHex = result.publicKeys['1'];
-    console.log("\n⚠️ Using key slot 1 as last resort fallback - Address:", address);
-
-    return {
-      address,
-      publicKey: publicKeyHex,
-      keySlot: 1,
-    };
+    // NO FALLBACK - fail clearly if we couldn't find any valid key slots
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.error("❌❌❌ [Burner] FATAL ERROR: No valid key slots found!");
+    console.log("═══════════════════════════════════════════════════════");
+    console.error("This likely means:");
+    console.error("  1. The bridge disconnected during key slot scanning");
+    console.error("  2. The card was removed from the reader");
+    console.error("  3. The card has no initialized key slots");
+    console.error("\nPlease try again:");
+    console.error("  - Ensure card stays on reader during connection");
+    console.error("  - Check that HaLo Bridge is still running");
+    console.error("  - Try refreshing the page");
+    
+    // Clean up bridge connection before throwing
+    disconnectBridge();
+    throw new Error("No valid wallet keys found on card. Please ensure the card remains on the reader and try again.");
   } catch (error: any) {
-    console.error("Error reading Burner card:", error);
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.error("❌❌❌ [Burner] getBurnerAddress() FAILED");
+    console.log("═══════════════════════════════════════════════════════");
+    console.error("Error details:", error);
+    
+    // Clean up bridge connection before throwing
+    disconnectBridge();
     throw new Error(error.message || "Failed to read Burner card");
   }
 }

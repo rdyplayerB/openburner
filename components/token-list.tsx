@@ -7,6 +7,8 @@ import { Plus, Send, X, RefreshCw } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
 import { getTokenPrices, clearPriceCache } from "@/lib/price-oracle";
+import { batchGetTokenImages, getTokenImage } from "@/lib/token-icons";
+import { motion } from "framer-motion";
 
 interface Token {
   address: string;
@@ -59,6 +61,7 @@ export function TokenList({
   const [showAddToken, setShowAddToken] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
+  const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
 
   function formatTokenBalance(balance: string): string {
     const num = parseFloat(balance);
@@ -78,8 +81,9 @@ export function TokenList({
     if (cached) {
       console.log("📦 Using cached token data");
       setTokens(cached);
-      // Load prices for cached tokens
+      // Load prices and images for cached tokens
       loadPricesForTokens(cached);
+      loadImagesForTokens(cached);
       return;
     }
     
@@ -98,6 +102,34 @@ export function TokenList({
       setTokenPrices(prices);
     } catch (err) {
       console.error("Error loading prices:", err);
+    }
+  }
+
+  async function loadImagesForTokens(tokenList: Token[]) {
+    try {
+      const tokensToFetch = tokenList.map(t => ({ 
+        symbol: t.symbol, 
+        address: t.address,
+        chainId: chainId 
+      }));
+      console.log(`🖼️ [Token List] Starting to fetch images for ${tokensToFetch.length} tokens on chain ${chainId}`);
+      console.log(`🖼️ [Token List] Tokens to fetch:`, tokensToFetch.map(t => `${t.symbol} (${t.address})`).join(', '));
+      
+      const images = await batchGetTokenImages(tokensToFetch);
+      
+      // Convert Map to object for state
+      const imagesObj: { [symbol: string]: string } = {};
+      images.forEach((url, symbol) => {
+        imagesObj[symbol] = url;
+        console.log(`📝 [Token List] Storing image for ${symbol}: ${url}`);
+      });
+      
+      console.log(`✅ [Token List] Loaded ${Object.keys(imagesObj).length} out of ${tokensToFetch.length} token images`);
+      console.log(`📊 [Token List] Success rate: ${Math.round((Object.keys(imagesObj).length / tokensToFetch.length) * 100)}%`);
+      setTokenImages(imagesObj);
+      console.log(`💾 [Token List] Token images state updated`);
+    } catch (err) {
+      console.error("❌ [Token List] Error loading token images:", err);
     }
   }
 
@@ -227,8 +259,11 @@ export function TokenList({
       const cacheKey = `${chainId}_${address}`;
       tokenCache.set(cacheKey, tokenData);
       
-      // Load prices for all tokens
-      await loadPricesForTokens(tokenData);
+      // Load prices and images for all tokens
+      await Promise.all([
+        loadPricesForTokens(tokenData),
+        loadImagesForTokens(tokenData)
+      ]);
       
       setError(null);
     } catch (err: any) {
@@ -308,6 +343,13 @@ export function TokenList({
       const cacheKey = `${chainId}_${address}`;
       tokenCache.set(cacheKey, updatedTokens);
       
+      // Fetch image for the new token
+      getTokenImage(symbol, newTokenAddress, chainId).then(imageUrl => {
+        if (imageUrl) {
+          setTokenImages(prev => ({ ...prev, [symbol.toUpperCase()]: imageUrl }));
+        }
+      }).catch(err => console.warn("Could not load image for new token:", err));
+      
       // Clear form
       setNewTokenAddress("");
       setShowAddToken(false);
@@ -335,11 +377,12 @@ export function TokenList({
   }
   
   function handleManualRefresh() {
-    // Clear cache and force reload
+    // Clear token list cache and force reload (but keep image cache)
     const cacheKey = `${chainId}_${address}`;
     tokenCache.delete(cacheKey);
-    clearPriceCache(); // Clear price cache too
-    console.log("🔄 Manual refresh: cache cleared, loading fresh data...");
+    clearPriceCache(); // Clear price cache to get fresh prices
+    // Note: We keep the image cache since token logos don't change
+    console.log("🔄 Manual refresh: token list and price cache cleared, loading fresh data...");
     loadTokens();
     
     // Also refresh main balance
@@ -351,28 +394,28 @@ export function TokenList({
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold text-slate-900">Assets</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assets</h2>
         <div className="flex items-center gap-2">
           <button
             onClick={handleManualRefresh}
             disabled={isLoading}
-            className="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100 transition-all disabled:opacity-50"
+            className="text-slate-600 dark:text-slate-400 hover:text-brand-orange p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
             title="Refresh all balances"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} strokeWidth={2.5} />
           </button>
           <button
             onClick={() => setShowAddToken(!showAddToken)}
-            className="text-sm text-slate-700 hover:text-slate-900 font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-100 transition-all"
+            className="text-sm text-slate-700 dark:text-slate-300 hover:text-brand-orange font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all group"
           >
             {showAddToken ? (
               <>
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={2.5} />
                 Cancel
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
                 Add Token
               </>
             )}
@@ -381,8 +424,8 @@ export function TokenList({
       </div>
 
       {showAddToken && (
-        <div className="mb-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
-          <label className="block text-xs text-slate-600 font-semibold mb-2">
+        <div className="mb-6 p-5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <label className="block text-xs text-slate-600 dark:text-slate-400 font-semibold mb-2">
             Token Contract Address
           </label>
           <input
@@ -390,7 +433,7 @@ export function TokenList({
             value={newTokenAddress}
             onChange={(e) => setNewTokenAddress(e.target.value)}
             placeholder="0x..."
-            className="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent mb-3 bg-white"
+            className="w-full px-4 py-3 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-brand-orange focus:border-transparent mb-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
           />
           {error && (
             <p className="text-xs text-red-600 mb-3 px-1 font-medium">{error}</p>
@@ -398,7 +441,7 @@ export function TokenList({
           <button
             onClick={handleAddToken}
             disabled={!newTokenAddress || isLoading}
-            className="w-full bg-slate-900 text-white text-sm font-semibold py-3 px-4 rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-glow-orange"
           >
             {isLoading ? "Adding..." : "Add Token"}
           </button>
@@ -420,42 +463,69 @@ export function TokenList({
         </div>
       ) : (
         <div className="space-y-2">
-          {tokens.map((token) => {
+          {tokens.map((token, index) => {
             const isNative = token.address === "native";
             const isCustomToken = !isNative && getStoredTokenAddresses().includes(token.address.toLowerCase());
             const popularTokens = getTokenListForChain(chainId);
             const isPopularToken = popularTokens.some(t => t.address.toLowerCase() === token.address.toLowerCase());
             
             return (
-              <div
+              <motion.div
                 key={token.address}
-                className="flex items-center justify-between p-4 rounded-xl transition-all hover:bg-slate-50 border border-transparent hover:border-slate-200 group cursor-pointer"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.3, 
+                  delay: index * 0.05,
+                  ease: "easeOut"
+                }}
+                className="flex items-center justify-between p-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 hover:border-slate-200 dark:hover:border-slate-600 group cursor-pointer hover:scale-[1.01]"
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   {/* Token Icon */}
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                      <span className="text-sm font-bold text-slate-700">{token.symbol[0]}</span>
-                    </div>
+                    {tokenImages[token.symbol.toUpperCase()] ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-sm ring-1 ring-slate-900/5">
+                        <img 
+                          src={tokenImages[token.symbol.toUpperCase()]}
+                          alt={token.symbol}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to letter avatar on image load error
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center';
+                              parent.innerHTML = `<span class="text-sm font-bold text-brand-orange">${token.symbol[0]}</span>`;
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center">
+                        <span className="text-sm font-bold text-brand-orange">{token.symbol[0]}</span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Token Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-bold text-slate-900">{token.symbol}</p>
+                      <p className="font-bold text-slate-900 dark:text-slate-100 token-opacity">{token.symbol}</p>
                       {isCustomToken && !isPopularToken && (
-                        <span className="text-[9px] px-2 py-0.5 bg-slate-200 text-slate-600 rounded-full font-bold uppercase tracking-wider">Custom</span>
+                        <span className="text-[9px] px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full font-bold uppercase tracking-wider">Custom</span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 truncate">{token.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{token.name}</p>
                   </div>
                   
                   {/* Balance */}
                   <div className="text-right">
-                    <p className="text-base font-bold text-slate-900 font-mono">
+                    <p className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono balance-number">
                       {formatTokenBalance(token.balance)}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {tokenPrices[token.symbol] !== undefined ? (
                         `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
                       ) : (
@@ -472,10 +542,10 @@ export function TokenList({
                       e.stopPropagation();
                       onSendToken(token);
                     }}
-                    className="p-2.5 text-slate-600 hover:text-white hover:bg-slate-900 rounded-lg transition-all"
+                    className="p-2.5 text-slate-600 hover:text-white hover:bg-brand-orange rounded-lg transition-all duration-150 shadow-sm hover:shadow-md active:scale-95"
                     title={`Send ${token.symbol}`}
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-4 h-4" strokeWidth={2.5} />
                   </button>
                   {isCustomToken && !isPopularToken && !isNative && (
                     <button
@@ -483,14 +553,14 @@ export function TokenList({
                         e.stopPropagation();
                         handleRemoveToken(token.address);
                       }}
-                      className="p-2.5 text-slate-400 hover:text-white hover:bg-red-500 rounded-lg transition-all"
+                      className="p-2.5 text-slate-400 hover:text-white hover:bg-red-500 rounded-lg transition-all duration-150 shadow-sm hover:shadow-md active:scale-95"
                       title="Remove custom token"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4" strokeWidth={2.5} />
                     </button>
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

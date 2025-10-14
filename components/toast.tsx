@@ -1,0 +1,52 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { CheckCircle, X } from "lucide-react";
+
+interface ToastProps {
+  message: string;
+  isVisible: boolean;
+  onClose: () => void;
+  duration?: number;
+}
+
+export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastProps) {
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) {
+      setIsExiting(false);
+      const timer = setTimeout(() => {
+        setIsExiting(true);
+        setTimeout(onClose, 300); // Wait for exit animation
+      }, duration);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, duration, onClose]);
+
+  if (!isVisible && !isExiting) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-[100] pointer-events-none">
+      <div
+        className={`pointer-events-auto bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg dark:shadow-2xl dark:border dark:border-slate-700 flex items-center gap-3 min-w-[200px] ${
+          isExiting ? "toast-slide-out" : "toast-slide-in"
+        }`}
+      >
+        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" strokeWidth={2.5} />
+        <span className="text-sm font-medium flex-1">{message}</span>
+        <button
+          onClick={() => {
+            setIsExiting(true);
+            setTimeout(onClose, 300);
+          }}
+          className="text-slate-400 hover:text-white transition-colors"
+        >
+          <X className="w-4 h-4" strokeWidth={2.5} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
