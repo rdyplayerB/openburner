@@ -129,6 +129,7 @@ export function TokenList({
               }
             }
             setTokenPrices(cachedPrices);
+            console.log("🕐 Using cached prices from:", new Date(timestamp).toLocaleTimeString());
             setLastPriceUpdate(timestamp);
             return cachedPrices;
           }
@@ -141,9 +142,10 @@ export function TokenList({
       console.log("✅ Prices loaded from API:", prices);
       setTokenPrices(prices);
       
-      // Update last price update timestamp
-      const timestamp = getOldestPriceTimestamp(symbols);
-      setLastPriceUpdate(timestamp);
+      // Update last price update timestamp (use current time since we just fetched)
+      const now = Date.now();
+      console.log("🕐 Setting last price update to:", new Date(now).toLocaleTimeString());
+      setLastPriceUpdate(now);
       
       return prices;
     } catch (err) {
