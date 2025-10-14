@@ -124,7 +124,7 @@ export function PinInput({ onSubmit, onCancel, isVisible, error }: PinInputProps
         </div>
 
         <p className="text-xs text-center text-slate-400 mt-4">
-          🔒 Your PIN is sent directly to your Burner
+          🔒 Your PIN is sent directly to your Burner and never stored or shared
         </p>
       </div>
     </div>
