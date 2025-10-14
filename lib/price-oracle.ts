@@ -23,15 +23,18 @@ interface CoinGeckoResponse {
   };
 }
 
-// Cache durations based on token volatility
+// Cache durations - Conservative settings for CoinGecko free tier
+// Free tier limit: ~10-30 calls/minute
+// With batched requests, 1000 users = ~1000 calls/hour = ~16 calls/min (sustainable)
 const CACHE_DURATIONS = {
-  STABLECOIN: 30 * 60 * 1000,  // 30 minutes (stablecoins are stable)
-  MAJOR: 5 * 60 * 1000,         // 5 minutes (ETH, BTC, major tokens)
-  DEFAULT: 3 * 60 * 1000,       // 3 minutes (other tokens)
+  STABLECOIN: 2 * 60 * 60 * 1000,  // 2 hours (stablecoins barely move)
+  MAJOR: 30 * 60 * 1000,            // 30 minutes (ETH, BTC, major tokens)
+  DEFAULT: 30 * 60 * 1000,          // 30 minutes (other tokens)
 };
 
 // Stale-while-revalidate: serve stale data up to this duration while fetching fresh
-const STALE_WHILE_REVALIDATE = 15 * 60 * 1000; // 15 minutes
+// Disabled for manual-refresh-only strategy
+const STALE_WHILE_REVALIDATE = 24 * 60 * 60 * 1000; // 24 hours (very permissive)
 
 // Memory cache (fast, in-memory)
 const memoryCache = new Map<string, TokenPrice>();
@@ -368,4 +371,23 @@ export function clearPriceCache(): void {
   memoryCache.clear();
   pendingRequests.clear();
   console.log("💰 Memory cache cleared (localStorage preserved)");
+}
+
+/**
+ * Get the timestamp of the oldest cached price
+ * Useful for showing "Last updated X minutes ago"
+ */
+export function getOldestPriceTimestamp(symbols: string[]): number | null {
+  let oldestTimestamp: number | null = null;
+  
+  for (const symbol of symbols) {
+    const cached = memoryCache.get(symbol) || loadFromLocalStorage(symbol);
+    if (cached) {
+      if (oldestTimestamp === null || cached.lastUpdated < oldestTimestamp) {
+        oldestTimestamp = cached.lastUpdated;
+      }
+    }
+  }
+  
+  return oldestTimestamp;
 }

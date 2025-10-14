@@ -457,7 +457,7 @@ export function WalletDashboard() {
 
       {/* Receive Modal */}
       {showReceiveModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowReceiveModal(false)}>
+        <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowReceiveModal(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-card-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-slate-900">Receive <span className="text-brand-orange">Tokens</span></h2>

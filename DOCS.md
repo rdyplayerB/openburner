@@ -151,14 +151,48 @@ const balances = await batchGetBalances(
 ### Get Token Prices
 
 ```typescript
-import { getTokenPrices } from '@/lib/price-oracle';
+import { getTokenPrices, clearPriceCache } from '@/lib/price-oracle';
 
 const prices = await getTokenPrices([
   'ETH',
   'USDC'
 ]);
 // Returns: { ETH: 2500.00, USDC: 1.00 }
+
+// Force fresh price fetch
+clearPriceCache();
 ```
+
+**Price Caching Strategy:**
+
+OpenBurner uses an aggressive multi-tier caching strategy to minimize CoinGecko API calls and stay within the free tier limits (10-30 calls/minute):
+
+| Token Type | Cache Duration | Examples |
+|------------|----------------|----------|
+| Stablecoins | 2 hours | USDC, USDT, DAI |
+| Major Tokens | 30 minutes | ETH, BTC, MATIC, BNB |
+| Other Tokens | 30 minutes | All other tokens |
+
+**Cache Layers:**
+1. **Memory cache** - Fast, session-only
+2. **localStorage** - Persistent across page reloads
+3. **Request deduplication** - Prevents duplicate concurrent API calls
+4. **Batch fetching** - All token prices fetched in single API call
+
+**Manual Refresh Only:**
+- Prices are **NOT** auto-refreshed on page load
+- Cached prices are served immediately for instant UI
+- Users must manually click the refresh button to update prices
+- This prevents excessive API calls as user count scales
+
+**Why This Matters:**
+- With 100 tokens, 1 refresh = 1 API call (not 100)
+- With 1000 users refreshing randomly across 1 hour = ~16 calls/min (sustainable)
+- Free tier limit: 10-30 calls/minute
+- If you need more frequent updates, consider upgrading to CoinGecko Pro
+
+**UI Indicator:**
+The token list shows "Updated Xm ago" next to the refresh button, so users know price freshness.
 
 ## Environment Variables
 

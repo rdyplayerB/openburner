@@ -219,7 +219,7 @@ export function SendToken({
   // If transaction is confirmed, show confirmation screen
   if (isConfirmed && txHash) {
     return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+      <div className="modal-overlay bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-8 max-w-md w-full">
           {/* Success Icon */}
           <div className="flex justify-center mb-6">
@@ -285,7 +285,7 @@ export function SendToken({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div className="modal-overlay bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-6 max-w-md w-full">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-slate-900">

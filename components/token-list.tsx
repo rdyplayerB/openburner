@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { Plus, Send, RefreshCw, X } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
-import { getTokenPrices, clearPriceCache } from "@/lib/price-oracle";
+import { getTokenPrices, clearPriceCache, getOldestPriceTimestamp } from "@/lib/price-oracle";
 import { batchGetTokenImages, getTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
 import { motion } from "framer-motion";
 
@@ -64,6 +64,7 @@ export function TokenList({
   const [error, setError] = useState<string | null>(null);
   const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
   const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
+  const [lastPriceUpdate, setLastPriceUpdate] = useState<number | null>(null);
 
   function formatTokenBalance(balance: string): string {
     const num = parseFloat(balance);
@@ -113,6 +114,11 @@ export function TokenList({
       const prices = await getTokenPrices(symbols);
       console.log("✅ Prices loaded:", prices);
       setTokenPrices(prices);
+      
+      // Update last price update timestamp
+      const timestamp = getOldestPriceTimestamp(symbols);
+      setLastPriceUpdate(timestamp);
+      
       return prices;
     } catch (err) {
       console.error("Error loading prices:", err);
@@ -430,16 +436,38 @@ export function TokenList({
     }
   }
 
+  function formatTimeAgo(timestamp: number | null): string {
+    if (!timestamp) return "";
+    
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assets</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {lastPriceUpdate && !isLoading && (
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Updated {formatTimeAgo(lastPriceUpdate)}
+            </span>
+          )}
           <button
             onClick={handleManualRefresh}
             disabled={isLoading}
             className="text-slate-600 dark:text-slate-400 hover:text-brand-orange p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
-            title="Refresh all balances"
+            title="Refresh balances and prices"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} strokeWidth={2.5} />
           </button>

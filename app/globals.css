@@ -8,6 +8,15 @@
   --brand-orange: #E4572E;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -16,6 +25,18 @@ body {
 }
 
 @layer utilities {
+  /* Modal overlay that covers full viewport */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
   .glass-card {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
