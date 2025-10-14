@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { Plus, Send, RefreshCw, X } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
-import { getTokenPrices, clearPriceCache, getOldestPriceTimestamp } from "@/lib/price-oracle";
+import { getTokenPrices, clearPriceCache } from "@/lib/price-oracle";
 import { batchGetTokenImages, getTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
 import { motion } from "framer-motion";
 
@@ -64,9 +64,7 @@ export function TokenList({
   const [error, setError] = useState<string | null>(null);
   const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
   const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
-  const [lastPriceUpdate, setLastPriceUpdate] = useState<number | null>(null);
   const [isActuallyRefreshing, setIsActuallyRefreshing] = useState(false);
-  const [, setTimeNow] = useState(Date.now()); // Force re-render every minute
 
   function formatTokenBalance(balance: string): string {
     const num = parseFloat(balance);
@@ -83,14 +81,6 @@ export function TokenList({
     preloadCommonTokenImages();
   }, []);
 
-  // Update the time display every minute to keep "Xm ago" current
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeNow(Date.now());
-    }, 60000); // Update every 60 seconds
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     // Check cache first (no expiration)
@@ -103,12 +93,6 @@ export function TokenList({
       // Load prices and images for cached tokens
       loadPricesForTokens(cached, false).then(prices => {
         loadImagesForTokens(cached).then(images => {
-          // Set timestamp from actual cached data
-          const timestamp = getOldestPriceTimestamp(cached.map(t => t.symbol));
-          if (timestamp) {
-            console.log("🕐 Cached load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
-            setLastPriceUpdate(timestamp);
-          }
           
           // Report cached data to parent
           if (onTokensLoaded) {
@@ -146,8 +130,6 @@ export function TokenList({
               }
             }
             setTokenPrices(cachedPrices);
-            console.log("🕐 Using cached prices from:", new Date(timestamp).toLocaleTimeString());
-            setLastPriceUpdate(timestamp);
             return cachedPrices;
           }
         }
@@ -159,10 +141,6 @@ export function TokenList({
       console.log("✅ Prices loaded from API:", prices);
       setTokenPrices(prices);
       
-      // Update last price update timestamp (use current time since we just fetched)
-      const now = Date.now();
-      console.log("🕐 Setting last price update to:", new Date(now).toLocaleTimeString());
-      setLastPriceUpdate(now);
       
       return prices;
     } catch (err) {
@@ -335,12 +313,6 @@ export function TokenList({
         loadImagesForTokens(tokenData)
       ]);
       
-      // Set timestamp from actual cached data on initial load
-      const timestamp = getOldestPriceTimestamp(tokenData.map(t => t.symbol));
-      if (timestamp) {
-        console.log("🕐 Initial load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
-        setLastPriceUpdate(timestamp);
-      }
       
       // Report loaded data to parent
       if (onTokensLoaded) {
@@ -497,41 +469,12 @@ export function TokenList({
     }
   }
 
-  function formatTimeAgo(timestamp: number | null): string {
-    if (!timestamp) return "";
-    
-    const now = Date.now();
-    const diffMs = now - timestamp;
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    // Use broader, more forgiving time ranges
-    if (diffMins < 2) return "just now";
-    if (diffMins < 5) return "a few minutes ago";
-    if (diffMins < 15) return "recently";
-    if (diffMins < 60) return "within the hour";
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 2) return "about an hour ago";
-    if (diffHours < 6) return "a few hours ago";
-    if (diffHours < 24) return "today";
-    
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays === 1) return "yesterday";
-    if (diffDays < 7) return "this week";
-    if (diffDays < 30) return "this month";
-    return "older";
-  }
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assets</h2>
         <div className="flex items-center gap-3">
-          {lastPriceUpdate && !isLoading && (
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              Updated {formatTimeAgo(lastPriceUpdate)}
-            </span>
-          )}
           <div className="relative group">
             <button
               onClick={handleManualRefresh}
