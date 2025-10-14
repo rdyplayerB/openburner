@@ -66,6 +66,7 @@ export function TokenList({
   const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
   const [lastPriceUpdate, setLastPriceUpdate] = useState<number | null>(null);
   const [isActuallyRefreshing, setIsActuallyRefreshing] = useState(false);
+  const [, setTimeNow] = useState(Date.now()); // Force re-render every minute
 
   function formatTokenBalance(balance: string): string {
     const num = parseFloat(balance);
@@ -80,6 +81,15 @@ export function TokenList({
   // Preload common token images on first mount (runs once)
   useEffect(() => {
     preloadCommonTokenImages();
+  }, []);
+
+  // Update the time display every minute to keep "Xm ago" current
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeNow(Date.now());
+    }, 60000); // Update every 60 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
