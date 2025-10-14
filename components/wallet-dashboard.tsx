@@ -453,7 +453,7 @@ export function WalletDashboard() {
 
             <button
               onClick={() => setShowReceiveModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white transition-all duration-150 font-semibold text-sm shadow-md hover:shadow-lg active:scale-95"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-600 hover:bg-slate-700 dark:hover:bg-slate-500 text-white transition-all duration-150 font-semibold text-sm shadow-md hover:shadow-lg active:scale-95"
             >
               <Download className="w-4 h-4" strokeWidth={2.5} />
               Receive
