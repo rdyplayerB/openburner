@@ -506,9 +506,9 @@ export function TokenList({
             >
               <RefreshCw className={`w-4 h-4 ${isActuallyRefreshing ? "animate-spin" : ""}`} strokeWidth={2.5} />
             </button>
-            <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-50">
+            <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-50">
               Refresh balances & prices
-              <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-slate-900 dark:border-t-slate-700"></div>
+              <div className="absolute bottom-full right-4 mb-1 border-4 border-transparent border-b-slate-900 dark:border-b-slate-700"></div>
             </div>
           </div>
           <button
