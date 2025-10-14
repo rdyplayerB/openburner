@@ -463,14 +463,19 @@ export function TokenList({
               Updated {formatTimeAgo(lastPriceUpdate)}
             </span>
           )}
-          <button
-            onClick={handleManualRefresh}
-            disabled={isLoading}
-            className="text-slate-600 dark:text-slate-400 hover:text-brand-orange p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
-            title="Refresh balances and prices"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} strokeWidth={2.5} />
-          </button>
+          <div className="relative group">
+            <button
+              onClick={handleManualRefresh}
+              disabled={isLoading}
+              className="text-slate-600 dark:text-slate-400 hover:text-brand-orange p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} strokeWidth={2.5} />
+            </button>
+            <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-10">
+              Refresh balances & prices
+              <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-slate-900 dark:border-t-slate-700"></div>
+            </div>
+          </div>
           <button
             onClick={() => setShowAddToken(!showAddToken)}
             className="text-sm text-slate-700 dark:text-slate-300 hover:text-brand-orange font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all group"
