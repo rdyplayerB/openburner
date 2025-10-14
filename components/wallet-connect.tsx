@@ -121,7 +121,7 @@ export function WalletConnect() {
             </h1>
           </div>
           <p className="text-slate-500 text-[1.0625rem] font-medium">
-            Place Burner on reader to connect
+            Run HaLo Bridge, then place Burner on reader to connect
           </p>
         </div>
 
