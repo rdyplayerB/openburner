@@ -418,7 +418,7 @@ export function SendToken({
                 {txHash ? "Confirming..." : "Signing..."}
               </>
             ) : (
-              token.symbol
+              "Send"
             )}
           </button>
 
