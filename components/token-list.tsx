@@ -103,13 +103,11 @@ export function TokenList({
       // Load prices and images for cached tokens
       loadPricesForTokens(cached, false).then(prices => {
         loadImagesForTokens(cached).then(images => {
-          // Set timestamp from actual cached data (only if not already set)
-          if (!lastPriceUpdate) {
-            const timestamp = getOldestPriceTimestamp(cached.map(t => t.symbol));
-            if (timestamp) {
-              console.log("🕐 Cached load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
-              setLastPriceUpdate(timestamp);
-            }
+          // Set timestamp from actual cached data
+          const timestamp = getOldestPriceTimestamp(cached.map(t => t.symbol));
+          if (timestamp) {
+            console.log("🕐 Cached load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
+            setLastPriceUpdate(timestamp);
           }
           
           // Report cached data to parent
@@ -337,13 +335,11 @@ export function TokenList({
         loadImagesForTokens(tokenData)
       ]);
       
-      // Set timestamp from actual cached data on initial load (only if not already set)
-      if (!lastPriceUpdate) {
-        const timestamp = getOldestPriceTimestamp(tokenData.map(t => t.symbol));
-        if (timestamp) {
-          console.log("🕐 Initial load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
-          setLastPriceUpdate(timestamp);
-        }
+      // Set timestamp from actual cached data on initial load
+      const timestamp = getOldestPriceTimestamp(tokenData.map(t => t.symbol));
+      if (timestamp) {
+        console.log("🕐 Initial load - using cached timestamp:", new Date(timestamp).toLocaleTimeString());
+        setLastPriceUpdate(timestamp);
       }
       
       // Report loaded data to parent
@@ -508,14 +504,22 @@ export function TokenList({
     const diffMs = now - timestamp;
     const diffMins = Math.floor(diffMs / 60000);
     
-    if (diffMins < 1) return "just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
+    // Use broader, more forgiving time ranges
+    if (diffMins < 2) return "just now";
+    if (diffMins < 5) return "a few minutes ago";
+    if (diffMins < 15) return "recently";
+    if (diffMins < 60) return "within the hour";
     
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 2) return "about an hour ago";
+    if (diffHours < 6) return "a few hours ago";
+    if (diffHours < 24) return "today";
     
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
+    if (diffDays === 1) return "yesterday";
+    if (diffDays < 7) return "this week";
+    if (diffDays < 30) return "this month";
+    return "older";
   }
 
   return (
