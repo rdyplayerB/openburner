@@ -65,6 +65,7 @@ export function TokenList({
   const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
   const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
   const [lastPriceUpdate, setLastPriceUpdate] = useState<number | null>(null);
+  const [isActuallyRefreshing, setIsActuallyRefreshing] = useState(false);
 
   function formatTokenBalance(balance: string): string {
     const num = parseFloat(balance);
@@ -90,7 +91,7 @@ export function TokenList({
       console.log("📦 Using cached token data");
       setTokens(cached);
       // Load prices and images for cached tokens
-      loadPricesForTokens(cached).then(prices => {
+      loadPricesForTokens(cached, false).then(prices => {
         loadImagesForTokens(cached).then(images => {
           // Report cached data to parent
           if (onTokensLoaded) {
@@ -107,12 +108,37 @@ export function TokenList({
     }
   }, [address, rpcUrl, chainId]);
 
-  async function loadPricesForTokens(tokenList: Token[]) {
+  async function loadPricesForTokens(tokenList: Token[], forceRefresh: boolean = false) {
     try {
       const symbols = tokenList.map(t => t.symbol);
-      console.log("💰 Fetching prices for tokens:", symbols);
+      console.log("💰 Fetching prices for tokens:", symbols, forceRefresh ? "(forced refresh)" : "(cached)");
+      
+      // If not forcing refresh, check if we have fresh cached data
+      if (!forceRefresh) {
+        const timestamp = getOldestPriceTimestamp(symbols);
+        if (timestamp) {
+          const now = Date.now();
+          const isFresh = (now - timestamp) < (30 * 60 * 1000); // 30 minutes
+          if (isFresh) {
+            console.log("📦 Using fresh cached prices");
+            const cachedPrices: { [symbol: string]: number } = {};
+            for (const symbol of symbols) {
+              const cached = memoryCache.get(symbol) || loadFromLocalStorage(symbol);
+              if (cached) {
+                cachedPrices[symbol] = cached.usd;
+              }
+            }
+            setTokenPrices(cachedPrices);
+            setLastPriceUpdate(timestamp);
+            return cachedPrices;
+          }
+        }
+      }
+      
+      // Actually fetch from API
+      setIsActuallyRefreshing(true);
       const prices = await getTokenPrices(symbols);
-      console.log("✅ Prices loaded:", prices);
+      console.log("✅ Prices loaded from API:", prices);
       setTokenPrices(prices);
       
       // Update last price update timestamp
@@ -123,6 +149,8 @@ export function TokenList({
     } catch (err) {
       console.error("Error loading prices:", err);
       return {};
+    } finally {
+      setIsActuallyRefreshing(false);
     }
   }
 
@@ -284,7 +312,7 @@ export function TokenList({
       
       // Load prices and images for all tokens
       const [prices, images] = await Promise.all([
-        loadPricesForTokens(tokenData),
+        loadPricesForTokens(tokenData, false), // Don't force refresh on initial load
         loadImagesForTokens(tokenData)
       ]);
       
@@ -421,13 +449,20 @@ export function TokenList({
     console.log(`🗑️ Token removed from list (no auto-refresh)`);
   }
   
-  function handleManualRefresh() {
+  async function handleManualRefresh() {
     // Clear token list cache and force reload (but keep image cache)
     const cacheKey = `${chainId}_${address}`;
     tokenCache.delete(cacheKey);
     clearPriceCache(); // Clear price cache to get fresh prices
     // Note: We keep the image cache since token logos don't change
     console.log("🔄 Manual refresh: token list and price cache cleared, loading fresh data...");
+    
+    // Force refresh prices for current tokens
+    if (tokens.length > 0) {
+      await loadPricesForTokens(tokens, true); // Force refresh
+    }
+    
+    // Reload tokens (balances)
     loadTokens();
     
     // Also refresh main balance
@@ -469,9 +504,9 @@ export function TokenList({
               disabled={isLoading}
               className="text-slate-600 dark:text-slate-400 hover:text-brand-orange p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} strokeWidth={2.5} />
+              <RefreshCw className={`w-4 h-4 ${isActuallyRefreshing ? "animate-spin" : ""}`} strokeWidth={2.5} />
             </button>
-            <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-10">
+            <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-50">
               Refresh balances & prices
               <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-slate-900 dark:border-t-slate-700"></div>
             </div>
