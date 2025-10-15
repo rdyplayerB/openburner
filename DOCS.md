@@ -29,7 +29,7 @@ Both work with the same Burner Ethereum card - your addresses and keys remain th
 ## Quick Start
 
 ### Prerequisites
-- **Burner Card** - [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
+- **Burner Card** - [Order here](https://arx-burner.myshopify.com/OPENBURNER)
 - **Desktop NFC Reader** - ACR1252U or compatible USB reader ([Get on Amazon](https://amzn.to/3ISNwd7))
 - **Node.js 18+**
 
@@ -396,14 +396,14 @@ If you find OpenBurner useful, there are a few ways you can help:
 - Share your feedback by [opening an issue](https://github.com/rdyplayerB/openburner/issues), reaching out on [𝕏](https://x.com/rdyplayerB), [Farcaster](https://farcaster.xyz/rdyplayerb), or [email me](mailto:rdyplayerb@gmail.com)
 - You can also find me in the official [Burner Telegram channel](https://t.me/burnerofficial) (@rdyplayerB)
 - Share OpenBurner on [𝕏](https://x.com/rdyplayerB) or [Farcaster](https://farcaster.xyz/rdyplayerb)
-- Use the [affiliate link to get a Burner (10% off)](https://arx-burner.myshopify.com/OPENBURNER) or the [Amazon affiliate link for the recommended USB NFC reader](https://amzn.to/3ISNwd7)
+- Use the [affiliate link to get a Burner](https://arx-burner.myshopify.com/OPENBURNER) or the [Amazon affiliate link for the recommended USB NFC reader](https://amzn.to/3ISNwd7)
 - Support development with a donation to `rdyplayerB.eth`
 - Fork the project and experiment with your own ideas
 
 ## Links
 
 - **GitHub**: https://github.com/rdyplayerB/openburner
-- **Get a Burner Card**: [Order here (10% off)](https://arx-burner.myshopify.com/OPENBURNER)
+- **Get a Burner Card**: [Order here](https://arx-burner.myshopify.com/OPENBURNER)
 - **LibBurner Documentation**: https://github.com/arx-research/libburner
 - **ethers.js Docs**: https://docs.ethers.org
 
