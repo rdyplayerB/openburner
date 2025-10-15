@@ -175,7 +175,7 @@ If you find OpenBurner useful, there are a few ways you can help:
 - Share your feedback by [opening an issue](https://github.com/rdyplayerB/openburner/issues), reaching out on [𝕏](https://x.com/rdyplayerB), [Farcaster](https://farcaster.xyz/rdyplayerb), or [email me](mailto:rdyplayerb@gmail.com)
 - You can also find me in the official [Burner Telegram channel](https://t.me/burnerofficial) (@rdyplayerB)
 - Share OpenBurner on [𝕏](https://x.com/rdyplayerB) or [Farcaster](https://farcaster.xyz/rdyplayerb)
-- Use the [affiliate link to get a Burner](https://arx-burner.myshopify.com/OPENBURNER) or the [Amazon affiliate link for the recommended USB NFC reader](https://amzn.to/3ISNwd7)
+- Use my link to get a [Burner](https://arx-burner.myshopify.com/OPENBURNER) or my link for the [recommended USB NFC reader](https://amzn.to/3ISNwd7)
 - Support development with a donation to `rdyplayerB.eth`
 - Fork the project and experiment with your own ideas
 
