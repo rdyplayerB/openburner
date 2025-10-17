@@ -1,8 +1,7 @@
-import { getBurnerAddressViaGateway, startGatewayPairing } from '../burner-gateway';
 import { BurnerKeyInfo } from '../burner';
 
 /**
- * Connect with mobile NFC - uses Web NFC API when available, falls back to gateway
+ * Connect with mobile NFC - uses Web NFC API when available, falls back to error
  */
 export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
   // Check if Web NFC is available (Chrome/Android)
@@ -11,27 +10,14 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
       console.log("📱 [Mobile NFC] Web NFC API available, attempting direct connection...");
       return await connectWithWebNFC();
     } catch (error) {
-      console.warn("📱 [Mobile NFC] Web NFC failed, falling back to gateway:", error);
-      return await connectWithGateway();
+      console.warn("📱 [Mobile NFC] Web NFC failed:", error);
+      throw new Error("Web NFC connection failed. Please ensure your device supports NFC and try again.");
     }
   } else {
-    // Use gateway mode for iOS and other browsers
-    console.log("📱 [Mobile NFC] Web NFC not available, using gateway mode...");
-    return await connectWithGateway();
+    // Web NFC not available - provide helpful error message
+    console.log("📱 [Mobile NFC] Web NFC not available on this device");
+    throw new Error("NFC not supported on this device. Please use a device with Web NFC support (Chrome on Android) or connect via desktop.");
   }
-}
-
-/**
- * Connect using gateway mode - starts pairing and gets address
- */
-async function connectWithGateway(): Promise<BurnerKeyInfo> {
-  console.log("📱 [Mobile NFC] Starting gateway pairing for mobile connection...");
-  
-  // Start the gateway pairing process
-  await startGatewayPairing();
-  
-  // Now get the burner address
-  return await getBurnerAddressViaGateway();
 }
 
 /**
