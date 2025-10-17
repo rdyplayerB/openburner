@@ -1,7 +1,8 @@
+import { connectWithMobileGateway } from './mobile-gateway';
 import { BurnerKeyInfo } from '../burner';
 
 /**
- * Connect with mobile NFC - uses Web NFC API when available, falls back to error
+ * Connect with mobile NFC - uses Web NFC API when available, falls back to mobile gateway
  */
 export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
   // Check if Web NFC is available (Chrome/Android)
@@ -10,13 +11,13 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
       console.log("📱 [Mobile NFC] Web NFC API available, attempting direct connection...");
       return await connectWithWebNFC();
     } catch (error) {
-      console.warn("📱 [Mobile NFC] Web NFC failed:", error);
-      throw new Error("Web NFC connection failed. Please ensure your device supports NFC and try again.");
+      console.warn("📱 [Mobile NFC] Web NFC failed, falling back to mobile gateway:", error);
+      return await connectWithMobileGateway();
     }
   } else {
-    // Web NFC not available - provide helpful error message
-    console.log("📱 [Mobile NFC] Web NFC not available on this device");
-    throw new Error("NFC not supported on this device. Please use a device with Web NFC support (Chrome on Android) or connect via desktop.");
+    // Web NFC not available - use mobile gateway approach
+    console.log("📱 [Mobile NFC] Web NFC not available, using mobile gateway...");
+    return await connectWithMobileGateway();
   }
 }
 
