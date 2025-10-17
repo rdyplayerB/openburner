@@ -11,7 +11,6 @@ export interface BurnerKeyInfo {
 export interface GatewayPairInfo {
   execURL: string;
   qrCodeDataURL: string;
-  sessionId: string;
 }
 
 // Global gateway instance for persistence
@@ -312,8 +311,7 @@ export async function startGatewayPairing(): Promise<GatewayPairInfo> {
 
     return {
       execURL: pairInfo.execURL,
-      qrCodeDataURL,
-      sessionId: pairInfo.sessionId
+      qrCodeDataURL
     };
   } catch (error: any) {
     console.log("\n═══════════════════════════════════════════════════════");
