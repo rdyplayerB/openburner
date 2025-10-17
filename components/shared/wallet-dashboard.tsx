@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useWalletStore } from "@/store/wallet-store";
-import { TokenList } from "./token-list";
-import { SendToken } from "./send-token";
-import { TokenSelector } from "./token-selector";
-import { Toast } from "./toast";
+import { TokenList } from "../token-list";
+import { SendToken } from "../send-token";
+import { TokenSelector } from "../token-selector";
+import { Toast } from "../toast";
 import { ethers } from "ethers";
 import { Copy, LogOut, CheckCircle, ChevronDown, Plus, Network, Send, Download, Repeat2, QrCode, ExternalLink, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
