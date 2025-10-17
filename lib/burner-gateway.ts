@@ -295,7 +295,6 @@ export async function startGatewayPairing(): Promise<GatewayPairInfo> {
     const pairInfo = await globalGateway.startPairing();
     const pairDuration = Date.now() - pairStart;
     console.log(`✅ [Gateway] Pairing started in ${pairDuration}ms`);
-    console.log(`🔗 [Gateway] Session ID: ${pairInfo.sessionId}`);
     console.log(`📱 [Gateway] Exec URL: ${pairInfo.execURL}`);
 
     // Generate QR code for display
