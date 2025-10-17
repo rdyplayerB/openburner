@@ -10,6 +10,7 @@ import { ethers } from "ethers";
 import { Copy, LogOut, CheckCircle, ChevronDown, Plus, Network, Send, Download, Repeat2, QrCode, ExternalLink, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { getTokenPrice } from "@/lib/price-oracle";
+import { getAppConfig } from "@/lib/config/environment";
 import Image from "next/image";
 
 interface Token {
@@ -79,6 +80,7 @@ const BLOCK_EXPLORERS: Record<number, string> = {
 export function WalletDashboard() {
   const { address, balance, rpcUrl, chainName, chainId, disconnect, setBalance, setChain, publicKey, keySlot } =
     useWalletStore();
+  const { pricingEnabled } = getAppConfig();
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const [copied, setCopied] = useState(false);
@@ -413,10 +415,12 @@ export function WalletDashboard() {
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {isLoadingBalance ? (
                 "≈ $... USD"
-              ) : nativeTokenPrice > 0 ? (
+              ) : pricingEnabled && nativeTokenPrice > 0 ? (
                 `≈ $${(parseFloat(balance) * nativeTokenPrice).toFixed(2)} USD`
               ) : (
-                <span className="text-slate-400 dark:text-slate-500">Price unavailable</span>
+                <span className="text-slate-400 dark:text-slate-500">
+                  {pricingEnabled ? "Price unavailable" : "Pricing disabled (hosted version)"}
+                </span>
               )}
             </p>
           </div>

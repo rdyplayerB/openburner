@@ -2,6 +2,9 @@
  * Price Oracle using CoinGecko API
  * Implements multi-tier caching and best practices to minimize API calls
  * 
+ * HOSTED VERSION: Pricing is disabled to avoid API costs
+ * LOCAL VERSION: Full pricing functionality enabled
+ * 
  * Caching Strategy:
  * 1. Memory cache (fast, session-only)
  * 2. localStorage cache (persistent across sessions)
@@ -11,6 +14,7 @@
  */
 
 import { coinGeckoLimiter } from "./coingecko-rate-limiter";
+import { getAppConfig } from "./config/environment";
 
 interface TokenPrice {
   usd: number;
@@ -95,9 +99,16 @@ function getApiBaseUrl(): string {
 }
 
 /**
- * Get the CoinGecko API key (optional for free tier)
+ * Get the CoinGecko API key (only for local development)
  */
 function getApiKey(): string | undefined {
+  const config = getAppConfig();
+  
+  // Only use API key for local development
+  if (!config.pricingEnabled) {
+    return undefined;
+  }
+  
   return process.env.NEXT_PUBLIC_COINGECKO_API_KEY || undefined;
 }
 
@@ -202,15 +213,27 @@ async function fetchPricesFromCoinGecko(coinIds: string[]): Promise<CoinGeckoRes
 
 /**
  * Get price for a single token symbol
+ * HOSTED VERSION: Returns 0 (pricing disabled)
+ * LOCAL VERSION: Returns actual price
  */
 export async function getTokenPrice(symbol: string): Promise<number> {
+  const config = getAppConfig();
+  
+  // Disable pricing on hosted version
+  if (!config.pricingEnabled) {
+    console.log(`💰 [Pricing] Disabled on hosted version for symbol: ${symbol}`);
+    return 0;
+  }
+  
+  // Local version - use existing logic
   const prices = await getTokenPrices([symbol]);
   return prices[symbol] || 0;
 }
 
 /**
  * Get prices for multiple token symbols with advanced caching
- * Returns a map of symbol -> USD price
+ * HOSTED VERSION: Returns zeros for all symbols (pricing disabled)
+ * LOCAL VERSION: Returns actual prices with caching
  * 
  * Strategy:
  * 1. Check memory cache first (fastest)
@@ -219,6 +242,13 @@ export async function getTokenPrice(symbol: string): Promise<number> {
  * 4. Deduplicate concurrent requests for same symbols
  */
 export async function getTokenPrices(symbols: string[]): Promise<{ [symbol: string]: number }> {
+  const config = getAppConfig();
+  
+  // Disable pricing on hosted version
+  if (!config.pricingEnabled) {
+    console.log(`💰 [Pricing] Disabled on hosted version for symbols: ${symbols.join(', ')}`);
+    return symbols.reduce((acc, symbol) => ({ ...acc, [symbol]: 0 }), {});
+  }
   const now = Date.now();
   const result: { [symbol: string]: number } = {};
   const symbolsToFetch: string[] = [];

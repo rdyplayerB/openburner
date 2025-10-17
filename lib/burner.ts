@@ -25,7 +25,7 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
     const connectDuration = Date.now() - connectStart;
     console.log(`✅ [Burner] Bridge connected in ${connectDuration}ms`);
 
-    // Execute get_pkeys command
+    // Execute get_pkeys command for basic key info
     console.log("📡 [Burner] Executing get_pkeys command...");
     const getPkeysStart = Date.now();
     const result = await execBridgeCommand({
@@ -38,82 +38,178 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
     console.log("📬 [Burner] Available addresses:", result.etherAddresses);
     console.log("🔑 [Burner] Available public keys:", result.publicKeys);
 
-    // Manually verify address computation for key slot 1
-    const pubKey1 = result.publicKeys['1'];
-    const computedAddr1 = ethers.computeAddress("0x" + pubKey1);
-    console.log("Manual address computation from public key 1:", computedAddr1);
-    console.log("Bridge-provided address for key 1:", result.etherAddresses['1']);
-    console.log("Do they match?", computedAddr1.toLowerCase() === result.etherAddresses['1'].toLowerCase());
-
-    // SKIP NDEF read - it causes 30s timeout and disconnects the bridge
-    // We'll scan all key slots instead to find the primary wallet
-    console.log("ℹ️ [Burner] Skipping NDEF read to avoid timeouts");
-    console.log("ℹ️ [Burner] Will scan key slots (1-9) to find primary wallet instead");
-    let expectedAddress: string | null = null;
-
-    // Check all key slots (1-9) to find available addresses
+    // Use comprehensive data request like BurnerOS for consistency
     console.log("\n═══════════════════════════════════════════════════════");
-    console.log("🔍 [Burner] SCANNING ALL KEY SLOTS (1-9)");
+    console.log("🔍 [Burner] COMPREHENSIVE DATA SCANNING (BurnerOS style)");
     console.log("═══════════════════════════════════════════════════════");
-    const availableSlots: Array<{ keyNo: number; address: string; publicKey: string }> = [];
+    const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
     
-    for (let keyNo = 1; keyNo <= 9; keyNo++) {
-      try {
-        console.log(`📍 [Burner] Checking key slot ${keyNo}...`);
-        const keyInfoStart = Date.now();
-        const keyInfo = await execBridgeCommand({
-          name: "get_key_info",
-          keyNo,
-        });
-        const keyInfoDuration = Date.now() - keyInfoStart;
-        
-        if (keyInfo.publicKey) {
-          const addr = ethers.computeAddress("0x" + keyInfo.publicKey);
-          console.log(`✅ [Burner] Key slot ${keyNo} (${keyInfoDuration}ms): ${addr}`);
-          console.log(`   Public Key: ${keyInfo.publicKey.substring(0, 20)}...`);
-          availableSlots.push({
-            keyNo,
-            address: addr,
-            publicKey: keyInfo.publicKey,
-          });
+    // Priority order: 9 (user wallet) > 8 (preloaded) > 2 (system)
+    const targetSlots = [9, 8, 2];
+    
+    try {
+      // Use the same comprehensive spec as BurnerOS and Gateway
+      const comprehensiveSpec = "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8";
+      
+      console.log(`📡 [Burner] Executing get_data_struct with spec: ${comprehensiveSpec}`);
+      const dataResult = await execBridgeCommand({
+        name: "get_data_struct",
+        spec: comprehensiveSpec
+      });
+      
+      console.log("📋 [Burner] Full data result:", dataResult);
+      
+      // Process the results for each target slot
+      for (const keyNo of targetSlots) {
+        try {
+          console.log(`📍 [Burner] Processing key slot ${keyNo}...`);
           
-          // If we have an expected address from pkN, check if it matches
-          if (expectedAddress && addr.toLowerCase() === expectedAddress.toLowerCase()) {
-            console.log(`🎯 [Burner] ✅ pkN address MATCHES key slot ${keyNo}!`);
+          // Check for compressed public key first
+          const compressedKey = dataResult.data[`compressedPublicKey:${keyNo}`];
+          let publicKey = null;
+          let address = null;
+          
+          if (compressedKey) {
+            // Use compressed public key directly to compute address (like BurnerOS)
+            // This eliminates the need for a second tap
+            try {
+              // Ensure compressed key is proper length (33 bytes = 66 hex chars)
+              let processedCompressedKey = compressedKey;
+              if (compressedKey.length > 66) {
+                // Take first 66 characters if too long
+                processedCompressedKey = compressedKey.substring(0, 66);
+                console.log(`⚠️ [Burner] Compressed key too long, truncating to 66 chars`);
+              } else if (compressedKey.length < 66) {
+                // Pad with zeros if too short
+                processedCompressedKey = compressedKey.padEnd(66, '0');
+                console.log(`⚠️ [Burner] Compressed key too short, padding to 66 chars`);
+              }
+              
+              // Convert compressed public key to full public key using ethers
+              const fullPublicKey = ethers.SigningKey.computePublicKey("0x" + processedCompressedKey, true);
+              publicKey = fullPublicKey.slice(2); // Remove 0x prefix
+              address = ethers.computeAddress("0x" + publicKey);
+              console.log(`✅ [Burner] Key slot ${keyNo}: ${address}`);
+              console.log(`   Public Key: ${publicKey.substring(0, 20)}...`);
+              console.log(`   Compressed Key: ${processedCompressedKey.substring(0, 20)}...`);
+              console.log(`   🎯 Single tap success - no second request needed!`);
+            } catch (e) {
+              console.log(`⚠️ [Burner] Failed to expand compressed key for slot ${keyNo}:`, e);
+              // Fallback to get_key_info if compressed key expansion fails
+              const keyInfo = await execBridgeCommand({
+                name: "get_key_info",
+                keyNo,
+              });
+              
+              if (keyInfo.publicKey) {
+                publicKey = keyInfo.publicKey;
+                address = ethers.computeAddress("0x" + publicKey);
+                console.log(`✅ [Burner] Key slot ${keyNo} (fallback): ${address}`);
+                console.log(`   Public Key: ${publicKey.substring(0, 20)}...`);
+              }
+            }
           }
-        } else {
-          console.log(`⚠️ [Burner] Key slot ${keyNo}: No public key found`);
+          
+          if (publicKey && address) {
+            // Check for attestation
+            const hasAttestation = !!dataResult.data[`publicKeyAttest:${keyNo}`];
+            
+            availableSlots.push({
+              keyNo,
+              address,
+              publicKey,
+              hasAttestation
+            });
+            
+            console.log(`   Attestation: ${hasAttestation ? 'Yes' : 'No'}`);
+            
+            // If we found a key in the highest priority slot, we can stop here
+            if (keyNo === targetSlots[0]) {
+              console.log(`🎯 [Burner] Found highest priority key in slot ${keyNo}, stopping scan`);
+              break;
+            }
+          } else {
+            console.log(`⚠️ [Burner] Key slot ${keyNo}: No public key found in comprehensive scan`);
+          }
+        } catch (e) {
+          console.log(`❌ [Burner] Key slot ${keyNo}: Error processing from comprehensive scan`);
+          console.log(`   Error:`, e);
         }
-      } catch (e) {
-        console.log(`❌ [Burner] Key slot ${keyNo}: Not available or not initialized`);
-        console.log(`   Error:`, e);
+      }
+    } catch (e) {
+      console.log("❌ [Burner] Comprehensive data request failed, falling back to individual calls");
+      console.log("   Error:", e);
+      
+      // Fallback to individual calls if comprehensive approach fails
+      for (const keyNo of targetSlots) {
+        try {
+          console.log(`📍 [Burner] Fallback: Checking key slot ${keyNo}...`);
+          const keyInfoStart = Date.now();
+          const keyInfo = await execBridgeCommand({
+            name: "get_key_info",
+            keyNo,
+          });
+          const keyInfoDuration = Date.now() - keyInfoStart;
+          
+          if (keyInfo.publicKey) {
+            const addr = ethers.computeAddress("0x" + keyInfo.publicKey);
+            console.log(`✅ [Burner] Key slot ${keyNo} (${keyInfoDuration}ms): ${addr}`);
+            console.log(`   Public Key: ${keyInfo.publicKey.substring(0, 20)}...`);
+            
+            // Check for attestation by trying to get public key attest
+            let hasAttestation = false;
+            try {
+              const attestResult = await execBridgeCommand({
+                name: "get_data_struct",
+                spec: `publicKeyAttest:${keyNo}`
+              });
+              hasAttestation = !!attestResult.data[`publicKeyAttest:${keyNo}`];
+            } catch (e) {
+              // Attestation not available, that's okay
+            }
+            
+            availableSlots.push({
+              keyNo,
+              address: addr,
+              publicKey: keyInfo.publicKey,
+              hasAttestation
+            });
+            
+            console.log(`   Attestation: ${hasAttestation ? 'Yes' : 'No'}`);
+            
+            if (keyNo === targetSlots[0]) {
+              console.log(`🎯 [Burner] Found highest priority key in slot ${keyNo}, stopping scan`);
+              break;
+            }
+          } else {
+            console.log(`⚠️ [Burner] Key slot ${keyNo}: No public key found`);
+          }
+        } catch (e) {
+          console.log(`❌ [Burner] Key slot ${keyNo}: Not available or not initialized`);
+          console.log(`   Error:`, e);
+        }
       }
     }
 
     console.log("\n═══════════════════════════════════════════════════════");
-    console.log(`📊 [Burner] SCAN COMPLETE - Found ${availableSlots.length} available key slots`);
+    console.log(`📊 [Burner] TARGETED SCAN COMPLETE - Found ${availableSlots.length} available key slots`);
     console.log("═══════════════════════════════════════════════════════");
     availableSlots.forEach((slot, idx) => {
-      console.log(`${idx + 1}. Slot ${slot.keyNo}: ${slot.address}`);
+      console.log(`${idx + 1}. Slot ${slot.keyNo}: ${slot.address} ${slot.hasAttestation ? '(attested)' : '(no attestation)'}`);
     });
 
-    // Strategy: Use the highest numbered key slot (typically the user's main address)
-    // Key slots are often used as: 1-2 for internal/system, higher numbers for user wallets
+    // Strategy: Use the first available slot (already in priority order)
     console.log("\n═══════════════════════════════════════════════════════");
     console.log("🎯 [Burner] SELECTING KEY SLOT");
     console.log("═══════════════════════════════════════════════════════");
     
     if (availableSlots.length > 0) {
-      const bestSlot = availableSlots[availableSlots.length - 1]; // Highest numbered slot
-      console.log(`✅ [Burner] SELECTED: Key slot ${bestSlot.keyNo} (highest available)`);
+      const bestSlot = availableSlots[0]; // First slot is highest priority
+      console.log(`✅ [Burner] SELECTED: Key slot ${bestSlot.keyNo} (priority-based selection)`);
       console.log(`   Address: ${bestSlot.address}`);
       console.log(`   Public Key: ${bestSlot.publicKey.substring(0, 40)}...`);
-      console.log(`   Strategy: Using highest numbered slot as primary wallet`);
-      
-      if (expectedAddress && bestSlot.address.toLowerCase() !== expectedAddress.toLowerCase()) {
-        console.log(`⚠️ [Burner] Note: pkN address (${expectedAddress}) differs from selected key slot address`);
-        console.log(`ℹ️ [Burner] pkN might be an attestation key rather than the wallet key`);
-      }
+      console.log(`   Has Attestation: ${bestSlot.hasAttestation}`);
+      console.log(`   Strategy: Priority-based selection (9 > 8 > 2)`);
       
       console.log("\n═══════════════════════════════════════════════════════");
       console.log("🎉 [Burner] getBurnerAddress() COMPLETED SUCCESSFULLY");

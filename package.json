@@ -3,13 +3,16 @@
   "version": "1.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "NEXT_PUBLIC_APP_MODE=local next dev",
+    "dev:hosted": "NEXT_PUBLIC_APP_MODE=hosted next dev",
+    "build": "NEXT_PUBLIC_APP_MODE=local next build",
+    "build:hosted": "NEXT_PUBLIC_APP_MODE=hosted next build",
     "start": "next start",
+    "start:hosted": "NEXT_PUBLIC_APP_MODE=hosted next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@arx-research/libburner": "^1.0.0",
+    "@arx-research/libhalo": "^1.15.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "ethers": "^6.13.2",
@@ -17,10 +20,12 @@
     "geist": "^1.5.1",
     "lucide-react": "^0.545.0",
     "next": "14.2.13",
+    "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^3.3.1",
+    "websocket": "^1.0.35",
     "zustand": "^4.5.5"
   },
   "devDependencies": {

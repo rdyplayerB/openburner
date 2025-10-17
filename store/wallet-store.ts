@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export type ConnectionMode = 'bridge' | 'gateway';
+
 interface WalletState {
   address: string | null;
   publicKey: string | null;
@@ -10,9 +12,11 @@ interface WalletState {
   chainName: string;
   isConnected: boolean;
   balance: string;
+  connectionMode: ConnectionMode;
   setWallet: (address: string, publicKey: string, keySlot?: number) => void;
   setChain: (chainId: number, rpcUrl: string, chainName: string) => void;
   setBalance: (balance: string) => void;
+  setConnectionMode: (mode: ConnectionMode) => void;
   disconnect: () => void;
 }
 
@@ -27,6 +31,7 @@ export const useWalletStore = create<WalletState>()(
       chainName: "Ethereum",
       isConnected: false,
       balance: "0",
+      connectionMode: 'bridge' as ConnectionMode,
       setWallet: (address, publicKey, keySlot) => {
         console.log("🔐 [Wallet Store] setWallet called:");
         console.log(`  Address: ${address}`);
@@ -43,6 +48,10 @@ export const useWalletStore = create<WalletState>()(
       setBalance: (balance) => {
         console.log(`💰 [Wallet Store] Setting balance: ${balance}`);
         set({ balance });
+      },
+      setConnectionMode: (mode) => {
+        console.log(`🔄 [Wallet Store] Setting connection mode: ${mode}`);
+        set({ connectionMode: mode });
       },
       disconnect: () => {
         console.log("🔌 [Wallet Store] DISCONNECT called");

@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { Plus, Send, RefreshCw, X } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
-import { getTokenPrices, clearPriceCache } from "@/lib/price-oracle";
+import { getTokenPrices, clearPriceCache, getOldestPriceTimestamp } from "@/lib/price-oracle";
 import { batchGetTokenImages, getTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
 import { motion } from "framer-motion";
 
@@ -122,13 +122,8 @@ export function TokenList({
           const isFresh = (now - timestamp) < (30 * 60 * 1000); // 30 minutes
           if (isFresh) {
             console.log("📦 Using fresh cached prices");
-            const cachedPrices: { [symbol: string]: number } = {};
-            for (const symbol of symbols) {
-              const cached = memoryCache.get(symbol) || loadFromLocalStorage(symbol);
-              if (cached) {
-                cachedPrices[symbol] = cached.usd;
-              }
-            }
+            // Use the getTokenPrices function which handles caching internally
+            const cachedPrices = await getTokenPrices(symbols);
             setTokenPrices(cachedPrices);
             return cachedPrices;
           }
