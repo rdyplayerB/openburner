@@ -19,7 +19,7 @@ export function HostedDesktopConnect() {
   const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
   const [readerConnected, setReaderConnected] = useState<boolean | null>(null);
   const [showQR, setShowQR] = useState(false);
-  const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string; sessionId: string } | null>(null);
+  const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string } | null>(null);
   const { setWallet, connectionMode, setConnectionMode } = useWalletStore();
   
   // Use ref to track connecting state for interval callback
@@ -264,13 +264,11 @@ export function HostedDesktopConnect() {
     console.log("\n═══════════════════════════════════════════════════════");
     console.log(`✅ [Hosted Desktop] Gateway pairing started in ${pairDuration}ms`);
     console.log("═══════════════════════════════════════════════════════");
-    console.log(`   Session ID: ${pairInfo.sessionId}`);
     console.log(`   Exec URL: ${pairInfo.execURL}`);
     
     setQrData({
       qrCodeDataURL: pairInfo.qrCodeDataURL,
-      execURL: pairInfo.execURL,
-      sessionId: pairInfo.sessionId
+      execURL: pairInfo.execURL
     });
     setShowQR(true);
     
@@ -447,7 +445,6 @@ export function HostedDesktopConnect() {
         <QRDisplay
           qrCodeDataURL={qrData.qrCodeDataURL}
           execURL={qrData.execURL}
-          sessionId={qrData.sessionId}
           onClose={() => {
             setShowQR(false);
             setQrData(null);

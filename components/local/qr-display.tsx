@@ -6,11 +6,10 @@ import { Smartphone, Copy, Check, X } from "lucide-react";
 interface QRDisplayProps {
   qrCodeDataURL: string;
   execURL: string;
-  sessionId: string;
   onClose?: () => void;
 }
 
-export function QRDisplay({ qrCodeDataURL, execURL, sessionId, onClose }: QRDisplayProps) {
+export function QRDisplay({ qrCodeDataURL, execURL, onClose }: QRDisplayProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopyURL = async () => {

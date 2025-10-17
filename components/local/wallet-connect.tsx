@@ -19,7 +19,7 @@ export function WalletConnect() {
   const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
   const [readerConnected, setReaderConnected] = useState<boolean | null>(null);
   const [showQR, setShowQR] = useState(false);
-  const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string; sessionId: string } | null>(null);
+  const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string } | null>(null);
   const { setWallet, connectionMode, setConnectionMode } = useWalletStore();
   
   
@@ -279,14 +279,12 @@ export function WalletConnect() {
     console.log("\n═══════════════════════════════════════════════════════");
     console.log(`✅ [WalletConnect] Gateway pairing started in ${pairDuration}ms`);
     console.log("═══════════════════════════════════════════════════════");
-    console.log(`   Session ID: ${pairInfo.sessionId}`);
     console.log(`   Exec URL: ${pairInfo.execURL}`);
     
     // Show QR code
     setQrData({
       qrCodeDataURL: pairInfo.qrCodeDataURL,
-      execURL: pairInfo.execURL,
-      sessionId: pairInfo.sessionId
+      execURL: pairInfo.execURL
     });
     setShowQR(true);
     
@@ -464,7 +462,6 @@ export function WalletConnect() {
         <QRDisplay
           qrCodeDataURL={qrData.qrCodeDataURL}
           execURL={qrData.execURL}
-          sessionId={qrData.sessionId}
           onClose={() => {
             setShowQR(false);
             setQrData(null);
