@@ -1,4 +1,4 @@
-import { getBurnerAddressViaGateway } from '../burner-gateway';
+import { getBurnerAddressViaGateway, startGatewayPairing } from '../burner-gateway';
 import { BurnerKeyInfo } from '../burner';
 
 /**
@@ -12,13 +12,26 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
       return await connectWithWebNFC();
     } catch (error) {
       console.warn("📱 [Mobile NFC] Web NFC failed, falling back to gateway:", error);
-      return await getBurnerAddressViaGateway();
+      return await connectWithGateway();
     }
   } else {
     // Use gateway mode for iOS and other browsers
     console.log("📱 [Mobile NFC] Web NFC not available, using gateway mode...");
-    return await getBurnerAddressViaGateway();
+    return await connectWithGateway();
   }
+}
+
+/**
+ * Connect using gateway mode - starts pairing and gets address
+ */
+async function connectWithGateway(): Promise<BurnerKeyInfo> {
+  console.log("📱 [Mobile NFC] Starting gateway pairing for mobile connection...");
+  
+  // Start the gateway pairing process
+  await startGatewayPairing();
+  
+  // Now get the burner address
+  return await getBurnerAddressViaGateway();
 }
 
 /**
