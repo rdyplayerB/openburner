@@ -59,7 +59,7 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
         const compressedKey = cardData[compressedKeyKey];
         
         // Check if we have a valid compressed key (string) and not an error object
-        if (compressedKey && typeof compressedKey === 'string' && !compressedKey.error) {
+        if (compressedKey && typeof compressedKey === 'string') {
           // For now, create a placeholder address from the compressed key
           // In a real implementation, you'd need to expand the compressed key and derive the address
           const mockAddress = "0x" + compressedKey.substring(0, 40);
