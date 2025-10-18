@@ -108,12 +108,12 @@ export function HostedMobileConnect() {
           )}
 
           {/* Instructions */}
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-2">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-200">
               How to Connect
             </h3>
             
-            <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400 transition-colors duration-200">
+            <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400 transition-colors duration-200">
               <p>1. Place your Burner card on the back of your phone</p>
               <p>2. Hold it steady until you feel a vibration</p>
               <p>3. Your wallet will connect automatically</p>
