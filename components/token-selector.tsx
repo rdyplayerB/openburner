@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Send, Search } from "lucide-react";
 import { motion } from "framer-motion";
+import { getAppConfig } from "@/lib/config/environment";
 
 interface Token {
   address: string;
@@ -38,6 +39,7 @@ export function TokenSelector({
   tokenPrices,
 }: TokenSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { pricingEnabled } = getAppConfig();
 
   // Filter tokens based on search query (by name, symbol, or address)
   const filteredTokens = tokens.filter((token) => {
@@ -76,7 +78,7 @@ export function TokenSelector({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, symbol, or address..."
-              className="w-full pl-10 pr-4 py-2 sm:py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400"
+              className="w-full pl-10 pr-4 py-2 sm:py-2.5 text-base border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400"
               autoFocus
             />
           </div>
@@ -152,13 +154,15 @@ export function TokenSelector({
                       <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 font-mono">
                         {formatTokenBalance(token.balance)}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {tokenPrices[token.symbol] !== undefined ? (
-                          `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
-                        ) : (
-                          <span className="text-slate-400 dark:text-slate-500">—</span>
-                        )}
-                      </p>
+                      {pricingEnabled && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {tokenPrices[token.symbol] !== undefined ? (
+                            `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
+                          ) : (
+                            <span className="text-slate-400 dark:text-slate-500">—</span>
+                          )}
+                        </p>
+                      )}
                     </div>
 
                     {/* Send Icon */}

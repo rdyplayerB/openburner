@@ -322,21 +322,21 @@ export function WalletDashboard() {
                           value={customName}
                           onChange={(e) => setCustomName(e.target.value)}
                           placeholder="Network Name"
-                          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                          className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                         />
                         <input
                           type="text"
                           value={customRpc}
                           onChange={(e) => setCustomRpc(e.target.value)}
                           placeholder="RPC URL"
-                          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                          className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                         />
                         <input
                           type="number"
                           value={customChainId}
                           onChange={(e) => setCustomChainId(e.target.value)}
                           placeholder="Chain ID"
-                          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                          className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                         />
                         <button
                           onClick={handleCustomChain}
@@ -441,19 +441,17 @@ export function WalletDashboard() {
               Send
             </button>
 
-            <div className="flex-1 relative group">
-              <button
-                disabled
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed font-semibold text-sm"
-              >
-                <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
-                Swap
-              </button>
+            <button
+              disabled
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed font-semibold text-sm relative group"
+            >
+              <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
+              Swap
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 Planned
                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
-            </div>
+            </button>
 
             <button
               onClick={() => setShowReceiveModal(true)}

@@ -17,6 +17,10 @@ body {
   overflow-x: hidden;
   /* Ensure no gaps at the top */
   position: relative;
+  /* Prevent mobile zoom */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Ensure modal overlays cover everything */
@@ -179,5 +183,26 @@ body {
   50% {
     box-shadow: 0 0 30px rgba(228, 87, 46, 0.5), 0 0 40px rgba(228, 87, 46, 0.3);
   }
+}
+
+/* Prevent mobile zoom on input fields */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  font-size: 16px !important;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Ensure buttons don't trigger zoom */
+button {
+  font-size: 16px !important;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 

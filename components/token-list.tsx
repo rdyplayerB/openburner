@@ -41,7 +41,7 @@ function getNativeTokenInfo(chainId: number): { symbol: string; name: string } {
     case 324: // zkSync Era
       return { symbol: "ETH", name: "Ethereum" };
     case 137: // Polygon
-      return { symbol: "MATIC", name: "Polygon" };
+      return { symbol: "POL", name: "Polygon" };
     default:
       return { symbol: "ETH", name: "Ethereum" };
   }
@@ -466,8 +466,8 @@ export function TokenList({
 
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assets</h2>
         <div className="flex items-center gap-3">
           <div className="relative group">
@@ -503,7 +503,7 @@ export function TokenList({
       </div>
 
       {showAddToken && (
-        <div className="mb-6 p-5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
           <label className="block text-xs text-slate-600 dark:text-slate-400 font-semibold mb-2">
             Token Contract Address
           </label>
@@ -559,9 +559,9 @@ export function TokenList({
                   ease: "easeOut"
                 }}
                 onClick={() => onSendToken(token)}
-                className="flex items-center justify-between p-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                className="flex items-center justify-between px-3 py-3 sm:px-4 sm:py-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
               >
-                <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   {/* Token Icon */}
                   <div className="flex-shrink-0">
                     {tokenImages[token.symbol.toUpperCase()] ? (
@@ -615,7 +615,7 @@ export function TokenList({
                   </div>
                   
                   {/* Send indicator on hover */}
-                  <div className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg">
                       <Send className="w-4 h-4" strokeWidth={2.5} />
                     </div>

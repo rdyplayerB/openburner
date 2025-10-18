@@ -225,36 +225,36 @@ Add any custom network via the UI network selector.
 
 ## Token Management
 
-### Hardcoded Token Lists
+### Default Token Lists
 
-OpenBurner currently uses **hardcoded token lists** rather than a dynamic token list service. The following popular tokens are pre-configured for each network:
+OpenBurner uses **streamlined token lists** focused on core tokens for optimal performance. The following essential tokens are pre-configured for each network:
 
 **Ethereum Mainnet:**
-- USDC, USDT, DAI, WETH, WBTC, AAVE, UNI, LINK
+- WETH, USDC, USDT, WBTC
 
 **Base:**
-- USDC, DAI, WETH, USDbC, cbBTC, cbETH, wstETH
+- WETH, USDC, USD2
 
 **Arbitrum One:**
-- USDC, USDT, DAI, WETH, WBTC, ARB, LINK
+- WETH, USDC, USDT, WBTC
 
 **Optimism:**
-- USDC, USDT, DAI, WETH, WBTC, OP
+- WETH, USDC, USDT, WBTC, OP
 
 **Polygon:**
-- USDC, USDT, DAI, WETH, WBTC, WMATIC
+- POL (native), WETH, USDC, USDT, WBTC
 
 **Blast:**
-- USDB, WETH
+- WETH, USDB (native stablecoin)
 
 **Scroll:**
-- USDC, USDT, WETH
+- WETH, USDC, USDT
 
 **Linea:**
-- USDC, USDT, WETH
+- WETH, USDC, USDT
 
 **zkSync Era:**
-- USDC, USDT, WETH
+- WETH, USDC, USDT
 
 ### Adding Custom Tokens
 

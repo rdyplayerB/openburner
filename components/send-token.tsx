@@ -328,7 +328,7 @@ export function SendToken({
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="0x..."
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+              className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
             />
             {lastUsedAddress && lastUsedAddress !== recipient && (
               <div className="mt-2 flex items-center justify-between">
@@ -368,7 +368,7 @@ export function SendToken({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.0"
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+              className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
             />
           </div>
 
