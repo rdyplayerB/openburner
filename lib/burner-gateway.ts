@@ -55,19 +55,19 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
     console.log(`✅ [Gateway] Smartphone connected in ${connectDuration}ms`);
 
     // Use a single execHaloCmd call to get all key information at once
-    // This matches BurnerOS approach - single tap, comprehensive data request
-    console.log("🔍 [Gateway] Scanning all key slots in single tap (BurnerOS style)...");
+    // Single tap, comprehensive data request approach
+    console.log("🔍 [Gateway] Scanning all key slots in single tap...");
     
     // Priority order: 9 (user wallet) > 8 (preloaded) > 2 (system)
     const targetSlots = [9, 8, 2];
     const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
     
-    // Single comprehensive call like BurnerOS does
+    // Single comprehensive call for efficiency
     console.log("📍 [Gateway] Making comprehensive data request...");
     const scanStart = Date.now();
     
     try {
-      // Use the same spec as BurnerOS: latchValue, graffiti, and all key data at once
+      // Use comprehensive spec: latchValue, graffiti, and all key data at once
       const comprehensiveSpec = "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8";
       
       console.log(`📡 [Gateway] Executing get_data_struct with spec: ${comprehensiveSpec}`);
@@ -91,7 +91,7 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
           let address = null;
           
           if (compressedKey) {
-            // Use compressed public key directly to compute address (like BurnerOS)
+            // Use compressed public key directly to compute address
             // This eliminates the need for a second tap
             try {
               // Ensure compressed key is proper length (33 bytes = 66 hex chars)
@@ -334,15 +334,15 @@ export async function waitForGatewayConnection(gate: HaloGateway): Promise<Burne
     const connectDuration = Date.now() - connectStart;
     console.log(`✅ [Gateway] Smartphone connected in ${connectDuration}ms`);
 
-    // Execute comprehensive data request like BurnerOS
-    console.log("🔍 [Gateway] Scanning for available key slots (BurnerOS style)...");
+    // Execute comprehensive data request
+    console.log("🔍 [Gateway] Scanning for available key slots...");
     
     // Priority order: 9 (user wallet) > 8 (preloaded) > 2 (system)
     const targetSlots = [9, 8, 2];
     const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
     
     try {
-      // Use the same spec as BurnerOS: latchValue, graffiti, and all key data at once
+      // Use comprehensive spec: latchValue, graffiti, and all key data at once
       const comprehensiveSpec = "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8";
       
       console.log(`📡 [Gateway] Executing get_data_struct with spec: ${comprehensiveSpec}`);
@@ -364,7 +364,7 @@ export async function waitForGatewayConnection(gate: HaloGateway): Promise<Burne
           let address = null;
           
           if (compressedKey) {
-            // Use compressed public key directly to compute address (like BurnerOS)
+            // Use compressed public key directly to compute address
             // This eliminates the need for a second tap
             try {
               // Ensure compressed key is proper length (33 bytes = 66 hex chars)

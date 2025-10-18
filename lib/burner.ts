@@ -38,9 +38,9 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
     console.log("📬 [Burner] Available addresses:", result.etherAddresses);
     console.log("🔑 [Burner] Available public keys:", result.publicKeys);
 
-    // Use comprehensive data request like BurnerOS for consistency
+    // Use comprehensive data request for consistency
     console.log("\n═══════════════════════════════════════════════════════");
-    console.log("🔍 [Burner] COMPREHENSIVE DATA SCANNING (BurnerOS style)");
+    console.log("🔍 [Burner] COMPREHENSIVE DATA SCANNING");
     console.log("═══════════════════════════════════════════════════════");
     const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
     
@@ -48,7 +48,7 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
     const targetSlots = [9, 8, 2];
     
     try {
-      // Use the same comprehensive spec as BurnerOS and Gateway
+      // Use comprehensive spec for all key data
       const comprehensiveSpec = "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8";
       
       console.log(`📡 [Burner] Executing get_data_struct with spec: ${comprehensiveSpec}`);
@@ -70,7 +70,7 @@ export async function getBurnerAddress(): Promise<BurnerKeyInfo> {
           let address = null;
           
           if (compressedKey) {
-            // Use compressed public key directly to compute address (like BurnerOS)
+            // Use compressed public key directly to compute address
             // This eliminates the need for a second tap
             try {
               // Ensure compressed key is proper length (33 bytes = 66 hex chars)
