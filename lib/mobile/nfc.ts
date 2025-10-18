@@ -56,19 +56,24 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
         const compressedKeyKey = `compressedPublicKey:${slot}`;
         const attestKey = `publicKeyAttest:${slot}`;
         
-        if (cardData[compressedKeyKey]) {
+        const compressedKey = cardData[compressedKeyKey];
+        
+        // Check if we have a valid compressed key (string) and not an error object
+        if (compressedKey && typeof compressedKey === 'string' && !compressedKey.error) {
           // For now, create a placeholder address from the compressed key
           // In a real implementation, you'd need to expand the compressed key and derive the address
-          const mockAddress = "0x" + cardData[compressedKeyKey].substring(0, 40);
-          const mockPublicKey = "0x" + cardData[compressedKeyKey] + "00".repeat(32);
+          const mockAddress = "0x" + compressedKey.substring(0, 40);
+          const mockPublicKey = "0x" + compressedKey + "00".repeat(32);
           
           availableSlots.push({
             keyNo: slot,
             address: mockAddress,
             publicKey: mockPublicKey,
-            hasAttestation: cardData[attestKey] ? true : false
+            hasAttestation: cardData[attestKey] && typeof cardData[attestKey] === 'string' ? true : false
           });
           console.log(`✅ [Mobile NFC] Found compressed key slot ${slot}: ${mockAddress}`);
+        } else if (compressedKey && compressedKey.error) {
+          console.log(`⚠️ [Mobile NFC] Key slot ${slot} not generated: ${compressedKey.error}`);
         }
       }
     }
