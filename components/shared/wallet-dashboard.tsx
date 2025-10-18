@@ -11,6 +11,7 @@ import { Copy, LogOut, CheckCircle, ChevronDown, Plus, Network, Send, Download, 
 import { QRCodeSVG } from "qrcode.react";
 import { getTokenPrice } from "@/lib/price-oracle";
 import { getAppConfig } from "@/lib/config/environment";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 import Image from "next/image";
 
 interface Token {
@@ -221,38 +222,39 @@ export function WalletDashboard() {
 
   return (
     <div className="space-y-3">
-      {/* Header with Network & Disconnect */}
+      {/* Header with Network, Theme Toggle & Disconnect */}
       <div className="flex items-center justify-between">
-        <div className="relative network-dropdown">
-          <button
-            onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-card hover:shadow-card-hover hover:border-brand-orange/30 dark:hover:border-brand-orange/40 transition-all"
-          >
-            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100">
-              {(() => {
-                const chain = POPULAR_CHAINS.find(c => c.chainId === chainId);
-                return chain?.logo ? (
-                  <img 
-                    src={chain.logo} 
-                    alt={chainName}
-                    className="w-4 h-4 object-cover rounded-full"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `<span class="text-[9px] font-bold text-slate-700">${chainName[0]}</span>`;
-                      }
-                    }}
-                  />
-                ) : (
-                  <span className="text-[9px] font-bold text-slate-700">{chainName[0]}</span>
-                );
-              })()}
-            </div>
-            <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{chainName}</span>
-            <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform ${showNetworkDropdown ? "rotate-180" : ""}`} />
-          </button>
+        <div className="flex items-center gap-3">
+          <div className="relative network-dropdown">
+            <button
+              onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-card hover:shadow-card-hover hover:border-brand-orange/30 dark:hover:border-brand-orange/40 transition-all"
+            >
+              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100">
+                {(() => {
+                  const chain = POPULAR_CHAINS.find(c => c.chainId === chainId);
+                  return chain?.logo ? (
+                    <img 
+                      src={chain.logo} 
+                      alt={chainName}
+                      className="w-4 h-4 object-cover rounded-full"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-[9px] font-bold text-slate-700">${chainName[0]}</span>`;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span className="text-[9px] font-bold text-slate-700">{chainName[0]}</span>
+                  );
+                })()}
+              </div>
+              <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{chainName}</span>
+              <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform ${showNetworkDropdown ? "rotate-180" : ""}`} />
+            </button>
           
           {showNetworkDropdown && (
             <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-card-lg z-50 p-2 max-h-96 overflow-y-auto">
@@ -348,6 +350,10 @@ export function WalletDashboard() {
               </div>
             </div>
           )}
+          </div>
+          
+          {/* Theme Toggle */}
+          <ThemeToggle />
         </div>
 
         <button
