@@ -28,9 +28,18 @@ export async function connectWithMobileGateway(): Promise<BurnerKeyInfo> {
 
     // Wait for smartphone to connect (this is where the mobile device acts as the "smartphone")
     console.log("⏳ [Mobile Gateway] Waiting for card connection...");
+    const connectStart = Date.now();
+    await gateway.waitConnected();
+    const connectDuration = Date.now() - connectStart;
+    console.log(`✅ [Mobile Gateway] Card connected in ${connectDuration}ms`);
     
-    // Get the burner address
-    const result = await gateway.getBurnerAddress();
+    // Get comprehensive data from the card
+    console.log("📡 [Mobile Gateway] Executing comprehensive data scan...");
+    const comprehensiveSpec = "publicKey:9,publicKey:8,publicKey:2,etherAddress:9,etherAddress:8,etherAddress:2,publicKeyAttest:9,publicKeyAttest:8,publicKeyAttest:2";
+    const result = await gateway.execHaloCmd({
+      name: "get_data_struct",
+      spec: comprehensiveSpec
+    });
     console.log("📋 [Mobile Gateway] Card data received:", result);
 
     // Process the result to find the best key slot
@@ -40,14 +49,18 @@ export async function connectWithMobileGateway(): Promise<BurnerKeyInfo> {
     const targetSlots = [9, 8, 2];
     
     for (const slot of targetSlots) {
-      if (result.etherAddresses && result.etherAddresses[slot] && result.publicKeys && result.publicKeys[slot]) {
+      const addressKey = `etherAddress:${slot}`;
+      const publicKeyKey = `publicKey:${slot}`;
+      const attestKey = `publicKeyAttest:${slot}`;
+      
+      if (result[addressKey] && result[publicKeyKey]) {
         availableSlots.push({
           keyNo: slot,
-          address: result.etherAddresses[slot],
-          publicKey: result.publicKeys[slot],
-          hasAttestation: result.attestations && result.attestations[slot] ? true : false
+          address: result[addressKey],
+          publicKey: result[publicKeyKey],
+          hasAttestation: result[attestKey] ? true : false
         });
-        console.log(`✅ [Mobile Gateway] Found key slot ${slot}: ${result.etherAddresses[slot]}`);
+        console.log(`✅ [Mobile Gateway] Found key slot ${slot}: ${result[addressKey]}`);
       }
     }
 
