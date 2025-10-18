@@ -252,7 +252,7 @@ export function WalletDashboard() {
                   );
                 })()}
               </div>
-              <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{chainName}</span>
+              <span className="font-semibold text-base text-slate-900 dark:text-slate-100">{chainName}</span>
               <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform ${showNetworkDropdown ? "rotate-180" : ""}`} />
             </button>
           
@@ -341,7 +341,7 @@ export function WalletDashboard() {
                         <button
                           onClick={handleCustomChain}
                           disabled={!customRpc || !customChainId || !customName}
-                          className="w-full bg-brand-orange text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-brand-orange-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                          className="w-full bg-brand-orange text-white text-base font-semibold py-2 px-3 rounded-lg hover:bg-brand-orange-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                         >
                           Add Network
                         </button>
@@ -362,7 +362,7 @@ export function WalletDashboard() {
           title="Disconnect"
         >
           <LogOut className="w-4 h-4" strokeWidth={2.5} />
-          <span className="text-sm font-semibold">Disconnect</span>
+          <span className="text-base font-semibold">Disconnect</span>
         </button>
       </div>
 
@@ -435,7 +435,7 @@ export function WalletDashboard() {
           <div className="flex gap-3">
             <button
               onClick={() => setShowTokenSelector(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white transition-all duration-150 font-semibold text-sm shadow-md hover:shadow-glow-orange active:scale-95"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white transition-all duration-150 font-semibold text-base shadow-md hover:shadow-glow-orange active:scale-95"
             >
               <Send className="w-4 h-4" strokeWidth={2.5} />
               Send
@@ -443,7 +443,7 @@ export function WalletDashboard() {
 
             <button
               disabled
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed font-semibold text-sm relative group"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed font-semibold text-base relative group"
             >
               <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
               Swap
@@ -455,7 +455,7 @@ export function WalletDashboard() {
 
             <button
               onClick={() => setShowReceiveModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-600 hover:bg-slate-700 dark:hover:bg-slate-500 text-white transition-all duration-150 font-semibold text-sm shadow-md hover:shadow-lg active:scale-95"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-600 hover:bg-slate-700 dark:hover:bg-slate-500 text-white transition-all duration-150 font-semibold text-base shadow-md hover:shadow-lg active:scale-95"
             >
               <Download className="w-4 h-4" strokeWidth={2.5} />
               Receive

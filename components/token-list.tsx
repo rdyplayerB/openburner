@@ -485,7 +485,7 @@ export function TokenList({
           </div>
           <button
             onClick={() => setShowAddToken(!showAddToken)}
-            className="text-sm text-slate-700 dark:text-slate-300 hover:text-brand-orange font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all group"
+            className="text-base text-slate-700 dark:text-slate-300 hover:text-brand-orange font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all group"
           >
             {showAddToken ? (
               <>
@@ -520,7 +520,7 @@ export function TokenList({
           <button
             onClick={handleAddToken}
             disabled={!newTokenAddress || isLoading}
-            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-glow-orange"
+            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white text-base font-semibold py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-glow-orange"
           >
             {isLoading ? "Adding..." : "Add Token"}
           </button>
