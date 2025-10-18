@@ -67,60 +67,56 @@ export function HostedMobileConnect() {
               height={64} 
               className="w-16 h-16 drop-shadow-sm"
             />
-            <h1 className="text-4xl font-bold text-black dark:text-white tracking-tight leading-none">
+            <h1 className="text-4xl font-bold text-black dark:text-white tracking-tight leading-none transition-colors duration-200">
               Open<span className="text-[#FF6B35]">Burner</span>
             </h1>
           </div>
-          <p className="text-slate-600 dark:text-slate-400 text-lg font-medium leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-lg font-medium leading-relaxed transition-colors duration-200">
             Tap your Burner card to your device
           </p>
         </div>
 
         {/* Connect Button */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700/60 shadow-card-lg overflow-hidden">
-          <div className="p-8">
-            <button
-              onClick={handleConnect}
-              disabled={isConnecting}
-              className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#E55A2B] hover:to-[#FF7A3A] text-white font-semibold py-6 px-8 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 shadow-lg hover:shadow-xl hover:shadow-orange-500/25 text-xl active:scale-[0.98] transform hover:scale-[1.02] disabled:hover:scale-100"
-            >
-              {isConnecting ? (
-                <>
-                  <Loader2 className="animate-spin h-8 w-8" strokeWidth={2.5} />
-                  <span>Reading Card...</span>
-                </>
-              ) : (
-                <>
-                  <Nfc className="h-8 w-8" strokeWidth={2.5} />
-                  <span>Tap Your Burner</span>
-                </>
-              )}
-            </button>
-            
-            {/* Cancel Button - only show when connecting */}
-            {isConnecting && (
-              <button
-                onClick={handleCancel}
-                className="w-full mt-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <X className="h-5 w-5" strokeWidth={2.5} />
-                <span>Cancel</span>
-              </button>
+        <div className="space-y-6">
+          <button
+            onClick={handleConnect}
+            disabled={isConnecting}
+            className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#E55A2B] hover:to-[#FF7A3A] text-white font-semibold py-6 px-8 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 shadow-lg hover:shadow-xl hover:shadow-orange-500/25 text-xl active:scale-[0.98] transform hover:scale-[1.02] disabled:hover:scale-100"
+          >
+            {isConnecting ? (
+              <>
+                <Loader2 className="animate-spin h-8 w-8" strokeWidth={2.5} />
+                <span>Reading Card...</span>
+              </>
+            ) : (
+              <>
+                <Nfc className="h-8 w-8" strokeWidth={2.5} />
+                <span>Tap Your Burner</span>
+              </>
             )}
-          </div>
+          </button>
+          
+          {/* Cancel Button - only show when connecting */}
+          {isConnecting && (
+            <button
+              onClick={handleCancel}
+              className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              <X className="h-5 w-5" strokeWidth={2.5} />
+              <span>Cancel</span>
+            </button>
+          )}
 
           {/* Instructions */}
-          <div className="bg-slate-50/80 dark:bg-slate-800/80 px-8 py-6 border-t border-slate-200/60 dark:border-slate-700/60">
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 text-center">
-                How to Connect
-              </h3>
-              
-              <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                <p>1. Place your Burner card on the back of your phone</p>
-                <p>2. Hold it steady until you feel a vibration</p>
-                <p>3. Your wallet will connect automatically</p>
-              </div>
+          <div className="text-center space-y-3">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-200">
+              How to Connect
+            </h3>
+            
+            <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400 transition-colors duration-200">
+              <p>1. Place your Burner card on the back of your phone</p>
+              <p>2. Hold it steady until you feel a vibration</p>
+              <p>3. Your wallet will connect automatically</p>
             </div>
           </div>
         </div>
