@@ -15,11 +15,11 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 transition-colors duration-700 bg-connected bg-bg-base dark:bg-slate-900">
       {/* Theme Toggle - Fixed Position */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-3 right-3 z-50">
         <ThemeToggle />
       </div>
 
-      <div className="max-w-2xl mx-auto pt-8 pb-16 relative z-10">
+      <div className="max-w-2xl mx-auto pt-6 pb-12 relative z-10">
         {!isConnected ? (
           // Environment-aware rendering
           isHosted && isMobile ? (
