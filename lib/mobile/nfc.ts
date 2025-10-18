@@ -7,115 +7,176 @@ import { BurnerKeyInfo } from '../burner';
  * Connect with mobile NFC - uses execHaloCmdWeb for direct Halo connection
  */
 export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
+  console.log("═══════════════════════════════════════════════════════");
+  console.log("🎯 [Mobile NFC] connectWithMobileNFC() STARTED");
+  console.log("═══════════════════════════════════════════════════════");
+  console.log("⏰ [Mobile NFC] Timestamp:", new Date().toISOString());
   console.log("📱 [Mobile NFC] Starting direct Halo connection...");
   console.log("📱 [Mobile NFC] This will trigger the native iOS security key modal");
   
   try {
-    // Use execHaloCmdWeb with credential method for direct Halo connection
-    const result = await execHaloCmdWeb({
-      name: "get_data_struct",
-      spec: "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8"
-    }, {
-      method: "credential" // This triggers the native iOS security key modal
-    });
-
-    console.log("✅ [Mobile NFC] Direct Halo connection successful");
-    console.log("📋 [Mobile NFC] Card data received:", result);
-
-    // The result from execHaloCmdWeb has a different structure
-    // It's wrapped in a 'data' property, similar to the gateway response
-    const cardData = result.data || result;
-    console.log("📋 [Mobile NFC] Processing card data:", cardData);
-
-    // Process the result to find the best key slot
-    const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
+    // Use comprehensive data request approach like bridge and gateway
+    console.log("🔍 [Mobile NFC] Scanning all key slots in single tap...");
     
     // Priority order: 9 (user wallet) > 8 (preloaded) > 2 (system)
     const targetSlots = [9, 8, 2];
+    const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
     
-    for (const slot of targetSlots) {
-      const addressKey = `etherAddress:${slot}`;
-      const publicKeyKey = `publicKey:${slot}`;
-      const attestKey = `publicKeyAttest:${slot}`;
+    // Single comprehensive call for efficiency
+    console.log("📍 [Mobile NFC] Making comprehensive data request...");
+    const scanStart = Date.now();
+    
+    try {
+      // Use comprehensive spec: latchValue, graffiti, and all key data at once
+      const comprehensiveSpec = "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8";
       
-      if (cardData[addressKey] && cardData[publicKeyKey]) {
-        availableSlots.push({
-          keyNo: slot,
-          address: cardData[addressKey],
-          publicKey: cardData[publicKeyKey],
-          hasAttestation: cardData[attestKey] ? true : false
-        });
-        console.log(`✅ [Mobile NFC] Found key slot ${slot}: ${cardData[addressKey]}`);
-      }
-    }
+      console.log(`📡 [Mobile NFC] Executing get_data_struct with spec: ${comprehensiveSpec}`);
+      const result = await execHaloCmdWeb({
+        name: "get_data_struct",
+        spec: comprehensiveSpec
+      }, {
+        method: "credential" // This triggers the native iOS security key modal
+      });
+      
+      const scanDuration = Date.now() - scanStart;
+      console.log(`✅ [Mobile NFC] Comprehensive data request completed in ${scanDuration}ms`);
+      console.log("📋 [Mobile NFC] Full data result:", result);
 
-    if (availableSlots.length === 0) {
-      // If no addresses found, try looking for compressed public keys and derive addresses
-      console.log("📋 [Mobile NFC] No addresses found, trying to derive from compressed public keys...");
+      // The result from execHaloCmdWeb has a different structure
+      // It's wrapped in a 'data' property, similar to the gateway response
+      const cardData = result.data || result;
+      console.log("📋 [Mobile NFC] Processing card data:", cardData);
       
-      for (const slot of targetSlots) {
-        const compressedKeyKey = `compressedPublicKey:${slot}`;
-        const attestKey = `publicKeyAttest:${slot}`;
-        
-        const compressedKey = cardData[compressedKeyKey];
-        
-        // Check if we have a valid compressed key (string) and not an error object
-        if (compressedKey && typeof compressedKey === 'string') {
-          try {
-            // Ensure compressed key is proper length (33 bytes = 66 hex chars)
-            let processedCompressedKey = compressedKey;
-            if (compressedKey.length > 66) {
-              // Take first 66 characters if too long
-              processedCompressedKey = compressedKey.substring(0, 66);
-              console.log(`⚠️ [Mobile NFC] Compressed key too long, truncating to 66 chars`);
-            } else if (compressedKey.length < 66) {
-              // Pad with zeros if too short
-              processedCompressedKey = compressedKey.padEnd(66, '0');
-              console.log(`⚠️ [Mobile NFC] Compressed key too short, padding to 66 chars`);
+      // Process the results for each target slot
+      for (const keyNo of targetSlots) {
+        try {
+          console.log(`📍 [Mobile NFC] Processing key slot ${keyNo}...`);
+          
+          // Check for compressed public key first
+          const compressedKey = cardData[`compressedPublicKey:${keyNo}`];
+          let publicKey = null;
+          let address = null;
+          
+          if (compressedKey) {
+            // Use compressed public key directly to compute address
+            // This eliminates the need for a second tap
+            try {
+              // Ensure compressed key is proper length (33 bytes = 66 hex chars)
+              let processedCompressedKey = compressedKey;
+              if (compressedKey.length > 66) {
+                // Take first 66 characters if too long
+                processedCompressedKey = compressedKey.substring(0, 66);
+                console.log(`⚠️ [Mobile NFC] Compressed key too long, truncating to 66 chars`);
+              } else if (compressedKey.length < 66) {
+                // Pad with zeros if too short
+                processedCompressedKey = compressedKey.padEnd(66, '0');
+                console.log(`⚠️ [Mobile NFC] Compressed key too short, padding to 66 chars`);
+              }
+              
+              // Convert compressed public key to full public key using ethers
+              const fullPublicKey = ethers.SigningKey.computePublicKey("0x" + processedCompressedKey, true);
+              publicKey = fullPublicKey.slice(2); // Remove 0x prefix
+              address = ethers.computeAddress("0x" + publicKey);
+              console.log(`✅ [Mobile NFC] Key slot ${keyNo}: ${address}`);
+              console.log(`   Public Key: ${publicKey.substring(0, 20)}...`);
+              console.log(`   Compressed Key: ${processedCompressedKey.substring(0, 20)}...`);
+              console.log(`   🎯 Single tap success - no second request needed!`);
+            } catch (e) {
+              console.log(`⚠️ [Mobile NFC] Failed to expand compressed key for slot ${keyNo}:`, e);
+              // Fallback to individual key info if compressed key expansion fails
+              // Note: This would require a second tap, so we'll skip for now
+              console.log(`⚠️ [Mobile NFC] Skipping fallback for slot ${keyNo} to avoid second tap`);
             }
-            
-            // Convert compressed public key to full public key using ethers
-            const fullPublicKey = ethers.SigningKey.computePublicKey("0x" + processedCompressedKey, true);
-            const publicKey = fullPublicKey.slice(2); // Remove 0x prefix
-            const address = ethers.computeAddress("0x" + publicKey);
+          }
+          
+          if (publicKey && address) {
+            // Check for attestation
+            const hasAttestation = !!cardData[`publicKeyAttest:${keyNo}`];
             
             availableSlots.push({
-              keyNo: slot,
-              address: address,
-              publicKey: publicKey,
-              hasAttestation: cardData[attestKey] && typeof cardData[attestKey] === 'string' ? true : false
+              keyNo,
+              address,
+              publicKey,
+              hasAttestation
             });
-            console.log(`✅ [Mobile NFC] Found compressed key slot ${slot}: ${address}`);
-            console.log(`   Public Key: ${publicKey.substring(0, 20)}...`);
-            console.log(`   Compressed Key: ${processedCompressedKey.substring(0, 20)}...`);
-          } catch (e) {
-            console.log(`⚠️ [Mobile NFC] Failed to expand compressed key for slot ${slot}:`, e);
+            
+            console.log(`   Attestation: ${hasAttestation ? 'Yes' : 'No'}`);
+            
+            // If we found a key in the highest priority slot, we can stop here
+            if (keyNo === targetSlots[0]) {
+              console.log(`🎯 [Mobile NFC] Found highest priority key in slot ${keyNo}, stopping scan`);
+              break;
+            }
+          } else {
+            console.log(`⚠️ [Mobile NFC] Key slot ${keyNo}: No public key found in comprehensive scan`);
           }
-        } else if (compressedKey && compressedKey.error) {
-          console.log(`⚠️ [Mobile NFC] Key slot ${slot} not generated: ${compressedKey.error}`);
+        } catch (e) {
+          console.log(`❌ [Mobile NFC] Key slot ${keyNo}: Error processing from comprehensive scan`);
+          console.log(`   Error:`, e);
         }
       }
+    } catch (e) {
+      console.log("❌ [Mobile NFC] Comprehensive data request failed, falling back to mobile gateway");
+      console.log("   Error:", e);
+      
+      // If comprehensive approach fails, fall back to mobile gateway
+      console.log("📱 [Mobile NFC] Falling back to mobile gateway...");
+      return await connectWithMobileGateway();
     }
-
-    if (availableSlots.length === 0) {
-      throw new Error("No valid wallet keys found on card. Please ensure the card remains on your device and try again.");
-    }
-
-    // Select the best key slot (priority: 9 > 8 > 2)
-    const bestSlot = availableSlots[0];
-    console.log(`🎯 [Mobile NFC] Selected key slot ${bestSlot.keyNo}`);
-    console.log(`   Address: ${bestSlot.address}`);
-    console.log(`   Public Key: ${bestSlot.publicKey.substring(0, 40)}...`);
-    console.log(`   Has Attestation: ${bestSlot.hasAttestation}`);
     
-    return {
-      address: bestSlot.address,
-      publicKey: bestSlot.publicKey,
-      keySlot: bestSlot.keyNo,
-    };
+    const scanDuration = Date.now() - scanStart;
+    console.log(`✅ [Mobile NFC] Key slot scan completed in ${scanDuration}ms`);
+
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.log(`📊 [Mobile NFC] SCAN COMPLETE - Found ${availableSlots.length} available key slots`);
+    console.log("═══════════════════════════════════════════════════════");
+    availableSlots.forEach((slot, idx) => {
+      console.log(`${idx + 1}. Slot ${slot.keyNo}: ${slot.address} ${slot.hasAttestation ? '(attested)' : '(no attestation)'}`);
+    });
+
+    // Strategy: Use the first available slot (already in priority order)
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.log("🎯 [Mobile NFC] SELECTING KEY SLOT");
+    console.log("═══════════════════════════════════════════════════════");
+    
+    if (availableSlots.length > 0) {
+      const bestSlot = availableSlots[0]; // First slot is highest priority
+      console.log(`✅ [Mobile NFC] SELECTED: Key slot ${bestSlot.keyNo} (priority-based selection)`);
+      console.log(`   Address: ${bestSlot.address}`);
+      console.log(`   Public Key: ${bestSlot.publicKey.substring(0, 40)}...`);
+      console.log(`   Has Attestation: ${bestSlot.hasAttestation}`);
+      console.log(`   Strategy: Priority-based selection (9 > 8 > 2)`);
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log("🎉 [Mobile NFC] connectWithMobileNFC() COMPLETED SUCCESSFULLY");
+      console.log("═══════════════════════════════════════════════════════");
+      
+      return {
+        address: bestSlot.address,
+        publicKey: bestSlot.publicKey,
+        keySlot: bestSlot.keyNo,
+      };
+    }
+
+    // NO FALLBACK - fail clearly if we couldn't find any valid key slots
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.error("❌❌❌ [Mobile NFC] FATAL ERROR: No valid key slots found!");
+    console.log("═══════════════════════════════════════════════════════");
+    console.error("This likely means:");
+    console.error("  1. The card was removed during key slot scanning");
+    console.error("  2. The card has no initialized key slots");
+    console.error("  3. The compressed key expansion failed");
+    console.error("\nPlease try again:");
+    console.error("  - Ensure card stays on device during connection");
+    console.error("  - Try refreshing the page");
+    
+    throw new Error("No valid wallet keys found on card. Please ensure the card remains on your device and try again.");
     
   } catch (error: any) {
-    console.error("❌ [Mobile NFC] Direct Halo connection failed:", error);
+    console.log("\n═══════════════════════════════════════════════════════");
+    console.error("❌❌❌ [Mobile NFC] connectWithMobileNFC() FAILED");
+    console.log("═══════════════════════════════════════════════════════");
+    console.error("Error details:", error);
     
     // If direct connection fails, fall back to mobile gateway
     console.log("📱 [Mobile NFC] Direct connection failed, falling back to mobile gateway...");
