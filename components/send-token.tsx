@@ -219,29 +219,29 @@ export function SendToken({
   // If transaction is confirmed, show confirmation screen
   if (isConfirmed && txHash) {
     return (
-      <div className="modal-overlay bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-8 max-w-md w-full">
+      <div className="modal-overlay bg-black/60 flex items-center justify-center p-3 z-50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-4 sm:p-6 max-w-sm sm:max-w-md w-full mx-2">
           {/* Success Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-12 h-12 text-green-600" />
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-green-600" />
             </div>
           </div>
 
           {/* Success Message */}
-          <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-2">
             Transaction <span className="text-brand-orange">Confirmed!</span>
           </h2>
-          <p className="text-slate-600 text-center mb-6">
+          <p className="text-sm sm:text-base text-slate-600 text-center mb-4 sm:mb-6">
             Your <span className="font-semibold text-slate-900">{amount} {token.symbol}</span> has been sent successfully
           </p>
 
           {/* Transaction Details */}
-          <div className="bg-slate-50 rounded-xl p-4 mb-6">
-            <div className="space-y-3">
+          <div className="bg-slate-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+            <div className="space-y-2 sm:space-y-3">
               <div>
                 <p className="text-xs text-slate-500 mb-1">Recipient</p>
-                <p className="text-sm font-mono text-slate-900 break-all">
+                <p className="text-xs sm:text-sm font-mono text-slate-900 break-all">
                   {recipient}
                 </p>
               </div>
@@ -261,12 +261,12 @@ export function SendToken({
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <a
               href={getExplorerTxUrl(chainId, txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl transition-all duration-150 font-semibold shadow-md hover:shadow-glow-orange active:scale-95"
+              className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl transition-all duration-150 font-semibold shadow-md hover:shadow-glow-orange active:scale-95 text-sm sm:text-base"
             >
               <span>View on Block Explorer</span>
               <ExternalLink className="w-4 h-4" strokeWidth={2.5} />
@@ -274,7 +274,7 @@ export function SendToken({
             
             <button
               onClick={handleReturnToWallet}
-              className="w-full px-6 py-3 border-2 border-slate-200 text-slate-900 rounded-xl hover:bg-slate-50 hover:border-brand-orange/30 transition-all duration-150 font-semibold active:scale-95"
+              className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-slate-200 text-slate-900 rounded-xl hover:bg-slate-50 hover:border-brand-orange/30 transition-all duration-150 font-semibold active:scale-95 text-sm sm:text-base"
             >
               Return to Wallet
             </button>
@@ -285,10 +285,10 @@ export function SendToken({
   }
 
   return (
-    <div className="modal-overlay bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-6 max-w-md w-full">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-slate-900">
+    <div className="modal-overlay bg-black/60 flex items-center justify-center p-3 z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-4 sm:p-6 max-w-sm sm:max-w-md w-full mx-2">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-bold text-slate-900">
             Send <span className="text-brand-orange">{token.symbol}</span>
           </h2>
           <button
@@ -311,14 +311,14 @@ export function SendToken({
           </button>
         </div>
 
-        <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-slate-50 rounded-lg">
           <p className="text-xs text-slate-500 mb-1">Available Balance</p>
-          <p className="text-lg font-semibold text-slate-900">
+          <p className="text-base sm:text-lg font-semibold text-slate-900">
             {parseFloat(token.balance).toFixed(6)} {token.symbol}
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <div>
             <label className="block text-xs text-slate-600 mb-1">
               Recipient
@@ -337,7 +337,8 @@ export function SendToken({
                   className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 transition-colors"
                 >
                   <Clock className="w-3 h-3" />
-                  <span>Last used: {lastUsedAddress.slice(0, 6)}...{lastUsedAddress.slice(-4)}</span>
+                  <span className="hidden sm:inline">Last used: {lastUsedAddress.slice(0, 6)}...{lastUsedAddress.slice(-4)}</span>
+                  <span className="sm:hidden">Last: {lastUsedAddress.slice(0, 4)}...{lastUsedAddress.slice(-2)}</span>
                 </button>
                 <button
                   onClick={clearLastUsedAddress}
@@ -391,7 +392,7 @@ export function SendToken({
           <button
             onClick={handleSend}
             disabled={!recipient || !amount || isSending}
-            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-3 px-4 rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-glow-orange active:scale-95"
+            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-2.5 sm:py-3 px-4 rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-glow-orange active:scale-95 text-sm sm:text-base"
           >
             {isSending ? (
               <>

@@ -467,10 +467,10 @@ export function WalletDashboard() {
 
       {/* Receive Modal */}
       {showReceiveModal && (
-        <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowReceiveModal(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-card-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Receive <span className="text-brand-orange">Tokens</span></h2>
+        <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={() => setShowReceiveModal(false)}>
+          <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md w-full shadow-card-lg mx-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Receive <span className="text-brand-orange">Tokens</span></h2>
               <button
                 onClick={() => setShowReceiveModal(false)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -479,37 +479,37 @@ export function WalletDashboard() {
               </button>
             </div>
 
-            <div className="mb-6">
-              <p className="text-sm text-slate-600 mb-4">
+            <div className="mb-4 sm:mb-6">
+              <p className="text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
                 Send only <span className="font-semibold">{chainName}</span> assets to this address. Sending assets from other networks will result in permanent loss.
               </p>
               
               {/* QR Code */}
-              <div className="bg-white rounded-xl p-6 mb-4 flex items-center justify-center border-2 border-slate-200">
+              <div className="bg-white rounded-xl p-4 sm:p-6 mb-3 sm:mb-4 flex items-center justify-center border-2 border-slate-200">
                 <QRCodeSVG 
                   value={address || ""}
-                  size={200}
+                  size={160}
                   level="H"
                   includeMargin={false}
                 />
               </div>
 
               {/* Address Display */}
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <div className="bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-200">
                 <p className="text-xs text-slate-500 font-medium mb-2">Your {chainName} Address</p>
                 <div className="flex items-center gap-2">
-                  <p className="flex-1 text-sm font-mono font-semibold text-slate-900 break-all">
+                  <p className="flex-1 text-xs sm:text-sm font-mono font-semibold text-slate-900 break-all">
                     {address}
                   </p>
                   <button
                     onClick={handleCopyReceiveAddress}
-                    className="flex-shrink-0 p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                    className="flex-shrink-0 p-1.5 sm:p-2 hover:bg-slate-200 rounded-lg transition-colors"
                     title={receiveAddressCopied ? "Copied!" : "Copy address"}
                   >
                     {receiveAddressCopied ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                     ) : (
-                      <Copy className="w-5 h-5 text-slate-600" />
+                      <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
                     )}
                   </button>
                 </div>
@@ -518,7 +518,7 @@ export function WalletDashboard() {
 
             <button
               onClick={() => setShowReceiveModal(false)}
-              className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-glow-orange"
+              className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-2.5 sm:py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-glow-orange text-sm sm:text-base"
             >
               Done
             </button>
