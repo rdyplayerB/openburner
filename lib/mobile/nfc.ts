@@ -11,10 +11,9 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
   
   try {
     // Use execHaloCmdWeb with credential method for direct Halo connection
-    // Use comprehensive spec that matches gateway implementation
     const result = await execHaloCmdWeb({
       name: "get_data_struct",
-      spec: "publicKey:9,publicKey:8,publicKey:2,etherAddress:9,etherAddress:8,etherAddress:2,publicKeyAttest:9,publicKeyAttest:8,publicKeyAttest:2"
+      spec: "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8"
     }, {
       method: "credential" // This triggers the native iOS security key modal
     });
