@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { connectWithMobileNFC } from "@/lib/mobile/nfc";
 import { useWalletStore } from "@/store/wallet-store";
-import { Nfc, Loader2, X } from "lucide-react";
+import { Nfc, Loader2, X, ExternalLink } from "lucide-react";
 import { MobileErrorModal } from "./mobile-error-modal";
 
 export function HostedMobileConnect() {
@@ -55,8 +56,8 @@ export function HostedMobileConnect() {
   };
 
   return (
-    <div className="h-screen grid place-items-center p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200">
-      <div className="max-w-sm w-full space-y-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200" style={{ minHeight: '100vh', minHeight: '100dvh' }}>
+      <div className="max-w-sm w-full space-y-4 -mt-8">
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -110,13 +111,26 @@ export function HostedMobileConnect() {
           </div>
         </div>
 
-        {/* Error Modal */}
-        <MobileErrorModal 
-          error={error}
-          onClose={() => setError(null)}
-          onRetry={handleConnect}
-        />
-      </div>
-    </div>
-  );
+              {/* Error Modal */}
+              <MobileErrorModal 
+                error={error}
+                onClose={() => setError(null)}
+                onRetry={handleConnect}
+              />
+            </div>
+          </div>
+
+          {/* Website Link */}
+          <div className="text-center mt-6">
+            <Link 
+              href="https://openburner.xyz" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-sm transition-colors duration-200"
+            >
+              <span>Visit openburner.xyz</span>
+              <ExternalLink className="w-3 h-3" strokeWidth={2} />
+            </Link>
+          </div>
+        );
 }
