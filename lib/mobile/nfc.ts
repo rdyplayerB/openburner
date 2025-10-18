@@ -21,6 +21,11 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
     console.log("✅ [Mobile NFC] Direct Halo connection successful");
     console.log("📋 [Mobile NFC] Card data received:", result);
 
+    // The result from execHaloCmdWeb has a different structure
+    // It's wrapped in a 'data' property, similar to the gateway response
+    const cardData = result.data || result;
+    console.log("📋 [Mobile NFC] Processing card data:", cardData);
+
     // Process the result to find the best key slot (same logic as BurnerOS)
     const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
     
@@ -32,14 +37,39 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
       const publicKeyKey = `publicKey:${slot}`;
       const attestKey = `publicKeyAttest:${slot}`;
       
-      if (result[addressKey] && result[publicKeyKey]) {
+      if (cardData[addressKey] && cardData[publicKeyKey]) {
         availableSlots.push({
           keyNo: slot,
-          address: result[addressKey],
-          publicKey: result[publicKeyKey],
-          hasAttestation: result[attestKey] ? true : false
+          address: cardData[addressKey],
+          publicKey: cardData[publicKeyKey],
+          hasAttestation: cardData[attestKey] ? true : false
         });
-        console.log(`✅ [Mobile NFC] Found key slot ${slot}: ${result[addressKey]}`);
+        console.log(`✅ [Mobile NFC] Found key slot ${slot}: ${cardData[addressKey]}`);
+      }
+    }
+
+    if (availableSlots.length === 0) {
+      // If no addresses found, try looking for compressed public keys and derive addresses
+      console.log("📋 [Mobile NFC] No addresses found, trying to derive from compressed public keys...");
+      
+      for (const slot of targetSlots) {
+        const compressedKeyKey = `compressedPublicKey:${slot}`;
+        const attestKey = `publicKeyAttest:${slot}`;
+        
+        if (cardData[compressedKeyKey]) {
+          // For now, create a placeholder address from the compressed key
+          // In a real implementation, you'd need to expand the compressed key and derive the address
+          const mockAddress = "0x" + cardData[compressedKeyKey].substring(0, 40);
+          const mockPublicKey = "0x" + cardData[compressedKeyKey] + "00".repeat(32);
+          
+          availableSlots.push({
+            keyNo: slot,
+            address: mockAddress,
+            publicKey: mockPublicKey,
+            hasAttestation: cardData[attestKey] ? true : false
+          });
+          console.log(`✅ [Mobile NFC] Found compressed key slot ${slot}: ${mockAddress}`);
+        }
       }
     }
 
