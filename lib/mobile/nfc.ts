@@ -3,14 +3,14 @@ import { connectWithMobileGateway } from './mobile-gateway';
 import { BurnerKeyInfo } from '../burner';
 
 /**
- * Connect with mobile NFC - uses execHaloCmdWeb for direct Halo connection (like BurnerOS)
+ * Connect with mobile NFC - uses execHaloCmdWeb for direct Halo connection
  */
 export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
-  console.log("📱 [Mobile NFC] Starting direct Halo connection (BurnerOS method)...");
+  console.log("📱 [Mobile NFC] Starting direct Halo connection...");
   console.log("📱 [Mobile NFC] This will trigger the native iOS security key modal");
   
   try {
-    // Use the same approach as BurnerOS - execHaloCmdWeb with credential method
+    // Use execHaloCmdWeb with credential method for direct Halo connection
     const result = await execHaloCmdWeb({
       name: "get_data_struct",
       spec: "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8"
@@ -26,7 +26,7 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
     const cardData = result.data || result;
     console.log("📋 [Mobile NFC] Processing card data:", cardData);
 
-    // Process the result to find the best key slot (same logic as BurnerOS)
+    // Process the result to find the best key slot
     const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
     
     // Priority order: 9 (user wallet) > 8 (preloaded) > 2 (system)
