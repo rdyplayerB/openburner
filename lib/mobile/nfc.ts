@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { execHaloCmdWeb } from '@arx-research/libhalo/api/web';
 import { connectWithMobileGateway } from './mobile-gateway';
 import { BurnerKeyInfo } from '../burner';
@@ -60,18 +61,36 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
         
         // Check if we have a valid compressed key (string) and not an error object
         if (compressedKey && typeof compressedKey === 'string') {
-          // For now, create a placeholder address from the compressed key
-          // In a real implementation, you'd need to expand the compressed key and derive the address
-          const mockAddress = "0x" + compressedKey.substring(0, 40);
-          const mockPublicKey = "0x" + compressedKey + "00".repeat(32);
-          
-          availableSlots.push({
-            keyNo: slot,
-            address: mockAddress,
-            publicKey: mockPublicKey,
-            hasAttestation: cardData[attestKey] && typeof cardData[attestKey] === 'string' ? true : false
-          });
-          console.log(`✅ [Mobile NFC] Found compressed key slot ${slot}: ${mockAddress}`);
+          try {
+            // Ensure compressed key is proper length (33 bytes = 66 hex chars)
+            let processedCompressedKey = compressedKey;
+            if (compressedKey.length > 66) {
+              // Take first 66 characters if too long
+              processedCompressedKey = compressedKey.substring(0, 66);
+              console.log(`⚠️ [Mobile NFC] Compressed key too long, truncating to 66 chars`);
+            } else if (compressedKey.length < 66) {
+              // Pad with zeros if too short
+              processedCompressedKey = compressedKey.padEnd(66, '0');
+              console.log(`⚠️ [Mobile NFC] Compressed key too short, padding to 66 chars`);
+            }
+            
+            // Convert compressed public key to full public key using ethers
+            const fullPublicKey = ethers.SigningKey.computePublicKey("0x" + processedCompressedKey, true);
+            const publicKey = fullPublicKey.slice(2); // Remove 0x prefix
+            const address = ethers.computeAddress("0x" + publicKey);
+            
+            availableSlots.push({
+              keyNo: slot,
+              address: address,
+              publicKey: publicKey,
+              hasAttestation: cardData[attestKey] && typeof cardData[attestKey] === 'string' ? true : false
+            });
+            console.log(`✅ [Mobile NFC] Found compressed key slot ${slot}: ${address}`);
+            console.log(`   Public Key: ${publicKey.substring(0, 20)}...`);
+            console.log(`   Compressed Key: ${processedCompressedKey.substring(0, 20)}...`);
+          } catch (e) {
+            console.log(`⚠️ [Mobile NFC] Failed to expand compressed key for slot ${slot}:`, e);
+          }
         } else if (compressedKey && compressedKey.error) {
           console.log(`⚠️ [Mobile NFC] Key slot ${slot} not generated: ${compressedKey.error}`);
         }
