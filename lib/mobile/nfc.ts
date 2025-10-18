@@ -1,74 +1,70 @@
+import { execHaloCmdWeb } from '@arx-research/libhalo/api/web';
 import { connectWithMobileGateway } from './mobile-gateway';
 import { BurnerKeyInfo } from '../burner';
 
 /**
- * Connect with mobile NFC - uses WebAuthn for iOS, Web NFC for Android, falls back to mobile gateway
+ * Connect with mobile NFC - uses execHaloCmdWeb for direct Halo connection (like BurnerOS)
  */
 export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
-  // Check if Web NFC is available (Chrome/Android)
-  if ('NDEFReader' in window) {
-    try {
-      console.log("📱 [Mobile NFC] Web NFC API available, attempting direct connection...");
-      return await connectWithWebNFC();
-    } catch (error) {
-      console.warn("📱 [Mobile NFC] Web NFC failed, falling back to WebAuthn:", error);
-      return await connectWithWebAuthn();
-    }
-  } else {
-    // Web NFC not available - use WebAuthn for iOS
-    console.log("📱 [Mobile NFC] Web NFC not available, using WebAuthn...");
-    return await connectWithWebAuthn();
-  }
-}
-
-/**
- * Connect using WebAuthn API - triggers native iOS "Use Security Key" modal
- */
-async function connectWithWebAuthn(): Promise<BurnerKeyInfo> {
-  console.log("📱 [Mobile NFC] Starting WebAuthn connection...");
+  console.log("📱 [Mobile NFC] Starting direct Halo connection (BurnerOS method)...");
   console.log("📱 [Mobile NFC] This will trigger the native iOS security key modal");
   
   try {
-    // Use WebAuthn to authenticate with existing security key
-    const credential = await navigator.credentials.get({
-      publicKey: {
-        challenge: new Uint8Array(32), // Random challenge
-        allowCredentials: [], // Allow any credential
-        userVerification: "required",
-        timeout: 60000, // 60 second timeout
-        rpId: window.location.hostname
-      }
+    // Use the same approach as BurnerOS - execHaloCmdWeb with credential method
+    const result = await execHaloCmdWeb({
+      name: "get_data_struct",
+      spec: "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8"
+    }, {
+      method: "credential" // This triggers the native iOS security key modal
     });
 
-    if (!credential) {
-      throw new Error("No credential returned from WebAuthn");
+    console.log("✅ [Mobile NFC] Direct Halo connection successful");
+    console.log("📋 [Mobile NFC] Card data received:", result);
+
+    // Process the result to find the best key slot (same logic as BurnerOS)
+    const availableSlots: Array<{ keyNo: number; address: string; publicKey: string; hasAttestation: boolean }> = [];
+    
+    // Priority order: 9 (user wallet) > 8 (preloaded) > 2 (system)
+    const targetSlots = [9, 8, 2];
+    
+    for (const slot of targetSlots) {
+      const addressKey = `etherAddress:${slot}`;
+      const publicKeyKey = `publicKey:${slot}`;
+      const attestKey = `publicKeyAttest:${slot}`;
+      
+      if (result[addressKey] && result[publicKeyKey]) {
+        availableSlots.push({
+          keyNo: slot,
+          address: result[addressKey],
+          publicKey: result[publicKeyKey],
+          hasAttestation: result[attestKey] ? true : false
+        });
+        console.log(`✅ [Mobile NFC] Found key slot ${slot}: ${result[addressKey]}`);
+      }
     }
 
-    console.log("✅ [Mobile NFC] WebAuthn authentication successful");
-    console.log("📋 [Mobile NFC] Credential ID:", credential.id);
-    console.log("📋 [Mobile NFC] Type:", credential.type);
+    if (availableSlots.length === 0) {
+      throw new Error("No valid wallet keys found on card. Please ensure the card remains on your device and try again.");
+    }
 
-    // For now, we'll need to extract the public key and derive the address
-    // This is a simplified implementation - in practice, you'd need to:
-    // 1. Extract the public key from the credential
-    // 2. Derive the Ethereum address from the public key
-    // 3. Handle the key slot information
-    
-    // Placeholder implementation - you'll need to implement proper key extraction
-    const mockAddress = "0x" + Array.from(new Uint8Array(20)).map(b => b.toString(16).padStart(2, '0')).join('');
-    const mockPublicKey = "0x" + Array.from(new Uint8Array(64)).map(b => b.toString(16).padStart(2, '0')).join('');
+    // Select the best key slot (priority: 9 > 8 > 2)
+    const bestSlot = availableSlots[0];
+    console.log(`🎯 [Mobile NFC] Selected key slot ${bestSlot.keyNo}`);
+    console.log(`   Address: ${bestSlot.address}`);
+    console.log(`   Public Key: ${bestSlot.publicKey.substring(0, 40)}...`);
+    console.log(`   Has Attestation: ${bestSlot.hasAttestation}`);
     
     return {
-      address: mockAddress,
-      publicKey: mockPublicKey,
-      keySlot: 9 // Default to slot 9
+      address: bestSlot.address,
+      publicKey: bestSlot.publicKey,
+      keySlot: bestSlot.keyNo,
     };
     
   } catch (error: any) {
-    console.error("❌ [Mobile NFC] WebAuthn connection failed:", error);
+    console.error("❌ [Mobile NFC] Direct Halo connection failed:", error);
     
-    // If WebAuthn fails, fall back to mobile gateway
-    console.log("📱 [Mobile NFC] WebAuthn failed, falling back to mobile gateway...");
+    // If direct connection fails, fall back to mobile gateway
+    console.log("📱 [Mobile NFC] Direct connection failed, falling back to mobile gateway...");
     return await connectWithMobileGateway();
   }
 }
