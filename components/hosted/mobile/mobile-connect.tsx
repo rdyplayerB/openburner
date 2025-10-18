@@ -55,7 +55,7 @@ export function HostedMobileConnect() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200">
       <div className="max-w-sm w-full space-y-6">
         {/* Header */}
         <div className="text-center">
