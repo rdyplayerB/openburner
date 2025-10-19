@@ -67,6 +67,11 @@ export default function RootLayout({
             <link rel="apple-touch-icon" sizes="57x57" href="/icons/icon-57x57.png" />
             <meta name="msapplication-TileColor" content="#FF6B35" />
             <meta name="msapplication-config" content="/browserconfig.xml" />
+            {/* Android-specific meta tags */}
+            <meta name="mobile-web-app-capable" content="yes" />
+            <meta name="application-name" content="OpenBurner" />
+            <meta name="msapplication-tooltip" content="OpenBurner Mobile Wallet" />
+            <meta name="msapplication-starturl" content="/" />
           </>
         )}
       </head>
