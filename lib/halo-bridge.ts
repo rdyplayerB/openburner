@@ -44,6 +44,7 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
     console.log("🔌 [HaloBridge] Starting connection...");
 
     try {
+      // First try the official HaloBridge class
       this.bridge = new HaloBridge({});
       
       // Set up disconnection handler
@@ -54,9 +55,9 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
       });
 
       await this.bridge.connect();
-      console.log("✅ [HaloBridge] Connected successfully");
+      console.log("✅ [HaloBridge] Connected successfully via HaloBridge class");
     } catch (error) {
-      console.error("❌ [HaloBridge] Connection failed:", error);
+      console.error("❌ [HaloBridge] HaloBridge class connection failed:", error);
       
       if (error instanceof NFCBridgeConsentError && this.bridge) {
         console.log("🔐 [HaloBridge] Consent required - getting consent URL");
@@ -65,11 +66,19 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
         throw new Error("CONSENT_REQUIRED");
       }
       
-      // Check if it's a bridge not found error
+      // Check if it's a bridge not found error - try direct WebSocket fallback
       if (error instanceof Error && error.message.includes("Unable to locate halo bridge")) {
-        console.log("🔌 [HaloBridge] No local bridge service found");
-        this.bridge = null;
-        throw new Error("BRIDGE_NOT_AVAILABLE");
+        console.log("🔌 [HaloBridge] HaloBridge class failed, trying direct WebSocket connection...");
+        
+        try {
+          await this.connectDirectWebSocket();
+          console.log("✅ [HaloBridge] Connected successfully via direct WebSocket");
+          return;
+        } catch (wsError) {
+          console.error("❌ [HaloBridge] Direct WebSocket connection also failed:", wsError);
+          this.bridge = null;
+          throw new Error("BRIDGE_NOT_AVAILABLE");
+        }
       }
       
       this.bridge = null;
@@ -77,6 +86,73 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
     } finally {
       this.isConnecting = false;
     }
+  }
+
+  private async connectDirectWebSocket(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const ws = new WebSocket("ws://127.0.0.1:32868/ws");
+      
+      ws.onopen = () => {
+        console.log("✅ [HaloBridge] Direct WebSocket connected");
+        // Create a mock bridge object for compatibility
+        this.bridge = {
+          execHaloCmd: async (command: any) => {
+            return new Promise((execResolve, execReject) => {
+              const uid = Math.random().toString();
+              const message = {
+                uid,
+                type: "exec_halo",
+                command,
+              };
+              
+              const handleMessage = (event: MessageEvent) => {
+                const msg = JSON.parse(event.data);
+                if (msg.uid === uid) {
+                  ws.removeEventListener('message', handleMessage);
+                  if (msg.event === "exec_success") {
+                    execResolve(msg.data.res);
+                  } else if (msg.event === "exec_exception") {
+                    execReject(new Error(msg.data.exception.message));
+                  }
+                }
+              };
+              
+              ws.addEventListener('message', handleMessage);
+              ws.send(JSON.stringify(message));
+              
+              // Timeout after 30 seconds
+              setTimeout(() => {
+                ws.removeEventListener('message', handleMessage);
+                execReject(new Error("Command timeout"));
+              }, 30000);
+            });
+          },
+          close: () => {
+            ws.close();
+          },
+          onDisconnected: () => ({
+            sub: (callback: () => void) => {
+              ws.addEventListener('close', callback);
+            }
+          }),
+          getConsentURL: (origin: string) => {
+            return `http://127.0.0.1:32868/consent?website=${origin}`;
+          }
+        } as any;
+        
+        resolve();
+      };
+      
+      ws.onerror = (error) => {
+        console.error("❌ [HaloBridge] Direct WebSocket connection failed:", error);
+        reject(new Error("Failed to connect to HaLo Bridge via WebSocket"));
+      };
+      
+      ws.onclose = () => {
+        console.log("🔌 [HaloBridge] Direct WebSocket connection closed");
+        this.bridge = null;
+      };
+    });
   }
 
   disconnect(): void {
