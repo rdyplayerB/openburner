@@ -264,8 +264,8 @@ export function HostedDesktopConnect() {
       }
       
       if (error.message === "BRIDGE_NOT_AVAILABLE") {
-        console.log("🔌 [Hosted Desktop] No local bridge service available");
-        throw new Error("HaLo Bridge service not found. Please install and run the HaLo Bridge software to use USB NFC readers. You can download it from the HaLo Tools releases page.");
+        console.log("🔌 [Hosted Desktop] Bridge not available, suggesting gateway mode");
+        throw new Error("Bridge mode requires local HaLo Bridge software. For hosted versions, please use Gateway mode with your smartphone as an NFC reader instead.");
       }
       
       throw error;
@@ -317,7 +317,7 @@ export function HostedDesktopConnect() {
             </div>
             <p className="text-slate-600 dark:text-slate-400 text-base font-medium leading-relaxed max-w-sm mx-auto transition-colors duration-300">
               {connectionMode === 'bridge' 
-                ? 'Connect your Burner card using a USB NFC reader'
+                ? 'Connect your Burner card using a USB NFC reader (requires local HaLo Bridge software)'
                 : 'Use your smartphone as an NFC reader to connect'
               }
             </p>
@@ -394,7 +394,7 @@ export function HostedDesktopConnect() {
                       <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 transition-colors duration-300">
                         {bridgeConnected === null ? 'Checking connection...' : 
                          bridgeConnected ? 'Connected and ready' : 
-                         'Not detected - install HaLo Bridge software'}
+                         'Not available on hosted version - use Gateway mode instead'}
                       </p>
                     </div>
                   </div>
