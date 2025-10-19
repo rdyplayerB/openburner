@@ -7,7 +7,6 @@ import { connectWithMobileNFC } from "@/lib/mobile/nfc";
 import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, X, ExternalLink } from "lucide-react";
 import { MobileErrorModal } from "./mobile-error-modal";
-import { ThemeToggle } from "@/components/common/theme-toggle";
 
 export function HostedMobileConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -59,10 +58,6 @@ export function HostedMobileConnect() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200" style={{ minHeight: '100dvh' }}>
       <div className="max-w-sm w-full space-y-4 -mt-8">
-        {/* Header with Theme Toggle */}
-        <div className="flex items-center justify-end mb-2">
-          <ThemeToggle />
-        </div>
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
