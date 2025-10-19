@@ -19,7 +19,7 @@ export interface BurnerKeyInfo {
 export interface HaloBridgeService {
   connect(): Promise<void>;
   disconnect(): void;
-  executeCommand(command: any, options?: ExecHaloCmdWebOptions): Promise<any>;
+  executeCommand(command: any): Promise<any>;
   isConnected(): boolean;
   getConsentURL(): string | null;
 }
@@ -30,7 +30,7 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
   private consentURL: string | null = null;
 
   async connect(): Promise<void> {
-    if (this.bridge && this.bridge.isInitialized()) {
+    if (this.bridge) {
       console.log("✅ HaloBridge already connected");
       return;
     }
@@ -81,15 +81,15 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
     }
   }
 
-  async executeCommand(command: any, options?: ExecHaloCmdWebOptions): Promise<any> {
-    if (!this.bridge || !this.bridge.isInitialized()) {
+  async executeCommand(command: any): Promise<any> {
+    if (!this.bridge) {
       throw new Error("Bridge not connected");
     }
 
     console.log("📡 [HaloBridge] Executing command:", command);
     
     try {
-      const result = await this.bridge.execHaloCmd(command, options);
+      const result = await this.bridge.execHaloCmd(command);
       console.log("✅ [HaloBridge] Command executed successfully");
       return result;
     } catch (error) {
@@ -106,7 +106,7 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
   }
 
   isConnected(): boolean {
-    return this.bridge !== null && this.bridge.isInitialized();
+    return this.bridge !== null;
   }
 
   getConsentURL(): string | null {
