@@ -65,6 +65,13 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
         throw new Error("CONSENT_REQUIRED");
       }
       
+      // Check if it's a bridge not found error
+      if (error instanceof Error && error.message.includes("Unable to locate halo bridge")) {
+        console.log("🔌 [HaloBridge] No local bridge service found");
+        this.bridge = null;
+        throw new Error("BRIDGE_NOT_AVAILABLE");
+      }
+      
       this.bridge = null;
       throw error;
     } finally {

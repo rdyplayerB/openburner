@@ -263,6 +263,11 @@ export function HostedDesktopConnect() {
         }
       }
       
+      if (error.message === "BRIDGE_NOT_AVAILABLE") {
+        console.log("🔌 [Hosted Desktop] No local bridge service available");
+        throw new Error("HaLo Bridge service not found. Please install and run the HaLo Bridge software to use USB NFC readers. You can download it from the HaLo Tools releases page.");
+      }
+      
       throw error;
     }
   }
@@ -389,7 +394,7 @@ export function HostedDesktopConnect() {
                       <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 transition-colors duration-300">
                         {bridgeConnected === null ? 'Checking connection...' : 
                          bridgeConnected ? 'Connected and ready' : 
-                         'Not detected - please start HaLo Bridge'}
+                         'Not detected - install HaLo Bridge software'}
                       </p>
                     </div>
                   </div>
