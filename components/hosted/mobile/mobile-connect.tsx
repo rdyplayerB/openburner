@@ -132,5 +132,7 @@ export function HostedMobileConnect() {
               <ExternalLink className="w-3 h-3" strokeWidth={2} />
             </Link>
           </div>
-        );
+        </div>
+      </div>
+    );
 }
