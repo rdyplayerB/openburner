@@ -19,8 +19,41 @@ export function PWAInstallPrompt() {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       
       if (isIOS) {
-        // On iOS, show instructions for manual installation
-        alert('To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
+        // On iOS, we can't programmatically install, but we can:
+        // 1. Show a more helpful modal with visual instructions
+        // 2. Try to trigger the share sheet (though this may not work in all cases)
+        
+        // Try to trigger the share functionality
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'OpenBurner - Mobile Wallet',
+              text: 'Install OpenBurner on your home screen',
+              url: window.location.href
+            });
+            return;
+          } catch (shareError) {
+            // If share fails, show instructions
+            console.log('Share failed, showing instructions');
+          }
+        }
+        
+        // Show detailed instructions modal
+        const instructions = `
+📱 Install OpenBurner on iOS
+
+1️⃣ Look for the Share button (square with arrow pointing up) in Safari's bottom toolbar
+
+2️⃣ Tap "Share" and scroll down to find "Add to Home Screen"
+
+3️⃣ Tap "Add to Home Screen" 
+
+4️⃣ Tap "Add" to confirm
+
+The OpenBurner app will then appear on your home screen with the proper icon!
+        `;
+        
+        alert(instructions);
         return;
       }
       
@@ -78,7 +111,7 @@ export function PWAInstallPrompt() {
               onClick={handleInstall}
               className="flex-1 bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] text-white text-xs font-medium py-2 px-3 rounded-lg hover:from-[#E55A2B] hover:to-[#FF7A3A] transition-all duration-200"
             >
-              Install App
+              {/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'Show Instructions' : 'Install App'}
             </button>
             <button
               onClick={handleDismiss}
