@@ -277,6 +277,33 @@ OpenBurner uses **streamlined token lists** focused on core tokens for optimal p
 
 This limitation is intentional to keep the app simple and local-first. Future versions may include a dynamic token management UI.
 
+## Bridge Connection (Hosted Version)
+
+The hosted version supports USB NFC reader connections through a bridge service that handles consent properly.
+
+### How It Works
+
+1. **HaloBridge Service**: Uses `@arx-research/libhalo` for proper consent handling
+2. **Consent Flow**: Shows a modal matching BurnerOS approval prompt
+3. **WebSocket Communication**: Communicates with local bridge software
+4. **Security**: Requires explicit user consent and HTTPS
+
+### Bridge Requirements
+
+- **Halo Bridge Software**: Must be installed and running locally
+- **USB NFC Reader**: Compatible reader connected to computer
+- **Burner Card**: Physical card placed on reader
+- **User Consent**: Explicit permission granted through consent modal
+
+### Security Considerations
+
+- Bridge communication is restricted to localhost only
+- User consent is required before any USB access
+- HTTPS is required for hosted version
+- Clear fallback to gateway mode if bridge fails
+
+See [BRIDGE_SECURITY.md](./docs/BRIDGE_SECURITY.md) for detailed security information.
+
 ## Project Structure
 
 ```

@@ -4,13 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { getBurnerAddress } from "@/lib/burner";
 import { getBurnerAddressViaGateway, startGatewayPairing } from "@/lib/burner-gateway";
+import { getHaloBridgeService, getBurnerAddressViaBridge, cleanupHaloBridge } from "@/lib/halo-bridge";
 import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, CheckCircle, XCircle, Smartphone, X } from "lucide-react";
 import { QRDisplay } from "@/components/local/qr-display";
 import { ModeToggle } from "@/components/local/mode-toggle";
 import { ErrorModal } from "@/components/common/error-modal";
-
-const BRIDGE_WS_URL = "ws://127.0.0.1:32868/ws";
+import { ConsentModal } from "@/components/common/consent-modal";
 
 export function HostedDesktopConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -20,6 +20,8 @@ export function HostedDesktopConnect() {
   const [readerConnected, setReaderConnected] = useState<boolean | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string } | null>(null);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [consentURL, setConsentURL] = useState<string | null>(null);
   const { setWallet, connectionMode, setConnectionMode } = useWalletStore();
   
   // Use ref to track connecting state for interval callback
@@ -35,16 +37,23 @@ export function HostedDesktopConnect() {
   useEffect(() => {
     // Only check bridge status in bridge mode
     if (connectionMode === 'bridge') {
-      checkBridgeAndReader();
-      // Only check status when NOT connecting to avoid WebSocket conflicts
+      checkHaloBridgeStatus();
+      // Only check status when NOT connecting to avoid conflicts
       const interval = setInterval(() => {
         if (!isConnectingRef.current) {
-          checkBridgeAndReader();
+          checkHaloBridgeStatus();
         }
       }, 3000);
       return () => clearInterval(interval);
     }
   }, [connectionMode]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupHaloBridge();
+    };
+  }, []);
 
   // Poll for gateway connection when QR is shown
   useEffect(() => {
@@ -91,70 +100,24 @@ export function HostedDesktopConnect() {
     }
   }, [showQR, qrData]);
 
-  async function checkBridgeAndReader() {
-    let ws: WebSocket | null = null;
-    let resolved = false;
-    let bridgeOk = false;
-    
+  async function checkHaloBridgeStatus() {
     try {
-      ws = new WebSocket(BRIDGE_WS_URL);
-
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          if (bridgeOk) {
-            setBridgeConnected(true);
-            setReaderConnected(false);
-          } else {
-            setBridgeConnected(false);
-            setReaderConnected(false);
-          }
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.close();
-          }
-        }
-      }, 2000);
-
-      ws.onopen = () => {
-        bridgeOk = true;
-        console.log("✅ Bridge connected");
+      const bridge = getHaloBridgeService();
+      const isConnected = bridge.isConnected();
+      
+      if (isConnected) {
+        console.log("✅ HaloBridge connected");
         setBridgeConnected(true);
-      };
-
-      ws.onmessage = (event: MessageEvent) => {
-        const msg = JSON.parse(event.data);
-        console.log("Bridge message:", msg);
-        
-        if (msg.event === "handle_added" || msg.event === "handle_present") {
-          if (!resolved) {
-            resolved = true;
-            clearTimeout(timeout);
-            console.log("✅ Reader with chip detected");
-            setReaderConnected(true);
-            ws?.close();
-          }
-        }
-      };
-
-      ws.onerror = (e) => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          console.log("❌ Bridge connection error");
-          setBridgeConnected(false);
-          setReaderConnected(false);
-        }
-      };
-
-      ws.onclose = () => {
-        // Don't resolve here - let timeout handle it
-      };
-    } catch (err) {
-      if (!resolved) {
-        resolved = true;
+        setReaderConnected(true); // Assume reader is available if bridge is connected
+      } else {
+        console.log("❌ HaloBridge not connected");
         setBridgeConnected(false);
         setReaderConnected(false);
       }
+    } catch (err) {
+      console.log("❌ HaloBridge status check failed:", err);
+      setBridgeConnected(false);
+      setReaderConnected(false);
     }
   }
 
@@ -193,7 +156,38 @@ export function HostedDesktopConnect() {
     setErrorMode(null);
     setIsConnecting(false);
     isConnectingRef.current = false;
+    setShowConsentModal(false);
+    setConsentURL(null);
     console.log('🔄 [Hosted Desktop] Mode changed - clearing error state');
+  }
+
+  function handleConsentAllow() {
+    console.log("✅ [Hosted Desktop] User granted consent");
+    setShowConsentModal(false);
+    setConsentURL(null);
+    
+    // Retry bridge connection after consent
+    setTimeout(() => {
+      handleBridgeConnect();
+    }, 1000);
+  }
+
+  function handleConsentDeny() {
+    console.log("❌ [Hosted Desktop] User denied consent");
+    setShowConsentModal(false);
+    setConsentURL(null);
+    setIsConnecting(false);
+    isConnectingRef.current = false;
+    setError("Consent denied. Please try again and allow access to HaLo.");
+    setErrorMode('bridge');
+  }
+
+  function handleConsentClose() {
+    console.log("🛑 [Hosted Desktop] Consent modal closed");
+    setShowConsentModal(false);
+    setConsentURL(null);
+    setIsConnecting(false);
+    isConnectingRef.current = false;
   }
 
   async function handleConnect() {
@@ -236,23 +230,41 @@ export function HostedDesktopConnect() {
   }
 
   async function handleBridgeConnect() {
-    console.log("📞 [Hosted Desktop] Calling getBurnerAddress()...");
+    console.log("📞 [Hosted Desktop] Starting HaloBridge connection...");
     const connectStart = Date.now();
-    const { address, publicKey, keySlot } = await getBurnerAddress();
-    const connectDuration = Date.now() - connectStart;
     
-    console.log("\n═══════════════════════════════════════════════════════");
-    console.log(`✅ [Hosted Desktop] getBurnerAddress() returned in ${connectDuration}ms`);
-    console.log("═══════════════════════════════════════════════════════");
-    console.log(`   Address: ${address}`);
-    console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
-    console.log(`   Key Slot: ${keySlot}`);
-    
-    setWallet(address, publicKey, keySlot);
-    
-    console.log("\n═══════════════════════════════════════════════════════");
-    console.log("🎉 [Hosted Desktop] BRIDGE CONNECTION SUCCESSFUL!");
-    console.log("═══════════════════════════════════════════════════════\n");
+    try {
+      const { address, publicKey, keySlot } = await getBurnerAddressViaBridge();
+      const connectDuration = Date.now() - connectStart;
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log(`✅ [Hosted Desktop] HaloBridge connection completed in ${connectDuration}ms`);
+      console.log("═══════════════════════════════════════════════════════");
+      console.log(`   Address: ${address}`);
+      console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
+      console.log(`   Key Slot: ${keySlot}`);
+      
+      setWallet(address, publicKey, keySlot);
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log("🎉 [Hosted Desktop] BRIDGE CONNECTION SUCCESSFUL!");
+      console.log("═══════════════════════════════════════════════════════\n");
+    } catch (error: any) {
+      console.error("❌ [Hosted Desktop] HaloBridge connection failed:", error);
+      
+      if (error.message === "CONSENT_REQUIRED") {
+        console.log("🔐 [Hosted Desktop] Consent required - showing consent modal");
+        const bridge = getHaloBridgeService();
+        const consentURL = bridge.getConsentURL();
+        if (consentURL) {
+          setConsentURL(consentURL);
+          setShowConsentModal(true);
+          return; // Don't throw error, wait for user consent
+        }
+      }
+      
+      throw error;
+    }
   }
 
   async function handleGatewayConnect() {
@@ -462,6 +474,15 @@ export function HostedDesktopConnect() {
           setErrorMode(null);
         }}
         onTryAgain={handleTryAgain}
+      />
+
+      {/* Consent Modal */}
+      <ConsentModal
+        isOpen={showConsentModal}
+        website={typeof window !== 'undefined' ? window.location.origin : 'https://app.openburner.xyz'}
+        onAllow={handleConsentAllow}
+        onDeny={handleConsentDeny}
+        onClose={handleConsentClose}
       />
     </div>
   );
