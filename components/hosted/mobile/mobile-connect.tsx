@@ -111,28 +111,26 @@ export function HostedMobileConnect() {
           </div>
         </div>
 
-              {/* Error Modal */}
-              <MobileErrorModal 
-                error={error}
-                onClose={() => setError(null)}
-                onRetry={handleConnect}
-              />
-            </div>
-          </div>
+        {/* Error Modal */}
+        <MobileErrorModal 
+          error={error}
+          onClose={() => setError(null)}
+          onRetry={handleConnect}
+        />
 
-          {/* Website Link */}
-          <div className="text-center mt-6">
-            <Link 
-              href="https://openburner.xyz" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-sm transition-colors duration-200"
-            >
-              <span>Visit openburner.xyz</span>
-              <ExternalLink className="w-3 h-3" strokeWidth={2} />
-            </Link>
-          </div>
+        {/* Website Link */}
+        <div className="text-center mt-6">
+          <Link 
+            href="https://openburner.xyz" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-sm transition-colors duration-200"
+          >
+            <span>Visit openburner.xyz</span>
+            <ExternalLink className="w-3 h-3" strokeWidth={2} />
+          </Link>
         </div>
       </div>
-    );
+    </div>
+  );
 }
