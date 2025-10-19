@@ -32,8 +32,7 @@ export default function Home() {
       
       {/* PWA Components - only for mobile hosted mode */}
       <PWAInstallPrompt />
-      <OfflineIndicator />
-      <OnlineIndicator />
+      {/* Removed OfflineIndicator and OnlineIndicator as requested */}
     </main>
   );
 }

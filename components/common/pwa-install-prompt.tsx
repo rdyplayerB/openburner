@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePWA } from '@/hooks/use-pwa';
-import { Download, X, Wifi, WifiOff } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 
 export function PWAInstallPrompt() {
   const { isInstallable, isInstalled, isOffline, installApp, shouldEnablePWA } = usePWA();
@@ -15,6 +15,16 @@ export function PWAInstallPrompt() {
 
   const handleInstall = async () => {
     try {
+      // Check if we're on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      if (isIOS) {
+        // On iOS, show instructions for manual installation
+        alert('To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
+        return;
+      }
+      
+      // For Android and other browsers, use the install prompt
       await installApp();
     } catch (error) {
       console.error('Installation failed:', error);
@@ -52,22 +62,6 @@ export function PWAInstallPrompt() {
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
               Add to your home screen for quick access
             </p>
-            
-            {/* Offline indicator */}
-            {isOffline && (
-              <div className="flex items-center gap-1 mt-2 text-xs text-amber-600 dark:text-amber-400">
-                <WifiOff className="w-3 h-3" />
-                <span>You're offline</span>
-              </div>
-            )}
-            
-            {/* Online indicator */}
-            {!isOffline && (
-              <div className="flex items-center gap-1 mt-2 text-xs text-green-600 dark:text-green-400">
-                <Wifi className="w-3 h-3" />
-                <span>Online</span>
-              </div>
-            )}
           </div>
           
           <button
