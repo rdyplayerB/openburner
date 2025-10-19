@@ -4,6 +4,8 @@ import { WalletConnect } from "@/components/local/wallet-connect";
 import { HostedMobileConnect } from "@/components/hosted/mobile/mobile-connect";
 import { HostedDesktopConnect } from "@/components/hosted/desktop/hosted-desktop-connect";
 import { WalletDashboard } from "@/components/shared/wallet-dashboard";
+import { PWAInstallPrompt } from "@/components/common/pwa-install-prompt";
+import { OfflineIndicator, OnlineIndicator } from "@/components/common/offline-indicator";
 import { useWalletStore } from "@/store/wallet-store";
 import { useEnvironment } from "@/hooks/use-environment";
 
@@ -27,6 +29,11 @@ export default function Home() {
           <WalletDashboard />
         )}
       </div>
+      
+      {/* PWA Components - only for mobile hosted mode */}
+      <PWAInstallPrompt />
+      <OfflineIndicator />
+      <OnlineIndicator />
     </main>
   );
 }
