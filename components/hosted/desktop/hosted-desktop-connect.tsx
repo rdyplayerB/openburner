@@ -288,9 +288,6 @@ export function HostedDesktopConnect() {
       console.log("═══════════════════════════════════════════════════════\n");
     } catch (error: any) {
       console.error("❌ [Hosted Desktop] HaloBridge connection failed:", error);
-      console.log("🔍 [Hosted Desktop] Debug: Error message:", error.message);
-      console.log("🔍 [Hosted Desktop] Debug: Error type:", error.constructor.name);
-      console.log("🔍 [Hosted Desktop] Debug: Current showConsentModal state:", showConsentModal);
       
       // Check for consent error - either by message or by error type
       if (error.message === "CONSENT_REQUIRED" || 
@@ -300,14 +297,10 @@ export function HostedDesktopConnect() {
         console.log("🔐 [Hosted Desktop] Consent required - showing consent modal");
         const bridge = getHaloBridgeService();
         const consentURL = bridge.getConsentURL();
-        console.log("🔍 [Hosted Desktop] Debug: Consent URL:", consentURL);
         if (consentURL) {
           setConsentURL(consentURL);
           setShowConsentModal(true);
-          console.log("🔍 [Hosted Desktop] Debug: Consent modal should now be visible");
           return; // Don't throw error, wait for user consent
-        } else {
-          console.log("❌ [Hosted Desktop] Debug: No consent URL available");
         }
       }
       
