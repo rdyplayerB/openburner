@@ -2,4 +2,4 @@
 alwaysApply: true
 ---
 
-Do not push changes to github unless instructed by the user.
+Do not deploy changes (git push) unless instructed by the user.

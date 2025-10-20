@@ -32,15 +32,7 @@ export function usePWA() {
       }
     };
 
-    // Check if we should show install message (Safari or other browsers)
-    const checkInstallability = () => {
-      // For Safari and other browsers, show install message if not already installed
-      if (!window.matchMedia('(display-mode: standalone)').matches) {
-        setIsInstallable(true);
-      }
-    };
-
-    // Handle install prompt (Chrome, Edge, etc.)
+    // Handle install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -66,7 +58,6 @@ export function usePWA() {
 
     // Initial checks
     checkInstalled();
-    checkInstallability();
     setIsOffline(!navigator.onLine);
 
     // Register service worker
