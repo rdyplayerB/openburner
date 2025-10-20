@@ -13,7 +13,7 @@ export default function Home() {
   const config = useEnvironment();
   const { isHosted, isMobile, isClient } = config;
 
-  // Show loading state while mobile detection is happening on client-side
+  // Show loading state until hydration is complete
   if (!isClient) {
     return (
       <main className="min-h-screen p-4 transition-colors duration-700 bg-connected bg-bg-base dark:bg-slate-900">
@@ -33,7 +33,7 @@ export default function Home() {
     <main className="min-h-screen p-4 transition-colors duration-700 bg-connected bg-bg-base dark:bg-slate-900">
       <div className="max-w-2xl mx-auto pt-6 pb-12 relative z-10">
         {!isConnected ? (
-          // Environment-aware rendering
+          // Environment-aware rendering - only after hydration
           isHosted && isMobile ? (
             <HostedMobileConnect />
           ) : isHosted && !isMobile ? (
