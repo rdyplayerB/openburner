@@ -12,9 +12,12 @@ interface ToastProps {
 
 export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
+  const [isManuallyClosed, setIsManuallyClosed] = useState(false);
+
+  console.log('Toast render:', { isVisible, isExiting, isManuallyClosed, message });
 
   useEffect(() => {
-    if (isVisible) {
+    if (isVisible && !isManuallyClosed) {
       setIsExiting(false);
       const timer = setTimeout(() => {
         setIsExiting(true);
@@ -22,8 +25,12 @@ export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastPro
       }, duration);
 
       return () => clearTimeout(timer);
+    } else if (!isVisible) {
+      // Reset states when toast becomes invisible
+      setIsExiting(false);
+      setIsManuallyClosed(false);
     }
-  }, [isVisible, duration, onClose]);
+  }, [isVisible, duration, onClose, isManuallyClosed]);
 
   if (!isVisible && !isExiting) return null;
 
@@ -41,6 +48,7 @@ export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastPro
             e.preventDefault();
             e.stopPropagation();
             console.log('Toast close button clicked');
+            setIsManuallyClosed(true);
             setIsExiting(true);
             setTimeout(onClose, 300);
           }}

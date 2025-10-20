@@ -174,6 +174,7 @@ export function WalletDashboard() {
   }
 
   function handleCopyAddress() {
+    console.log('handleCopyAddress called');
     navigator.clipboard.writeText(address || "");
     setCopied(true);
     setToastMessage("Address copied!");
@@ -213,6 +214,7 @@ export function WalletDashboard() {
   }
 
   function handleCopyReceiveAddress() {
+    console.log('handleCopyReceiveAddress called');
     navigator.clipboard.writeText(address || "");
     setReceiveAddressCopied(true);
     setToastMessage("Address copied!");
@@ -564,7 +566,10 @@ export function WalletDashboard() {
       <Toast
         message={toastMessage}
         isVisible={showToast}
-        onClose={() => setShowToast(false)}
+        onClose={() => {
+          console.log('Toast onClose called');
+          setShowToast(false);
+        }}
       />
 
       {/* Footer Branding */}
