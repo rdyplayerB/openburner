@@ -406,13 +406,35 @@ export async function getBurnerAddressViaBridge(): Promise<BurnerKeyInfo> {
     });
 
     console.log("📋 [HaloBridge] Bridge result:", result);
+    console.log("📋 [HaloBridge] Bridge result keys:", Object.keys(result));
+    console.log("📋 [HaloBridge] etherAddresses:", result.etherAddresses);
+    console.log("📋 [HaloBridge] publicKeys:", result.publicKeys);
 
     if (!result.etherAddresses || result.etherAddresses.length === 0) {
-      throw new Error("No Ethereum addresses found on the card");
+      console.log("❌ [HaloBridge] No etherAddresses found, checking alternative fields...");
+      console.log("📋 [HaloBridge] Available fields:", Object.keys(result));
+      
+      // Try alternative field names
+      const altAddresses = result.etherAddress || result.addresses || result.ethAddresses || result.ethereumAddresses;
+      if (altAddresses && altAddresses.length > 0) {
+        console.log("✅ [HaloBridge] Found addresses in alternative field:", altAddresses);
+        result.etherAddresses = altAddresses;
+      } else {
+        throw new Error("No Ethereum addresses found on the card");
+      }
     }
 
     if (!result.publicKeys || result.publicKeys.length === 0) {
-      throw new Error("No public keys found on the card");
+      console.log("❌ [HaloBridge] No publicKeys found, checking alternative fields...");
+      
+      // Try alternative field names
+      const altKeys = result.publicKey || result.keys || result.pubKeys || result.ethereumKeys;
+      if (altKeys && altKeys.length > 0) {
+        console.log("✅ [HaloBridge] Found keys in alternative field:", altKeys);
+        result.publicKeys = altKeys;
+      } else {
+        throw new Error("No public keys found on the card");
+      }
     }
 
     // Use the first available address and key
@@ -422,7 +444,7 @@ export async function getBurnerAddressViaBridge(): Promise<BurnerKeyInfo> {
 
     console.log("✅ [HaloBridge] Successfully retrieved burner info:");
     console.log(`   Address: ${address}`);
-    console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
+    console.log(`   Public Key: ${publicKey ? publicKey.substring(0, 40) + '...' : 'undefined'}`);
     console.log(`   Key Slot: ${keySlot}`);
 
     return {
