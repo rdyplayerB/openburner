@@ -559,7 +559,7 @@ export function TokenList({
                   ease: "easeOut"
                 }}
                 onClick={() => onSendToken(token)}
-                className="flex items-center justify-between px-3 py-3 sm:px-4 sm:py-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                className="flex items-center justify-between pl-3 pr-0 py-3 sm:pl-4 sm:pr-0 sm:py-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {/* Token Icon */}
@@ -613,12 +613,12 @@ export function TokenList({
                       )}
                     </p>
                   </div>
-                  
-                  {/* Send indicator on hover */}
-                  <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg">
-                      <Send className="w-4 h-4" strokeWidth={2.5} />
-                    </div>
+                </div>
+                
+                {/* Send indicator on hover */}
+                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg">
+                    <Send className="w-4 h-4" strokeWidth={2.5} />
                   </div>
                 </div>
               </motion.div>
