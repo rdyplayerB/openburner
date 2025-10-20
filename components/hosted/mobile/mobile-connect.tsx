@@ -7,6 +7,7 @@ import { connectWithMobileNFC } from "@/lib/mobile/nfc";
 import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, X, ExternalLink } from "lucide-react";
 import { MobileErrorModal } from "./mobile-error-modal";
+import { PWAInstallPrompt } from "@/components/common/pwa-install-prompt";
 
 export function HostedMobileConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -131,6 +132,9 @@ export function HostedMobileConnect() {
           </Link>
         </div>
       </div>
+      
+      {/* PWA Install Prompt - only on mobile connection screen */}
+      <PWAInstallPrompt />
     </div>
   );
 }

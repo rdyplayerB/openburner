@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { usePWA } from '@/hooks/use-pwa';
+import { useWalletStore } from '@/store/wallet-store';
 import { Download, X } from 'lucide-react';
 
 export function PWAInstallPrompt() {
   const { isInstallable, isInstalled, isOffline, installApp, shouldEnablePWA } = usePWA();
+  const { isConnected } = useWalletStore();
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Don't show if PWA features are disabled or app is already installed
-  if (!shouldEnablePWA || isInstalled || isDismissed) {
+  // Don't show if PWA features are disabled, app is already installed, user is connected (wallet page), or dismissed
+  if (!shouldEnablePWA || isInstalled || isDismissed || isConnected) {
     return null;
   }
 
