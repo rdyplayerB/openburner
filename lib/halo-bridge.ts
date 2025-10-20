@@ -44,7 +44,8 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
     console.log("🔌 [HaloBridge] Starting connection...");
 
     try {
-      // First try the official HaloBridge class
+      // Try the official HaloBridge class with minimal configuration
+      // The HaloBridge class should handle bridge discovery automatically
       this.bridge = new HaloBridge({});
       
       // Set up disconnection handler
@@ -54,6 +55,7 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
         this.consentURL = null;
       });
 
+      // Try to connect - this should trigger bridge discovery
       await this.bridge.connect();
       console.log("✅ [HaloBridge] Connected successfully via HaloBridge class");
     } catch (error) {
@@ -91,17 +93,39 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
   private async connectDirectWebSocket(): Promise<void> {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket("ws://127.0.0.1:32868/ws");
+      let currentHandle: string | null = null;
       
       ws.onopen = () => {
         console.log("✅ [HaloBridge] Direct WebSocket connected");
+        
+        // Wait for reader to be detected before resolving
+        const checkForReader = () => {
+          if (currentHandle) {
+            console.log("✅ [HaloBridge] Reader detected, bridge ready");
+            resolve();
+          } else {
+            // Wait a bit more for reader detection
+            setTimeout(checkForReader, 1000);
+          }
+        };
+        
+        // Start checking for reader after a short delay
+        setTimeout(checkForReader, 500);
+        
         // Create a mock bridge object for compatibility
         this.bridge = {
           execHaloCmd: async (command: any) => {
             return new Promise((execResolve, execReject) => {
+              if (!currentHandle) {
+                execReject(new Error("No card detected. Please place your Burner card on the reader."));
+                return;
+              }
+              
               const uid = Math.random().toString();
               const message = {
                 uid,
                 type: "exec_halo",
+                handle: currentHandle,
                 command,
               };
               
@@ -139,8 +163,20 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
             return `http://127.0.0.1:32868/consent?website=${origin}`;
           }
         } as any;
+      };
+      
+      ws.onmessage = (event: MessageEvent) => {
+        const msg = JSON.parse(event.data);
+        console.log("🔌 [HaloBridge] Bridge message:", msg);
         
-        resolve();
+        if (msg.event === "handle_added") {
+          currentHandle = msg.data.handle;
+          console.log("✅ [HaloBridge] Card detected, handle:", currentHandle);
+        } else if (msg.event === "reader_added") {
+          console.log("✅ [HaloBridge] Reader added:", msg.data.reader_name);
+        } else if (msg.event === "ws_connected") {
+          console.log("✅ [HaloBridge] Bridge service connected");
+        }
       };
       
       ws.onerror = (error) => {
@@ -151,6 +187,7 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
       ws.onclose = () => {
         console.log("🔌 [HaloBridge] Direct WebSocket connection closed");
         this.bridge = null;
+        currentHandle = null;
       };
     });
   }
