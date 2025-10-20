@@ -39,34 +39,34 @@ export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInsta
   if (showInstructions) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-card-lg">
+        <div className="bg-gray-100 rounded-lg p-4 max-w-sm w-full shadow-lg">
           <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-[#FF6B35] rounded-full flex items-center justify-center">
+            <div className="flex justify-center mb-3">
+              <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center">
                 {instructions.icon}
               </div>
             </div>
             
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <h3 className="text-lg font-medium text-gray-800 mb-2">
               {instructions.title}
             </h3>
             
-            <p className="text-slate-600 dark:text-slate-400 mb-6 text-sm">
+            <p className="text-gray-600 mb-4 text-sm">
               Install OpenBurner for quick access from your home screen
             </p>
 
             {/* Instructions */}
-            <div className="text-left mb-6">
-              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+            <div className="text-left mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
                 How to install:
               </h4>
-              <ol className="space-y-3">
+              <ol className="space-y-2">
                 {instructions.steps.map((step, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-[#FF6B35] text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  <li key={index} className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-gray-400 text-white text-xs font-medium rounded-full flex items-center justify-center">
                       {index + 1}
                     </span>
-                    <span className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <span className="text-sm text-gray-600 leading-relaxed">
                       {step}
                     </span>
                   </li>
@@ -75,17 +75,17 @@ export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInsta
             </div>
             
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => setShowInstructions(false)}
-                className="flex-1 bg-[#FF6B35] hover:bg-[#E55A2B] text-white py-3 px-4 rounded-xl font-semibold transition-colors"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded font-medium transition-colors"
               >
                 Got it!
               </button>
               
               <button
                 onClick={handleDismiss}
-                className="px-4 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="px-3 py-2 border border-gray-400 text-gray-600 rounded hover:bg-gray-200 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -97,32 +97,32 @@ export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInsta
   }
 
   return (
-    <div className="bg-gradient-to-r from-[#FF6B35] to-[#E55A2B] rounded-2xl p-4 mb-6 text-white shadow-lg">
+    <div className="bg-white rounded-2xl p-4 mb-6 text-gray-800 shadow-lg border border-gray-200">
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-          <Smartphone className="w-6 h-6" />
+        <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+          <Download className="w-6 h-6 text-gray-600" />
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg mb-1">
+          <h3 className="font-semibold text-lg mb-1 text-gray-900">
             Install OpenBurner
           </h3>
-          <p className="text-white/90 text-sm mb-3 leading-relaxed">
-            Add OpenBurner to your home screen for quick access and a better experience
+          <p className="text-gray-600 text-sm mb-3 leading-relaxed">
+            Add to home screen for quick access
           </p>
           
           <div className="flex gap-2">
             <button
               onClick={handleInstall}
-              className="bg-white/20 hover:bg-white/30 text-white py-2 px-4 rounded-xl font-medium transition-colors flex items-center gap-2 text-sm"
+              className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-xl font-medium transition-colors flex items-center gap-2 text-sm"
             >
               <Download className="w-4 h-4" />
-              Show Instructions
+              Install
             </button>
             
             <button
               onClick={handleDismiss}
-              className="text-white/80 hover:text-white transition-colors p-2"
+              className="text-gray-500 hover:text-gray-700 transition-colors p-2"
               title="Dismiss"
             >
               <X className="w-4 h-4" />
