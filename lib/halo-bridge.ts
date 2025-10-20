@@ -76,14 +76,22 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
         }
       }
       
-      // Check if it's a bridge discovery error - bridge not installed or not running
+      // Check if it's a bridge discovery error - try direct connection as fallback
       if (error instanceof Error && (
         error.message.includes("Unable to locate halo bridge") ||
         error.message.includes("WebSocket connection failed")
       )) {
-        console.log("🔌 [HaloBridge] Bridge service not found - bridge software may not be installed or running");
-        this.bridge = null;
-        throw new Error("BRIDGE_NOT_AVAILABLE");
+        console.log("🔌 [HaloBridge] Bridge discovery failed, trying direct connection...");
+        
+        try {
+          await this.connectDirectSecureWebSocket();
+          console.log("✅ [HaloBridge] Connected successfully via direct secure WebSocket");
+          return;
+        } catch (directError) {
+          console.log("🔌 [HaloBridge] Direct connection also failed, bridge service may not be running");
+          this.bridge = null;
+          throw new Error("BRIDGE_NOT_AVAILABLE");
+        }
       }
       
       // All other errors
@@ -116,6 +124,108 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
     } finally {
       this.isConnecting = false;
     }
+  }
+
+  private async connectDirectSecureWebSocket(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const ws = new WebSocket("wss://halo-bridge.local:32869/ws");
+      let currentHandle: string | null = null;
+      
+      ws.onopen = () => {
+        console.log("✅ [HaloBridge] Direct secure WebSocket connected");
+        
+        // Wait for reader to be detected before resolving
+        const checkForReader = () => {
+          if (currentHandle) {
+            console.log("✅ [HaloBridge] Reader detected, bridge ready");
+            resolve();
+          } else {
+            // Wait a bit more for reader detection
+            setTimeout(checkForReader, 1000);
+          }
+        };
+        
+        // Start checking for reader after a short delay
+        setTimeout(checkForReader, 500);
+        
+        // Create a mock bridge object for compatibility
+        this.bridge = {
+          execHaloCmd: async (command: any) => {
+            return new Promise((execResolve, execReject) => {
+              if (!currentHandle) {
+                execReject(new Error("No card detected. Please place your Burner card on the reader."));
+                return;
+              }
+              
+              const uid = Math.random().toString();
+              const message = {
+                uid,
+                type: "exec_halo",
+                handle: currentHandle,
+                command,
+              };
+              
+              const handleMessage = (event: MessageEvent) => {
+                const msg = JSON.parse(event.data);
+                if (msg.uid === uid) {
+                  ws.removeEventListener('message', handleMessage);
+                  if (msg.event === "exec_success") {
+                    execResolve(msg.data.res);
+                  } else if (msg.event === "exec_exception") {
+                    execReject(new Error(msg.data.exception.message));
+                  }
+                }
+              };
+              
+              ws.addEventListener('message', handleMessage);
+              ws.send(JSON.stringify(message));
+              
+              // Timeout after 30 seconds
+              setTimeout(() => {
+                ws.removeEventListener('message', handleMessage);
+                execReject(new Error("Command timeout"));
+              }, 30000);
+            });
+          },
+          close: () => {
+            ws.close();
+          },
+          onDisconnected: () => ({
+            sub: (callback: () => void) => {
+              ws.addEventListener('close', callback);
+            }
+          }),
+          getConsentURL: (origin: string) => {
+            return `http://127.0.0.1:32868/consent?website=${origin}`;
+          }
+        } as any;
+      };
+      
+      ws.onmessage = (event: MessageEvent) => {
+        const msg = JSON.parse(event.data);
+        console.log("🔌 [HaloBridge] Bridge message:", msg);
+        
+        if (msg.event === "handle_added") {
+          currentHandle = msg.data.handle;
+          console.log("✅ [HaloBridge] Card detected, handle:", currentHandle);
+        } else if (msg.event === "reader_added") {
+          console.log("✅ [HaloBridge] Reader added:", msg.data.reader_name);
+        } else if (msg.event === "ws_connected") {
+          console.log("✅ [HaloBridge] Bridge service connected");
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error("❌ [HaloBridge] Direct secure WebSocket connection failed:", error);
+        reject(new Error("Failed to connect to HaLo Bridge via secure WebSocket"));
+      };
+      
+      ws.onclose = () => {
+        console.log("🔌 [HaloBridge] Direct secure WebSocket connection closed");
+        this.bridge = null;
+        currentHandle = null;
+      };
+    });
   }
 
   private async connectDirectWebSocket(): Promise<void> {
