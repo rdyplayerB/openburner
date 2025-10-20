@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
@@ -11,12 +11,6 @@ export const metadata: Metadata = {
   icons: {
     icon: '/openburnerlogo.ico',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   // PWA-specific metadata
   ...(isHosted && {
     manifest: '/manifest.json',
@@ -28,7 +22,6 @@ export const metadata: Metadata = {
     formatDetection: {
       telephone: false,
     },
-    themeColor: '#FF6B35',
     other: {
       'mobile-web-app-capable': 'yes',
       'apple-mobile-web-app-capable': 'yes',
@@ -37,6 +30,14 @@ export const metadata: Metadata = {
       'msapplication-config': '/browserconfig.xml',
     },
   }),
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: isHosted ? '#FF6B35' : undefined,
 };
 
 export default function RootLayout({
