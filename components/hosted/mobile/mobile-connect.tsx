@@ -159,25 +159,27 @@ export function HostedMobileConnect() {
 
       {/* Install Card - show for all mobile hosted users if not already installed - positioned at bottom */}
       {shouldEnablePWA && !isInstalled && (
-        <div className="max-w-sm w-full mx-auto">
-          <div 
-            onClick={handleInstallCardClick}
-            className="bg-white dark:bg-slate-800 rounded-xl border border-black/[0.04] dark:border-slate-700/60 shadow-card hover:shadow-card-hover transition-all duration-200 p-4 cursor-pointer active:scale-[0.98] transform"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#FF6B35] rounded-lg flex items-center justify-center flex-shrink-0">
-                <Download className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-                  Install OpenBurner
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
-                  Add to home screen for quick access
-                </p>
-              </div>
-              <div className="flex-shrink-0">
-                <X className="w-4 h-4 text-slate-400" />
+        <div className="w-full px-4 pb-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+          <div className="max-w-sm mx-auto">
+            <div 
+              onClick={handleInstallCardClick}
+              className="bg-white dark:bg-slate-800 rounded-xl border border-black/[0.04] dark:border-slate-700/60 shadow-card hover:shadow-card-hover transition-all duration-200 p-4 cursor-pointer active:scale-[0.98] transform"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#FF6B35] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Download className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+                    Install OpenBurner
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
+                    Add to home screen for quick access
+                  </p>
+                </div>
+                <div className="flex-shrink-0">
+                  <X className="w-4 h-4 text-slate-400" />
+                </div>
               </div>
             </div>
           </div>
