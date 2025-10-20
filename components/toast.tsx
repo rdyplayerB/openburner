@@ -37,11 +37,15 @@ export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastPro
         <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" strokeWidth={2.5} />
         <span className="text-sm font-medium flex-1">{message}</span>
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Toast close button clicked');
             setIsExiting(true);
             setTimeout(onClose, 300);
           }}
-          className="text-slate-400 hover:text-white transition-colors"
+          className="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700/50 flex-shrink-0"
+          aria-label="Close notification"
         >
           <X className="w-4 h-4" strokeWidth={2.5} />
         </button>
