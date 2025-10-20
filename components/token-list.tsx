@@ -559,71 +559,65 @@ export function TokenList({
                   ease: "easeOut"
                 }}
                 onClick={() => onSendToken(token)}
-                className="px-3 py-3 sm:px-4 sm:py-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                className="flex items-center justify-between px-3 py-3 sm:px-4 sm:py-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
               >
-                <div className="flex items-center justify-between gap-3 flex-1 min-w-0">
-                  {/* Left side: Token Icon + Info */}
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {/* Token Icon */}
-                    <div className="flex-shrink-0">
-                      {tokenImages[token.symbol.toUpperCase()] ? (
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-sm ring-1 ring-slate-900/5">
-                          <img 
-                            src={tokenImages[token.symbol.toUpperCase()]}
-                            alt={token.symbol}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback to letter avatar on image load error
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center';
-                                parent.innerHTML = `<span class="text-sm font-bold text-brand-orange">${token.symbol[0]}</span>`;
-                              }
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center">
-                          <span className="text-sm font-bold text-brand-orange">{token.symbol[0]}</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Token Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-slate-900 dark:text-slate-100 token-opacity">{token.symbol}</p>
-                        {isCustomToken && !isPopularToken && (
-                          <span className="text-[9px] px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full font-bold uppercase tracking-wider">Custom</span>
-                        )}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {/* Token Icon */}
+                  <div className="flex-shrink-0">
+                    {tokenImages[token.symbol.toUpperCase()] ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-sm ring-1 ring-slate-900/5">
+                        <img 
+                          src={tokenImages[token.symbol.toUpperCase()]}
+                          alt={token.symbol}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to letter avatar on image load error
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center';
+                              parent.innerHTML = `<span class="text-sm font-bold text-brand-orange">${token.symbol[0]}</span>`;
+                            }
+                          }}
+                        />
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{token.name}</p>
-                    </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center">
+                        <span className="text-sm font-bold text-brand-orange">{token.symbol[0]}</span>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Right side: Balance + Send indicator */}
-                  <div className="flex items-center gap-2">
-                    {/* Balance */}
-                    <div className="text-right">
-                      <p className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono balance-number">
-                        {formatTokenBalance(token.balance)}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {tokenPrices[token.symbol] !== undefined ? (
-                          `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
-                        ) : (
-                          <span className="text-slate-400">Price unavailable</span>
-                        )}
-                      </p>
+                  {/* Token Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-bold text-slate-900 dark:text-slate-100 token-opacity">{token.symbol}</p>
+                      {isCustomToken && !isPopularToken && (
+                        <span className="text-[9px] px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full font-bold uppercase tracking-wider">Custom</span>
+                      )}
                     </div>
-                    
-                    {/* Send indicator on hover */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg">
-                        <Send className="w-4 h-4" strokeWidth={2.5} />
-                      </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{token.name}</p>
+                  </div>
+                  
+                  {/* Balance */}
+                  <div className="text-right">
+                    <p className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono balance-number">
+                      {formatTokenBalance(token.balance)}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {tokenPrices[token.symbol] !== undefined ? (
+                        `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
+                      ) : (
+                        <span className="text-slate-400">Price unavailable</span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  {/* Send indicator on hover */}
+                  <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg">
+                      <Send className="w-4 h-4" strokeWidth={2.5} />
                     </div>
                   </div>
                 </div>

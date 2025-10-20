@@ -114,67 +114,61 @@ export function TokenSelector({
                     onSelectToken(token);
                     onClose();
                   }}
-                  className="w-full p-3 sm:p-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent hover:border-brand-orange/30 dark:hover:border-brand-orange/40 group cursor-pointer hover:shadow-md active:scale-[0.98]"
+                  className="w-full flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent hover:border-brand-orange/30 dark:hover:border-brand-orange/40 group cursor-pointer hover:shadow-md active:scale-[0.98]"
                 >
-                  <div className="flex items-center justify-between gap-3 sm:gap-4 flex-1 min-w-0">
-                    {/* Left side: Token Icon + Info */}
-                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                      {/* Token Icon */}
-                      <div className="flex-shrink-0">
-                        {tokenImages[token.symbol.toUpperCase()] ? (
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-white shadow-sm ring-1 ring-slate-900/5">
-                            <img
-                              src={tokenImages[token.symbol.toUpperCase()]}
-                              alt={token.symbol}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  parent.className = 'w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center';
-                                  parent.innerHTML = `<span class="text-xs sm:text-sm font-bold text-brand-orange">${token.symbol[0]}</span>`;
-                                }
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center">
-                            <span className="text-xs sm:text-sm font-bold text-brand-orange">{token.symbol[0]}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Token Info */}
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">{token.symbol}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{token.name}</p>
-                      </div>
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                    {/* Token Icon */}
+                    <div className="flex-shrink-0">
+                      {tokenImages[token.symbol.toUpperCase()] ? (
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-white shadow-sm ring-1 ring-slate-900/5">
+                          <img
+                            src={tokenImages[token.symbol.toUpperCase()]}
+                            alt={token.symbol}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.className = 'w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center';
+                                parent.innerHTML = `<span class="text-xs sm:text-sm font-bold text-brand-orange">${token.symbol[0]}</span>`;
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center">
+                          <span className="text-xs sm:text-sm font-bold text-brand-orange">{token.symbol[0]}</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Right side: Balance + Send Icon */}
-                    <div className="flex items-center gap-2">
-                      {/* Balance */}
-                      <div className="text-right">
-                        <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 font-mono">
-                          {formatTokenBalance(token.balance)}
-                        </p>
-                        {pricingEnabled && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {tokenPrices[token.symbol] !== undefined ? (
-                              `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
-                            ) : (
-                              <span className="text-slate-400 dark:text-slate-500">—</span>
-                            )}
-                          </p>
-                        )}
-                      </div>
+                    {/* Token Info */}
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">{token.symbol}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{token.name}</p>
+                    </div>
 
-                      {/* Send Icon */}
-                      <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="p-1.5 sm:p-2 bg-brand-orange text-white rounded-lg">
-                          <Send className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={2.5} />
-                        </div>
+                    {/* Balance */}
+                    <div className="text-right mr-1 sm:mr-2">
+                      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 font-mono">
+                        {formatTokenBalance(token.balance)}
+                      </p>
+                      {pricingEnabled && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {tokenPrices[token.symbol] !== undefined ? (
+                            `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
+                          ) : (
+                            <span className="text-slate-400 dark:text-slate-500">—</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Send Icon */}
+                    <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="p-1.5 sm:p-2 bg-brand-orange text-white rounded-lg">
+                        <Send className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={2.5} />
                       </div>
                     </div>
                   </div>
