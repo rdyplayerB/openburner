@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { getAppConfig } from './config/environment';
 import { signTransactionWithBurner } from './burner';
-import { signTransactionWithMobileGateway } from './mobile/mobile-gateway';
+import { signTransactionWithMobileNFC } from './mobile/nfc';
 import { signTransactionWithGateway } from './burner-gateway';
 
 /**
@@ -23,9 +23,9 @@ export async function signTransactionSmart(
   
   try {
     if (config.isHosted && config.isMobile) {
-      // Mobile hosted version - use mobile gateway
-      console.log("📱 [Smart Signer] Using mobile gateway signing");
-      return await signTransactionWithMobileGateway(transaction, keySlot, pin);
+      // Mobile hosted version - use mobile NFC (direct connection)
+      console.log("📱 [Smart Signer] Using mobile NFC signing");
+      return await signTransactionWithMobileNFC(transaction, keySlot, pin);
     } else if (config.isHosted && config.isDesktop) {
       // Desktop hosted version - use regular gateway
       console.log("🖥️ [Smart Signer] Using desktop gateway signing");

@@ -200,6 +200,72 @@ async function connectWithWebNFC(): Promise<BurnerKeyInfo> {
 }
 
 /**
+ * Sign a transaction using mobile NFC (direct connection)
+ * This uses the same direct NFC approach as connectWithMobileNFC
+ */
+export async function signTransactionWithMobileNFC(
+  transaction: ethers.TransactionRequest,
+  keySlot: number = 1,
+  pin?: string
+): Promise<string> {
+  console.log("📱 [Mobile NFC] Starting transaction signing...");
+  
+  try {
+    // Create a Transaction object with explicit string types
+    const tx = ethers.Transaction.from({
+      to: transaction.to as string,
+      value: transaction.value?.toString(),
+      data: transaction.data as string,
+      nonce: transaction.nonce as number,
+      gasLimit: transaction.gasLimit?.toString(),
+      maxFeePerGas: transaction.maxFeePerGas?.toString(),
+      maxPriorityFeePerGas: transaction.maxPriorityFeePerGas?.toString(),
+      chainId: transaction.chainId as number,
+      type: 2,
+    });
+
+    const txHash = tx.unsignedHash;
+
+    // Remove '0x' prefix for Burner
+    const digest = txHash.slice(2);
+
+    // Sign with Burner card via direct NFC
+    console.log(`📱 [Mobile NFC] Signing with key slot ${keySlot} via direct NFC...`);
+    const command: any = {
+      name: "sign",
+      keyNo: keySlot,
+      digest,
+    };
+    
+    // Add PIN if provided
+    if (pin) {
+      command.password = pin;
+    }
+    
+    const result = await execHaloCmdWeb(command, {
+      method: "credential" // This triggers the native iOS security key modal
+    });
+
+    // Construct the signature (direct NFC returns raw.r, raw.s, raw.v)
+    const sig = result.signature.raw || result.signature;
+    const signature = ethers.Signature.from({
+      r: "0x" + sig.r,
+      s: "0x" + sig.s,
+      v: sig.v,
+    });
+
+    // Apply signature to transaction
+    tx.signature = signature;
+
+    console.log("✅ [Mobile NFC] Transaction signed successfully");
+    return tx.serialized;
+  } catch (error: any) {
+    console.error("❌ [Mobile NFC] Transaction signing failed:", error);
+    throw new Error(error.message || "Failed to sign transaction via mobile NFC");
+  }
+}
+
+/**
  * Check if Web NFC is supported on this device
  */
 export function isWebNFCSupported(): boolean {

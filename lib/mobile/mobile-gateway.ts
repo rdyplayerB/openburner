@@ -104,6 +104,8 @@ export async function connectWithMobileGateway(): Promise<BurnerKeyInfo> {
 
 /**
  * Sign a transaction using the mobile gateway connection
+ * This function creates a new gateway connection for each signing attempt
+ * which is the correct approach for mobile hosted version
  */
 export async function signTransactionWithMobileGateway(
   transaction: ethers.TransactionRequest,
