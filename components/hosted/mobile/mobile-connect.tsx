@@ -179,18 +179,8 @@ export function HostedMobileConnect() {
                   instructions = 'To install OpenBurner on Android:\n\n1. Tap the menu button (three dots)\n2. Look for "Add to Home screen" or "Install app"\n3. Follow the prompts\n\nFor best results, use Chrome, Samsung Internet, or Edge';
                 }
               } else {
-                // Desktop or other devices
-                if (isChrome) {
-                  instructions = 'To install OpenBurner on Chrome:\n\n1. Look for the install icon in the address bar (⊞)\n2. Click it and select "Install"\n3. Follow the prompts\n\nIf you don\'t see the icon, try refreshing the page';
-                } else if (isEdge) {
-                  instructions = 'To install OpenBurner on Edge:\n\n1. Look for the install icon in the address bar (⊞)\n2. Click it and select "Install"\n3. Follow the prompts';
-                } else if (isFirefox) {
-                  instructions = 'To install OpenBurner on Firefox:\n\n1. Look for the install icon in the address bar\n2. Click it and select "Install"\n3. Follow the prompts\n\nNote: PWA support varies by Firefox version';
-                } else if (isSafari) {
-                  instructions = 'To install OpenBurner on Safari:\n\n1. Go to File menu\n2. Select "Add to Dock" or "Add to Home Screen"\n3. Follow the prompts\n\nNote: PWA support is limited on desktop Safari';
-                } else {
-                  instructions = 'To install OpenBurner:\n\n1. Look for an install icon in your browser\'s address bar\n2. Click it and follow the prompts\n3. Or use your browser\'s menu to "Add to Home screen"\n\nFor best results, use Chrome, Edge, or Safari';
-                }
+                // Non-mobile devices - show mobile-focused message
+                instructions = 'To install OpenBurner:\n\nThis app is designed for mobile devices. To install on your phone:\n\n1. Open this page on your mobile device\n2. Follow the install instructions for your device\n\nFor iOS: Use Safari and tap Share → Add to Home Screen\nFor Android: Use Chrome and tap Menu → Install app';
               }
               
               alert(instructions);
