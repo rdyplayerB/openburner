@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Bundle optimization
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

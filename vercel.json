@@ -15,5 +15,10 @@
       "source": "/(.*)",
       "destination": "/"
     }
-  ]
+  ],
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_APP_MODE": "hosted"
+    }
+  }
 }
