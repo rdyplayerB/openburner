@@ -17,6 +17,17 @@ export function HostedMobileConnect() {
   const { setWallet } = useWalletStore();
   const { isInstallable, isInstalled, installApp, shouldEnablePWA } = usePWA();
 
+  // Debug PWA state
+  useEffect(() => {
+    console.log('🔍 [PWA Debug] State:', {
+      shouldEnablePWA,
+      isInstallable,
+      isInstalled,
+      isHosted: process.env.NEXT_PUBLIC_APP_MODE === 'hosted',
+      userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'SSR'
+    });
+  }, [shouldEnablePWA, isInstallable, isInstalled]);
+
   // No auto-show install message - only show when user taps card
 
   const handleConnect = async () => {
@@ -141,8 +152,8 @@ export function HostedMobileConnect() {
           </Link>
         </div>
 
-        {/* Install Card - only show if PWA is installable and not already installed */}
-        {shouldEnablePWA && isInstallable && !isInstalled && (
+        {/* Install Card - show for all mobile hosted users if not already installed */}
+        {shouldEnablePWA && !isInstalled && (
           <div className="mt-4">
             <div 
               onClick={handleInstallCardClick}

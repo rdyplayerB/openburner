@@ -23,7 +23,11 @@ export function usePWA() {
   const shouldEnablePWA = isHosted && isMobile;
 
   useEffect(() => {
-    if (!shouldEnablePWA) return;
+    console.log('🔍 [PWA Hook] useEffect running, shouldEnablePWA:', shouldEnablePWA);
+    if (!shouldEnablePWA) {
+      console.log('❌ [PWA Hook] PWA not enabled, skipping setup');
+      return;
+    }
 
     // Check if app is already installed
     const checkInstalled = () => {
@@ -34,6 +38,7 @@ export function usePWA() {
 
     // Handle install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('🎉 [PWA] beforeinstallprompt event fired!', e);
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
