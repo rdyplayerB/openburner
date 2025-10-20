@@ -8,6 +8,7 @@ import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
 import { getTokenPrices, clearPriceCache, getOldestPriceTimestamp } from "@/lib/price-oracle";
 import { batchGetTokenImages, getTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
+import { getAppConfig } from "@/lib/config/environment";
 import { motion } from "framer-motion";
 
 interface Token {
@@ -57,6 +58,8 @@ export function TokenList({
   onTokensLoaded?: (tokens: Token[], images: { [symbol: string]: string }, prices: { [symbol: string]: number }) => void;
 }) {
   const { address, rpcUrl, chainId } = useWalletStore();
+  const { pricingEnabled } = getAppConfig();
+  console.log('TokenList pricingEnabled:', pricingEnabled);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newTokenAddress, setNewTokenAddress] = useState("");
@@ -110,6 +113,13 @@ export function TokenList({
   }, [address, rpcUrl, chainId]);
 
   async function loadPricesForTokens(tokenList: Token[], forceRefresh: boolean = false) {
+    // Only load prices if pricing is enabled
+    if (!pricingEnabled) {
+      console.log("💰 Pricing disabled, skipping price loading");
+      setTokenPrices({});
+      return {};
+    }
+
     try {
       const symbols = tokenList.map(t => t.symbol);
       console.log("💰 Fetching prices for tokens:", symbols, forceRefresh ? "(forced refresh)" : "(cached)");
@@ -605,13 +615,15 @@ export function TokenList({
                     <p className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono balance-number">
                       {formatTokenBalance(token.balance)}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {tokenPrices[token.symbol] !== undefined ? (
-                        `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
-                      ) : (
-                        <span className="text-slate-400">Price unavailable</span>
-                      )}
-                    </p>
+                    {pricingEnabled && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {tokenPrices[token.symbol] !== undefined ? (
+                          `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
+                        ) : (
+                          <span className="text-slate-400">Price unavailable</span>
+                        )}
+                      </p>
+                    )}
                   </div>
                   
                   {/* Send indicator on hover */}
