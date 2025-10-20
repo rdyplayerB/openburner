@@ -7,13 +7,12 @@ import { connectWithMobileNFC } from "@/lib/mobile/nfc";
 import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, X, ExternalLink, Download } from "lucide-react";
 import { MobileErrorModal } from "./mobile-error-modal";
-import { UniversalInstallMessage } from "./universal-install-message";
 import { usePWA } from "@/hooks/use-pwa";
 
 export function HostedMobileConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showInstallMessage, setShowInstallMessage] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   const { setWallet } = useWalletStore();
   const { isInstallable, isInstalled, installApp, shouldEnablePWA } = usePWA();
 
@@ -69,7 +68,7 @@ export function HostedMobileConnect() {
   };
 
   const handleInstallCardClick = () => {
-    setShowInstallMessage(true);
+    setShowInstructions(true);
   };
 
   const handleCancel = () => {
@@ -185,15 +184,82 @@ export function HostedMobileConnect() {
         </div>
       )}
       
-      {/* Universal Install Message */}
-      {showInstallMessage && (
-        <UniversalInstallMessage
-          onDismiss={() => {
-            setShowInstallMessage(false);
-          }}
-          onInstall={installApp}
-        />
+      {/* Instructions Popup */}
+      {showInstructions && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-100 rounded-lg p-4 max-w-sm w-full shadow-lg">
+            <div className="text-center">
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center">
+                  <Download className="w-6 h-6" />
+                </div>
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-800 mb-2">
+                Add to Home Screen
+              </h3>
+              
+              <p className="text-gray-600 mb-4 text-sm">
+                Install OpenBurner for quick access from your home screen
+              </p>
+
+              {/* Instructions */}
+              <div className="text-left mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  How to install:
+                </h4>
+                <ol className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-gray-400 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                      1
+                    </span>
+                    <span className="text-sm text-gray-600 leading-relaxed">
+                      Look for the Share button (square with arrow up) or menu (three dots)
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-gray-400 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                      2
+                    </span>
+                    <span className="text-sm text-gray-600 leading-relaxed">
+                      Find 'Add to Home Screen' or 'Install App' option
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-gray-400 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                      3
+                    </span>
+                    <span className="text-sm text-gray-600 leading-relaxed">
+                      Follow the prompts to add OpenBurner to your home screen
+                    </span>
+                  </li>
+                </ol>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowInstructions(false)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded font-medium transition-colors"
+                >
+                  Got it!
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowInstructions(false);
+                    if (installApp) installApp();
+                  }}
+                  className="px-3 py-2 border border-gray-400 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
+      
     </div>
   );
 }
