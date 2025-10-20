@@ -73,6 +73,11 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
           console.log("🔗 [HaloBridge] Consent URL:", this.consentURL);
           // Don't set bridge to null - we need it for retry after consent
           throw new Error("CONSENT_REQUIRED");
+        } else {
+          // If no bridge instance, create a consent URL manually
+          this.consentURL = `http://127.0.0.1:32868/consent?website=${window.location.origin}`;
+          console.log("🔗 [HaloBridge] Manual consent URL:", this.consentURL);
+          throw new Error("CONSENT_REQUIRED");
         }
       }
       
@@ -105,17 +110,22 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
   }
 
   async retryAfterConsent(): Promise<void> {
-    if (!this.bridge) {
-      throw new Error("No bridge instance available for retry");
-    }
-
     console.log("🔄 [HaloBridge] Retrying connection after consent...");
     this.isConnecting = true;
 
     try {
-      // Retry the connection with the existing bridge instance
-      await this.bridge.connect();
-      console.log("✅ [HaloBridge] Connected successfully after consent");
+      // If we have a bridge instance, try to reconnect it
+      if (this.bridge) {
+        await this.bridge.connect();
+        console.log("✅ [HaloBridge] Connected successfully after consent with existing bridge");
+      } else {
+        // If no bridge instance, create a new one and connect
+        console.log("🔄 [HaloBridge] Creating new bridge instance for retry...");
+        this.bridge = new HaloBridge({});
+        await this.bridge.connect();
+        console.log("✅ [HaloBridge] Connected successfully after consent with new bridge");
+      }
+      
       this.consentURL = null; // Clear consent URL since we're now connected
     } catch (error) {
       console.error("❌ [HaloBridge] Retry after consent failed:", error);

@@ -276,7 +276,11 @@ export function HostedDesktopConnect() {
       console.log("🔍 [Hosted Desktop] Debug: Error type:", error.constructor.name);
       console.log("🔍 [Hosted Desktop] Debug: Current showConsentModal state:", showConsentModal);
       
-      if (error.message === "CONSENT_REQUIRED") {
+      // Check for consent error - either by message or by error type
+      if (error.message === "CONSENT_REQUIRED" || 
+          error.message === "No user consent for this origin." ||
+          error.constructor.name === "NFCBridgeConsentError" ||
+          error.name === "NFCBridgeConsentError") {
         console.log("🔐 [Hosted Desktop] Consent required - showing consent modal");
         const bridge = getHaloBridgeService();
         const consentURL = bridge.getConsentURL();
