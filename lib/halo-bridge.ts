@@ -45,11 +45,9 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
 
     try {
       // Try the official HaloBridge class with proper configuration
-      // The HaloBridge class uses a different discovery mechanism
-      this.bridge = new HaloBridge({
-        // Let the HaloBridge class handle discovery
-        // It will try different endpoints including halo-bridge.local
-      });
+      // The HaloBridge class uses mDNS discovery to find the local bridge service
+      // It will attempt to connect to wss://halo-bridge.local:32869/ws (secure WebSocket)
+      this.bridge = new HaloBridge({});
       
       // Set up disconnection handler
       this.bridge.onDisconnected().sub(() => {
@@ -59,30 +57,34 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
       });
 
       // Try to connect - this should trigger bridge discovery
+      // This may throw NFCBridgeConsentError if consent is required
       await this.bridge.connect();
       console.log("✅ [HaloBridge] Connected successfully via HaloBridge class");
     } catch (error) {
       console.error("❌ [HaloBridge] HaloBridge class connection failed:", error);
       
-      if (error instanceof NFCBridgeConsentError && this.bridge) {
+      // Handle consent error - this is expected and part of the normal flow
+      if (error instanceof NFCBridgeConsentError) {
         console.log("🔐 [HaloBridge] Consent required - getting consent URL");
-        this.consentURL = this.bridge.getConsentURL(window.location.origin, {});
-        console.log("🔗 [HaloBridge] Consent URL:", this.consentURL);
-        throw new Error("CONSENT_REQUIRED");
+        // Store the bridge instance - we'll need it after consent is granted
+        if (this.bridge) {
+          this.consentURL = this.bridge.getConsentURL(window.location.origin, {});
+          console.log("🔗 [HaloBridge] Consent URL:", this.consentURL);
+          throw new Error("CONSENT_REQUIRED");
+        }
       }
       
-      // Check if it's a bridge discovery error - this is expected for hosted versions
+      // Check if it's a bridge discovery error - bridge not installed or not running
       if (error instanceof Error && (
         error.message.includes("Unable to locate halo bridge") ||
-        error.message.includes("halo-bridge.local") ||
         error.message.includes("WebSocket connection failed")
       )) {
-        console.log("🔌 [HaloBridge] Bridge discovery failed - expected for hosted versions");
+        console.log("🔌 [HaloBridge] Bridge service not found - bridge software may not be installed or running");
         this.bridge = null;
         throw new Error("BRIDGE_NOT_AVAILABLE");
       }
       
-      // All other errors are treated as bridge not available
+      // All other errors
       console.log("🔌 [HaloBridge] Bridge connection failed:", error instanceof Error ? error.message : String(error));
       
       this.bridge = null;
