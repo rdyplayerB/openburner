@@ -143,21 +143,21 @@ export function HostedMobileConnect() {
       
       {/* Install Prompt - only on mobile connection screen */}
       <div id="install-prompt" className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-5">
-          <div className="flex items-center gap-4">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg p-4">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
             </div>
             
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                 Install OpenBurner
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                 Add to your home screen for quick access
               </p>
             </div>
@@ -168,15 +168,15 @@ export function HostedMobileConnect() {
                 if (element) element.style.display = 'none';
                 sessionStorage.setItem('pwa-install-dismissed', 'true');
               }}
-              className="flex-shrink-0 p-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              className="flex-shrink-0 p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
           
-          <div className="mt-4">
+          <div className="mt-3">
             <button
               onClick={() => {
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -186,7 +186,7 @@ export function HostedMobileConnect() {
                   alert('To install OpenBurner:\n\n1. Tap the menu button (three dots)\n2. Select "Add to Home screen" or "Install app"\n3. Follow the prompts to install');
                 }
               }}
-              className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] text-white text-sm font-semibold py-3 px-4 rounded-xl hover:from-[#E55A2B] hover:to-[#FF7A3A] transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] text-white text-xs font-medium py-2 px-3 rounded-lg hover:from-[#E55A2B] hover:to-[#FF7A3A] transition-all duration-200"
             >
               Install App
             </button>
