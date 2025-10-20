@@ -144,7 +144,17 @@ export function HostedMobileConnect() {
       {/* Install Prompt - only on mobile connection screen */}
       <div id="install-prompt" className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto">
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm p-3">
-          <div className="flex items-center gap-3">
+          <div 
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => {
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+              if (isIOS) {
+                alert('To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
+              } else {
+                alert('To install OpenBurner:\n\n1. Tap the menu button (three dots)\n2. Select "Add to Home screen" or "Install app"\n3. Follow the prompts to install');
+              }
+            }}
+          >
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +173,8 @@ export function HostedMobileConnect() {
             </div>
             
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering the card click
                 const element = document.getElementById('install-prompt');
                 if (element) element.style.display = 'none';
                 sessionStorage.setItem('pwa-install-dismissed', 'true');
