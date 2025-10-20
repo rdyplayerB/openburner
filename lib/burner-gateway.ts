@@ -101,19 +101,37 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
           let publicKey = null;
           let address = null;
           
+          console.log(`📍 [Gateway] Raw compressed key for slot ${keyNo}:`, compressedKey, typeof compressedKey);
+          
           if (compressedKey) {
             // Use compressed public key directly to compute address
             // This eliminates the need for a second tap
             try {
+              // Handle different data types that might be returned
+              let processedCompressedKey;
+              if (typeof compressedKey === 'string') {
+                processedCompressedKey = compressedKey;
+              } else if (typeof compressedKey === 'object' && compressedKey !== null) {
+                // If it's an object, try to extract the string value
+                processedCompressedKey = compressedKey.toString();
+                console.log(`⚠️ [Gateway] Compressed key is object, converted to string: ${processedCompressedKey}`);
+              } else {
+                throw new Error(`Invalid compressed key type: ${typeof compressedKey}`);
+              }
+              
+              // Remove any '0x' prefix if present
+              if (processedCompressedKey.startsWith('0x')) {
+                processedCompressedKey = processedCompressedKey.slice(2);
+              }
+              
               // Ensure compressed key is proper length (33 bytes = 66 hex chars)
-              let processedCompressedKey = compressedKey;
-              if (compressedKey.length > 66) {
+              if (processedCompressedKey.length > 66) {
                 // Take first 66 characters if too long
-                processedCompressedKey = compressedKey.substring(0, 66);
+                processedCompressedKey = processedCompressedKey.substring(0, 66);
                 console.log(`⚠️ [Gateway] Compressed key too long, truncating to 66 chars`);
-              } else if (compressedKey.length < 66) {
+              } else if (processedCompressedKey.length < 66) {
                 // Pad with zeros if too short
-                processedCompressedKey = compressedKey.padEnd(66, '0');
+                processedCompressedKey = processedCompressedKey.padEnd(66, '0');
                 console.log(`⚠️ [Gateway] Compressed key too short, padding to 66 chars`);
               }
               
@@ -377,19 +395,37 @@ export async function waitForGatewayConnection(gate: HaloGateway): Promise<Burne
           let publicKey = null;
           let address = null;
           
+          console.log(`📍 [Gateway] Raw compressed key for slot ${keyNo}:`, compressedKey, typeof compressedKey);
+          
           if (compressedKey) {
             // Use compressed public key directly to compute address
             // This eliminates the need for a second tap
             try {
+              // Handle different data types that might be returned
+              let processedCompressedKey;
+              if (typeof compressedKey === 'string') {
+                processedCompressedKey = compressedKey;
+              } else if (typeof compressedKey === 'object' && compressedKey !== null) {
+                // If it's an object, try to extract the string value
+                processedCompressedKey = compressedKey.toString();
+                console.log(`⚠️ [Gateway] Compressed key is object, converted to string: ${processedCompressedKey}`);
+              } else {
+                throw new Error(`Invalid compressed key type: ${typeof compressedKey}`);
+              }
+              
+              // Remove any '0x' prefix if present
+              if (processedCompressedKey.startsWith('0x')) {
+                processedCompressedKey = processedCompressedKey.slice(2);
+              }
+              
               // Ensure compressed key is proper length (33 bytes = 66 hex chars)
-              let processedCompressedKey = compressedKey;
-              if (compressedKey.length > 66) {
+              if (processedCompressedKey.length > 66) {
                 // Take first 66 characters if too long
-                processedCompressedKey = compressedKey.substring(0, 66);
+                processedCompressedKey = processedCompressedKey.substring(0, 66);
                 console.log(`⚠️ [Gateway] Compressed key too long, truncating to 66 chars`);
-              } else if (compressedKey.length < 66) {
+              } else if (processedCompressedKey.length < 66) {
                 // Pad with zeros if too short
-                processedCompressedKey = compressedKey.padEnd(66, '0');
+                processedCompressedKey = processedCompressedKey.padEnd(66, '0');
                 console.log(`⚠️ [Gateway] Compressed key too short, padding to 66 chars`);
               }
               
