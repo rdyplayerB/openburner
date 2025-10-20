@@ -4,7 +4,6 @@ import { WalletConnect } from "@/components/local/wallet-connect";
 import { HostedMobileConnect } from "@/components/hosted/mobile/mobile-connect";
 import { HostedDesktopConnect } from "@/components/hosted/desktop/hosted-desktop-connect";
 import { WalletDashboard } from "@/components/shared/wallet-dashboard";
-import { OfflineIndicator, OnlineIndicator } from "@/components/common/offline-indicator";
 import { useWalletStore } from "@/store/wallet-store";
 import { useEnvironment } from "@/hooks/use-environment";
 

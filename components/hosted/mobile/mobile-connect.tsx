@@ -7,20 +7,25 @@ import { connectWithMobileNFC } from "@/lib/mobile/nfc";
 import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, X, ExternalLink } from "lucide-react";
 import { MobileErrorModal } from "./mobile-error-modal";
+import { UniversalInstallMessage } from "./universal-install-message";
+import { usePWA } from "@/hooks/use-pwa";
 
 export function HostedMobileConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showInstallMessage, setShowInstallMessage] = useState(false);
   const { setWallet } = useWalletStore();
+  const { isInstallable, isInstalled, installApp, shouldEnablePWA } = usePWA();
 
-  // Hide install prompt if previously dismissed
+  // Show install message if PWA is installable and not already installed
   useEffect(() => {
-    const dismissed = sessionStorage.getItem('pwa-install-dismissed');
-    if (dismissed === 'true') {
-      const element = document.getElementById('install-prompt');
-      if (element) element.style.display = 'none';
+    if (shouldEnablePWA && isInstallable && !isInstalled) {
+      const dismissed = sessionStorage.getItem('pwa-install-dismissed');
+      if (dismissed !== 'true') {
+        setShowInstallMessage(true);
+      }
     }
-  }, []);
+  }, [shouldEnablePWA, isInstallable, isInstalled]);
 
   const handleConnect = async () => {
     console.log("\n═══════════════════════════════════════════════════════");
@@ -141,88 +146,16 @@ export function HostedMobileConnect() {
         </div>
       </div>
       
-      {/* Install Prompt - only on mobile connection screen */}
-      <div id="install-prompt" className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto">
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm p-3">
-          <div 
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => {
-              const userAgent = navigator.userAgent;
-              
-              // Device detection
-              const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-              const isAndroid = /Android/.test(userAgent);
-              const isSamsung = /Samsung/.test(userAgent);
-              const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
-              const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-              const isEdge = /Edge/.test(userAgent);
-              const isFirefox = /Firefox/.test(userAgent);
-              
-              let instructions = '';
-              
-              if (isIOS) {
-                if (isSafari) {
-                  instructions = 'To install OpenBurner on iOS Safari:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
-                } else if (isChrome) {
-                  instructions = 'To install OpenBurner on iOS Chrome:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
-                } else if (isEdge) {
-                  instructions = 'To install OpenBurner on iOS Edge:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
-                } else {
-                  instructions = 'To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
-                }
-              } else if (isAndroid) {
-                if (isChrome) {
-                  instructions = 'To install OpenBurner on Android Chrome:\n\n1. Tap the menu button (three dots) in the address bar\n2. Look for "Install app" or "Add to Home screen"\n3. Tap it and follow the prompts';
-                } else if (isSamsung) {
-                  instructions = 'To install OpenBurner on Samsung Internet:\n\n1. Tap the menu button (three dots)\n2. Select "Add page to"\n3. Choose "Home screen"\n4. Tap "Add" to confirm';
-                } else if (isEdge) {
-                  instructions = 'To install OpenBurner on Android Edge:\n\n1. Tap the menu button (three dots)\n2. Select "Apps"\n3. Choose "Install this site as an app"\n4. Tap "Install" to confirm';
-                } else if (isFirefox) {
-                  instructions = 'To install OpenBurner on Android Firefox:\n\n1. Tap the menu button (three dots)\n2. Select "Install"\n3. Tap "Add" to confirm';
-                } else {
-                  instructions = 'To install OpenBurner on Android:\n\n1. Tap the menu button (three dots)\n2. Look for "Add to Home screen" or "Install app"\n3. Follow the prompts';
-                }
-              } else {
-                // Fallback for any other mobile devices
-                instructions = 'To install OpenBurner:\n\n1. Tap the Share button (square with arrow up)\n2. Look for "Add to Home Screen" or "Install app"\n3. Follow the prompts';
-              }
-              
-              alert(instructions);
-            }}
-          >
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Install OpenBurner
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Add to home screen
-              </p>
-            </div>
-            
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering the card click
-                const element = document.getElementById('install-prompt');
-                if (element) element.style.display = 'none';
-                sessionStorage.setItem('pwa-install-dismissed', 'true');
-              }}
-              className="flex-shrink-0 p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Universal Install Message */}
+      {showInstallMessage && (
+        <UniversalInstallMessage
+          onDismiss={() => {
+            setShowInstallMessage(false);
+            sessionStorage.setItem('pwa-install-dismissed', 'true');
+          }}
+          onInstall={installApp}
+        />
+      )}
     </div>
   );
 }

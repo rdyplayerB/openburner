@@ -184,20 +184,6 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
   }
 }
 
-/**
- * Connect using Web NFC API (Chrome/Android only)
- * FUTURE IMPLEMENTATION: This would use the Web NFC API directly
- */
-async function connectWithWebNFC(): Promise<BurnerKeyInfo> {
-  // FUTURE: Implement Web NFC API integration
-  // For now, throw error to trigger gateway fallback
-  throw new Error("Web NFC implementation pending - using gateway fallback");
-  
-  // FUTURE IMPLEMENTATION:
-  // const reader = new NDEFReader();
-  // await reader.scan();
-  // // ... Web NFC implementation similar to burner.ts logic
-}
 
 /**
  * Sign a transaction using mobile NFC (direct connection)
@@ -265,9 +251,3 @@ export async function signTransactionWithMobileNFC(
   }
 }
 
-/**
- * Check if Web NFC is supported on this device
- */
-export function isWebNFCSupported(): boolean {
-  return 'NDEFReader' in window;
-}
