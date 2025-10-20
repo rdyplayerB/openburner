@@ -162,29 +162,29 @@ export function HostedMobileConnect() {
               
               if (isIOS) {
                 if (isSafari) {
-                  instructions = 'To install OpenBurner on iOS Safari:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nNote: You must use Safari to install PWAs on iOS';
+                  instructions = 'To install OpenBurner on iOS Safari:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
                 } else if (isChrome) {
-                  instructions = 'To install OpenBurner on iOS Chrome:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nNote: Chrome on iOS uses the same process as Safari';
+                  instructions = 'To install OpenBurner on iOS Chrome:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
                 } else if (isEdge) {
-                  instructions = 'To install OpenBurner on iOS Edge:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nNote: Edge on iOS uses the same process as Safari';
+                  instructions = 'To install OpenBurner on iOS Edge:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
                 } else {
-                  instructions = 'To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nWorks in Safari, Chrome, Edge, and other iOS browsers';
+                  instructions = 'To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
                 }
               } else if (isAndroid) {
                 if (isChrome) {
-                  instructions = 'To install OpenBurner on Android Chrome:\n\n1. Tap the menu button (three dots) in the address bar\n2. Look for "Install app" or "Add to Home screen"\n3. Tap it and follow the prompts\n\nIf you don\'t see the option, try:\n• Refreshing the page\n• Using Chrome version 68 or newer';
+                  instructions = 'To install OpenBurner on Android Chrome:\n\n1. Tap the menu button (three dots) in the address bar\n2. Look for "Install app" or "Add to Home screen"\n3. Tap it and follow the prompts';
                 } else if (isSamsung) {
                   instructions = 'To install OpenBurner on Samsung Internet:\n\n1. Tap the menu button (three dots)\n2. Select "Add page to"\n3. Choose "Home screen"\n4. Tap "Add" to confirm';
                 } else if (isEdge) {
                   instructions = 'To install OpenBurner on Android Edge:\n\n1. Tap the menu button (three dots)\n2. Select "Apps"\n3. Choose "Install this site as an app"\n4. Tap "Install" to confirm';
                 } else if (isFirefox) {
-                  instructions = 'To install OpenBurner on Android Firefox:\n\n1. Tap the menu button (three dots)\n2. Select "Install"\n3. Tap "Add" to confirm\n\nNote: PWA support varies by Firefox version';
+                  instructions = 'To install OpenBurner on Android Firefox:\n\n1. Tap the menu button (three dots)\n2. Select "Install"\n3. Tap "Add" to confirm';
                 } else {
-                  instructions = 'To install OpenBurner on Android:\n\n1. Tap the menu button (three dots)\n2. Look for "Add to Home screen" or "Install app"\n3. Follow the prompts\n\nFor best results, use Chrome, Samsung Internet, or Edge';
+                  instructions = 'To install OpenBurner on Android:\n\n1. Tap the menu button (three dots)\n2. Look for "Add to Home screen" or "Install app"\n3. Follow the prompts';
                 }
               } else {
                 // Fallback for any other mobile devices
-                instructions = 'To install OpenBurner:\n\n1. Tap the Share button (square with arrow up)\n2. Look for "Add to Home Screen" or "Install app"\n3. Follow the prompts\n\nFor best results, use Safari (iOS) or Chrome (Android)';
+                instructions = 'To install OpenBurner:\n\n1. Tap the Share button (square with arrow up)\n2. Look for "Add to Home Screen" or "Install app"\n3. Follow the prompts';
               }
               
               alert(instructions);
