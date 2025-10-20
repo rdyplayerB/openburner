@@ -10,6 +10,15 @@ export function PWAInstallPrompt() {
   const { isConnected } = useWalletStore();
   const [isDismissed, setIsDismissed] = useState(false);
 
+  // Debug logging
+  console.log('[PWAInstallPrompt] State check:', {
+    shouldEnablePWA,
+    isInstalled,
+    isDismissed,
+    isConnected,
+    shouldShow: !(!shouldEnablePWA || isInstalled || isDismissed || isConnected)
+  });
+
   // Don't show if PWA features are disabled, app is already installed, user is connected (wallet page), or dismissed
   if (!shouldEnablePWA || isInstalled || isDismissed || isConnected) {
     return null;
