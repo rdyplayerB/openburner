@@ -71,14 +71,25 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
       const comprehensiveSpec = "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8";
       
       console.log(`📡 [Gateway] Executing get_data_struct with spec: ${comprehensiveSpec}`);
+      console.log(`📡 [Gateway] Gateway state before call:`, globalGateway);
+      
       const dataResult = await globalGateway.execHaloCmd({
         name: "get_data_struct",
         spec: comprehensiveSpec
       });
       
+      console.log(`📡 [Gateway] Raw data result:`, JSON.stringify(dataResult, null, 2));
+      
       const scanDuration = Date.now() - scanStart;
       console.log(`✅ [Gateway] Comprehensive data request completed in ${scanDuration}ms`);
       console.log("📋 [Gateway] Full data result:", dataResult);
+      
+      // Validate that we got some data back
+      if (!dataResult || !dataResult.data) {
+        throw new Error("No data returned from comprehensive call");
+      }
+      
+      console.log("📋 [Gateway] Available data keys:", Object.keys(dataResult.data));
       
       // Process the results for each target slot
       for (const keyNo of targetSlots) {
@@ -159,7 +170,10 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
       }
     } catch (e) {
       console.log("❌ [Gateway] Comprehensive data request failed, falling back to individual calls");
-      console.log("   Error:", e);
+      console.log("   Error details:", e);
+      console.log("   Error message:", (e as any)?.message);
+      console.log("   Error stack:", (e as any)?.stack);
+      console.log("   Gateway state:", globalGateway);
       
       // Fallback to individual calls if comprehensive approach fails
       for (const keyNo of targetSlots) {
@@ -432,7 +446,10 @@ export async function waitForGatewayConnection(gate: HaloGateway): Promise<Burne
       }
     } catch (e) {
       console.log("❌ [Gateway] Comprehensive data request failed, falling back to individual calls");
-      console.log("   Error:", e);
+      console.log("   Error details:", e);
+      console.log("   Error message:", (e as any)?.message);
+      console.log("   Error stack:", (e as any)?.stack);
+      console.log("   Gateway state:", globalGateway);
       
       // Fallback to individual calls if comprehensive approach fails
       for (const keyNo of targetSlots) {
