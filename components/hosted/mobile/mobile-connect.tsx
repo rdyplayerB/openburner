@@ -132,6 +132,17 @@ export function HostedMobileConnect() {
           onRetry={handleConnect}
         />
 
+        {/* Universal Install Message */}
+        {showInstallMessage && (
+          <UniversalInstallMessage
+            onDismiss={() => {
+              setShowInstallMessage(false);
+              sessionStorage.setItem('pwa-install-dismissed', 'true');
+            }}
+            onInstall={installApp}
+          />
+        )}
+
         {/* Website Link */}
         <div className="text-center mt-6">
           <Link 
@@ -145,17 +156,6 @@ export function HostedMobileConnect() {
           </Link>
         </div>
       </div>
-      
-      {/* Universal Install Message */}
-      {showInstallMessage && (
-        <UniversalInstallMessage
-          onDismiss={() => {
-            setShowInstallMessage(false);
-            sessionStorage.setItem('pwa-install-dismissed', 'true');
-          }}
-          onInstall={installApp}
-        />
-      )}
     </div>
   );
 }
