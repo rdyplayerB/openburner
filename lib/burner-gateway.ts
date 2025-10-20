@@ -145,18 +145,8 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
               console.log(`   🎯 Single tap success - no second request needed!`);
             } catch (e) {
               console.log(`⚠️ [Gateway] Failed to expand compressed key for slot ${keyNo}:`, e);
-              // Fallback to get_key_info if compressed key expansion fails
-              const keyInfo = await globalGateway.execHaloCmd({
-                name: "get_key_info",
-                keyNo,
-              });
-              
-              if (keyInfo.publicKey) {
-                publicKey = keyInfo.publicKey;
-                address = ethers.computeAddress("0x" + publicKey);
-                console.log(`✅ [Gateway] Key slot ${keyNo} (fallback): ${address}`);
-                console.log(`   Public Key: ${publicKey.substring(0, 20)}...`);
-              }
+              console.log(`⚠️ [Gateway] Skipping individual fallback for slot ${keyNo} - will try other slots first`);
+              // Don't immediately fallback - let the comprehensive scan complete first
             }
           }
           
