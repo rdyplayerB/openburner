@@ -615,13 +615,17 @@ export function TokenList({
                     <p className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono balance-number">
                       {formatTokenBalance(token.balance)}
                     </p>
-                    {pricingEnabled && (
+                    {pricingEnabled ? (
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {tokenPrices[token.symbol] !== undefined ? (
                           `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
                         ) : (
                           <span className="text-slate-400">Price unavailable</span>
                         )}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
+                        DEBUG: pricingEnabled={pricingEnabled ? 'true' : 'false'}, tokenPrices={JSON.stringify(tokenPrices)}
                       </p>
                     )}
                   </div>
