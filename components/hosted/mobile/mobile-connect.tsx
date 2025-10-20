@@ -165,8 +165,10 @@ export function HostedMobileConnect() {
                   instructions = 'To install OpenBurner on iOS Safari:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nNote: You must use Safari to install PWAs on iOS';
                 } else if (isChrome) {
                   instructions = 'To install OpenBurner on iOS Chrome:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nNote: Chrome on iOS uses the same process as Safari';
+                } else if (isEdge) {
+                  instructions = 'To install OpenBurner on iOS Edge:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nNote: Edge on iOS uses the same process as Safari';
                 } else {
-                  instructions = 'To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nWorks in Safari, Chrome, and other iOS browsers';
+                  instructions = 'To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nWorks in Safari, Chrome, Edge, and other iOS browsers';
                 }
               } else if (isAndroid) {
                 if (isChrome) {
