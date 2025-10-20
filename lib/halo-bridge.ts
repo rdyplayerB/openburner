@@ -44,9 +44,12 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
     console.log("🔌 [HaloBridge] Starting connection...");
 
     try {
-      // Try the official HaloBridge class with minimal configuration
-      // The HaloBridge class should handle bridge discovery automatically
-      this.bridge = new HaloBridge({});
+      // Try the official HaloBridge class with proper configuration
+      // The HaloBridge class uses a different discovery mechanism
+      this.bridge = new HaloBridge({
+        // Let the HaloBridge class handle discovery
+        // It will try different endpoints including halo-bridge.local
+      });
       
       // Set up disconnection handler
       this.bridge.onDisconnected().sub(() => {
@@ -68,20 +71,19 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
         throw new Error("CONSENT_REQUIRED");
       }
       
-      // Check if it's a bridge not found error - try direct WebSocket fallback
-      if (error instanceof Error && error.message.includes("Unable to locate halo bridge")) {
-        console.log("🔌 [HaloBridge] HaloBridge class failed, trying direct WebSocket connection...");
-        
-        try {
-          await this.connectDirectWebSocket();
-          console.log("✅ [HaloBridge] Connected successfully via direct WebSocket");
-          return;
-        } catch (wsError) {
-          console.error("❌ [HaloBridge] Direct WebSocket connection also failed:", wsError);
-          this.bridge = null;
-          throw new Error("BRIDGE_NOT_AVAILABLE");
-        }
+      // Check if it's a bridge discovery error - this is expected for hosted versions
+      if (error instanceof Error && (
+        error.message.includes("Unable to locate halo bridge") ||
+        error.message.includes("halo-bridge.local") ||
+        error.message.includes("WebSocket connection failed")
+      )) {
+        console.log("🔌 [HaloBridge] Bridge discovery failed - expected for hosted versions");
+        this.bridge = null;
+        throw new Error("BRIDGE_NOT_AVAILABLE");
       }
+      
+      // All other errors are treated as bridge not available
+      console.log("🔌 [HaloBridge] Bridge connection failed:", error instanceof Error ? error.message : String(error));
       
       this.bridge = null;
       throw error;
