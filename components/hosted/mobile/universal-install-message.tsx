@@ -183,7 +183,7 @@ export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInsta
             </h3>
             
             <p className="text-slate-600 dark:text-slate-400 mb-6 text-sm">
-              Install OpenBurner for quick access from your home screen
+              Install OpenBurner
             </p>
 
             {/* Instructions */}
@@ -239,7 +239,7 @@ export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInsta
             Install OpenBurner
           </h3>
           <p className="text-white/90 text-sm mb-3 leading-relaxed">
-            Install OpenBurner for quick access and a better experience
+            Install OpenBurner
           </p>
           
           <div className="flex gap-2">
