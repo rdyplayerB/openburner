@@ -1,45 +1,28 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { usePWA } from '@/hooks/use-pwa';
-import { useWalletStore } from '@/store/wallet-store';
 import { Download, X } from 'lucide-react';
 
 export function PWAInstallPrompt() {
-  const { isInstallable, isInstalled, isOffline, installApp, shouldEnablePWA } = usePWA();
-  const { isConnected } = useWalletStore();
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Debug logging
-  console.log('[PWAInstallPrompt] State check:', {
-    shouldEnablePWA,
-    isInstalled,
-    isDismissed,
-    isConnected,
-    shouldShow: !(!shouldEnablePWA || isInstalled || isDismissed || isConnected)
-  });
-
-  // Don't show if PWA features are disabled, app is already installed, user is connected (wallet page), or dismissed
-  if (!shouldEnablePWA || isInstalled || isDismissed || isConnected) {
+  // Don't show if dismissed
+  if (isDismissed) {
     return null;
   }
 
-  const handleInstall = async () => {
-    try {
-      // Check if we're on iOS
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      
-      if (isIOS) {
-        // On iOS, show instructions for manual installation
-        alert('To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
-        return;
-      }
-      
-      // For Android and other browsers, use the install prompt
-      await installApp();
-    } catch (error) {
-      console.error('Installation failed:', error);
+  const handleInstall = () => {
+    // Check if we're on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    if (isIOS) {
+      // On iOS, show instructions for manual installation
+      alert('To install OpenBurner on iOS:\n\n1. Tap the Share button (square with arrow up)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
+      return;
     }
+    
+    // For Android and other browsers, show instructions
+    alert('To install OpenBurner:\n\n1. Tap the menu button (three dots)\n2. Select "Add to Home screen" or "Install app"\n3. Follow the prompts to install');
   };
 
   const handleDismiss = () => {
@@ -83,22 +66,20 @@ export function PWAInstallPrompt() {
           </button>
         </div>
         
-        {isInstallable && (
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={handleInstall}
-              className="flex-1 bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] text-white text-xs font-medium py-2 px-3 rounded-lg hover:from-[#E55A2B] hover:to-[#FF7A3A] transition-all duration-200"
-            >
-              Install App
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors duration-200"
-            >
-              Not now
-            </button>
-          </div>
-        )}
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={handleInstall}
+            className="flex-1 bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] text-white text-xs font-medium py-2 px-3 rounded-lg hover:from-[#E55A2B] hover:to-[#FF7A3A] transition-all duration-200"
+          >
+            Install App
+          </button>
+          <button
+            onClick={handleDismiss}
+            className="px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors duration-200"
+          >
+            Not now
+          </button>
+        </div>
       </div>
     </div>
   );

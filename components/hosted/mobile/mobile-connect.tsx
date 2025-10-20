@@ -133,7 +133,7 @@ export function HostedMobileConnect() {
         </div>
       </div>
       
-      {/* PWA Install Prompt - only on mobile connection screen */}
+      {/* Install Prompt - only on mobile connection screen */}
       <PWAInstallPrompt />
     </div>
   );
