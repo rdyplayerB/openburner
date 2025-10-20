@@ -183,8 +183,8 @@ export function HostedMobileConnect() {
                   instructions = 'To install OpenBurner on Android:\n\n1. Tap the menu button (three dots)\n2. Look for "Add to Home screen" or "Install app"\n3. Follow the prompts\n\nFor best results, use Chrome, Samsung Internet, or Edge';
                 }
               } else {
-                // Non-mobile devices - show mobile-focused message
-                instructions = 'To install OpenBurner:\n\nThis app is designed for mobile devices. To install on your phone:\n\n1. Open this page on your mobile device\n2. Follow the install instructions for your device\n\nFor iOS: Use Safari and tap Share → Add to Home Screen\nFor Android: Use Chrome and tap Menu → Install app';
+                // Fallback for any other mobile devices
+                instructions = 'To install OpenBurner:\n\n1. Tap the Share button (square with arrow up)\n2. Look for "Add to Home Screen" or "Install app"\n3. Follow the prompts\n\nFor best results, use Safari (iOS) or Chrome (Android)';
               }
               
               alert(instructions);
