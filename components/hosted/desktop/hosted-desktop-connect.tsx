@@ -272,15 +272,22 @@ export function HostedDesktopConnect() {
       console.log("═══════════════════════════════════════════════════════\n");
     } catch (error: any) {
       console.error("❌ [Hosted Desktop] HaloBridge connection failed:", error);
+      console.log("🔍 [Hosted Desktop] Debug: Error message:", error.message);
+      console.log("🔍 [Hosted Desktop] Debug: Error type:", error.constructor.name);
+      console.log("🔍 [Hosted Desktop] Debug: Current showConsentModal state:", showConsentModal);
       
       if (error.message === "CONSENT_REQUIRED") {
         console.log("🔐 [Hosted Desktop] Consent required - showing consent modal");
         const bridge = getHaloBridgeService();
         const consentURL = bridge.getConsentURL();
+        console.log("🔍 [Hosted Desktop] Debug: Consent URL:", consentURL);
         if (consentURL) {
           setConsentURL(consentURL);
           setShowConsentModal(true);
+          console.log("🔍 [Hosted Desktop] Debug: Consent modal should now be visible");
           return; // Don't throw error, wait for user consent
+        } else {
+          console.log("❌ [Hosted Desktop] Debug: No consent URL available");
         }
       }
       
@@ -382,6 +389,18 @@ export function HostedDesktopConnect() {
                 <span>Cancel</span>
               </button>
             )}
+            
+            {/* Debug Test Button */}
+            <button
+              onClick={() => {
+                console.log("🔍 [Debug] Manually triggering consent modal");
+                setShowConsentModal(true);
+                setConsentURL("http://127.0.0.1:32868/consent?website=" + window.location.origin);
+              }}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 mt-2"
+            >
+              Test Consent Modal (Debug)
+            </button>
           </div>
 
         </div>
