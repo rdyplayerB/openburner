@@ -18,6 +18,7 @@ export interface BurnerKeyInfo {
 
 export interface HaloBridgeService {
   connect(): Promise<void>;
+  retryAfterConsent(): Promise<void>;
   disconnect(): void;
   executeCommand(command: any): Promise<any>;
   isConnected(): boolean;
@@ -70,6 +71,7 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
         if (this.bridge) {
           this.consentURL = this.bridge.getConsentURL(window.location.origin, {});
           console.log("🔗 [HaloBridge] Consent URL:", this.consentURL);
+          // Don't set bridge to null - we need it for retry after consent
           throw new Error("CONSENT_REQUIRED");
         }
       }
@@ -87,6 +89,28 @@ class HaloBridgeServiceImpl implements HaloBridgeService {
       // All other errors
       console.log("🔌 [HaloBridge] Bridge connection failed:", error instanceof Error ? error.message : String(error));
       
+      this.bridge = null;
+      throw error;
+    } finally {
+      this.isConnecting = false;
+    }
+  }
+
+  async retryAfterConsent(): Promise<void> {
+    if (!this.bridge) {
+      throw new Error("No bridge instance available for retry");
+    }
+
+    console.log("🔄 [HaloBridge] Retrying connection after consent...");
+    this.isConnecting = true;
+
+    try {
+      // Retry the connection with the existing bridge instance
+      await this.bridge.connect();
+      console.log("✅ [HaloBridge] Connected successfully after consent");
+      this.consentURL = null; // Clear consent URL since we're now connected
+    } catch (error) {
+      console.error("❌ [HaloBridge] Retry after consent failed:", error);
       this.bridge = null;
       throw error;
     } finally {

@@ -161,15 +161,36 @@ export function HostedDesktopConnect() {
     console.log('🔄 [Hosted Desktop] Mode changed - clearing error state');
   }
 
-  function handleConsentAllow() {
+  async function handleConsentAllow() {
     console.log("✅ [Hosted Desktop] User granted consent");
     setShowConsentModal(false);
     setConsentURL(null);
     
-    // Retry bridge connection after consent
-    setTimeout(() => {
-      handleBridgeConnect();
-    }, 1000);
+    // Retry the bridge connection after consent
+    try {
+      console.log("🔄 [Hosted Desktop] Retrying bridge connection after consent...");
+      const bridge = getHaloBridgeService();
+      await bridge.retryAfterConsent();
+      
+      // Now get the burner address
+      const { address, publicKey, keySlot } = await getBurnerAddressViaBridge();
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log(`✅ [Hosted Desktop] HaloBridge connection completed after consent`);
+      console.log("═══════════════════════════════════════════════════════");
+      console.log(`   Address: ${address}`);
+      console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
+      console.log(`   Key Slot: ${keySlot}`);
+      
+      setWallet(address, publicKey, keySlot);
+      
+      console.log("\n═══════════════════════════════════════════════════════");
+      console.log("🎉 [Hosted Desktop] BRIDGE CONNECTION SUCCESSFUL!");
+      console.log("═══════════════════════════════════════════════════════\n");
+    } catch (error) {
+      console.error("❌ [Hosted Desktop] Bridge connection failed after consent:", error);
+      setError(error instanceof Error ? error.message : "Bridge connection failed after consent");
+    }
   }
 
   function handleConsentDeny() {
