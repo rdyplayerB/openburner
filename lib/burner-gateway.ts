@@ -71,25 +71,14 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
       const comprehensiveSpec = "latchValue:2,graffiti:1,compressedPublicKey:2,compressedPublicKey:9,publicKeyAttest:9,compressedPublicKey:8,publicKeyAttest:8";
       
       console.log(`📡 [Gateway] Executing get_data_struct with spec: ${comprehensiveSpec}`);
-      console.log(`📡 [Gateway] Gateway state before call:`, globalGateway);
-      
       const dataResult = await globalGateway.execHaloCmd({
         name: "get_data_struct",
         spec: comprehensiveSpec
       });
       
-      console.log(`📡 [Gateway] Raw data result:`, JSON.stringify(dataResult, null, 2));
-      
       const scanDuration = Date.now() - scanStart;
       console.log(`✅ [Gateway] Comprehensive data request completed in ${scanDuration}ms`);
       console.log("📋 [Gateway] Full data result:", dataResult);
-      
-      // Validate that we got some data back
-      if (!dataResult || !dataResult.data) {
-        throw new Error("No data returned from comprehensive call");
-      }
-      
-      console.log("📋 [Gateway] Available data keys:", Object.keys(dataResult.data));
       
       // Process the results for each target slot
       for (const keyNo of targetSlots) {
@@ -101,37 +90,19 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
           let publicKey = null;
           let address = null;
           
-          console.log(`📍 [Gateway] Raw compressed key for slot ${keyNo}:`, compressedKey, typeof compressedKey);
-          
           if (compressedKey) {
             // Use compressed public key directly to compute address
             // This eliminates the need for a second tap
             try {
-              // Handle different data types that might be returned
-              let processedCompressedKey;
-              if (typeof compressedKey === 'string') {
-                processedCompressedKey = compressedKey;
-              } else if (typeof compressedKey === 'object' && compressedKey !== null) {
-                // If it's an object, try to extract the string value
-                processedCompressedKey = compressedKey.toString();
-                console.log(`⚠️ [Gateway] Compressed key is object, converted to string: ${processedCompressedKey}`);
-              } else {
-                throw new Error(`Invalid compressed key type: ${typeof compressedKey}`);
-              }
-              
-              // Remove any '0x' prefix if present
-              if (processedCompressedKey.startsWith('0x')) {
-                processedCompressedKey = processedCompressedKey.slice(2);
-              }
-              
               // Ensure compressed key is proper length (33 bytes = 66 hex chars)
-              if (processedCompressedKey.length > 66) {
+              let processedCompressedKey = compressedKey;
+              if (compressedKey.length > 66) {
                 // Take first 66 characters if too long
-                processedCompressedKey = processedCompressedKey.substring(0, 66);
+                processedCompressedKey = compressedKey.substring(0, 66);
                 console.log(`⚠️ [Gateway] Compressed key too long, truncating to 66 chars`);
-              } else if (processedCompressedKey.length < 66) {
+              } else if (compressedKey.length < 66) {
                 // Pad with zeros if too short
-                processedCompressedKey = processedCompressedKey.padEnd(66, '0');
+                processedCompressedKey = compressedKey.padEnd(66, '0');
                 console.log(`⚠️ [Gateway] Compressed key too short, padding to 66 chars`);
               }
               
@@ -145,8 +116,18 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
               console.log(`   🎯 Single tap success - no second request needed!`);
             } catch (e) {
               console.log(`⚠️ [Gateway] Failed to expand compressed key for slot ${keyNo}:`, e);
-              console.log(`⚠️ [Gateway] Skipping individual fallback for slot ${keyNo} - will try other slots first`);
-              // Don't immediately fallback - let the comprehensive scan complete first
+              // Fallback to get_key_info if compressed key expansion fails
+              const keyInfo = await globalGateway.execHaloCmd({
+                name: "get_key_info",
+                keyNo,
+              });
+              
+              if (keyInfo.publicKey) {
+                publicKey = keyInfo.publicKey;
+                address = ethers.computeAddress("0x" + publicKey);
+                console.log(`✅ [Gateway] Key slot ${keyNo} (fallback): ${address}`);
+                console.log(`   Public Key: ${publicKey.substring(0, 20)}...`);
+              }
             }
           }
           
@@ -178,10 +159,7 @@ export async function getBurnerAddressViaGateway(): Promise<BurnerKeyInfo> {
       }
     } catch (e) {
       console.log("❌ [Gateway] Comprehensive data request failed, falling back to individual calls");
-      console.log("   Error details:", e);
-      console.log("   Error message:", (e as any)?.message);
-      console.log("   Error stack:", (e as any)?.stack);
-      console.log("   Gateway state:", globalGateway);
+      console.log("   Error:", e);
       
       // Fallback to individual calls if comprehensive approach fails
       for (const keyNo of targetSlots) {
@@ -385,37 +363,19 @@ export async function waitForGatewayConnection(gate: HaloGateway): Promise<Burne
           let publicKey = null;
           let address = null;
           
-          console.log(`📍 [Gateway] Raw compressed key for slot ${keyNo}:`, compressedKey, typeof compressedKey);
-          
           if (compressedKey) {
             // Use compressed public key directly to compute address
             // This eliminates the need for a second tap
             try {
-              // Handle different data types that might be returned
-              let processedCompressedKey;
-              if (typeof compressedKey === 'string') {
-                processedCompressedKey = compressedKey;
-              } else if (typeof compressedKey === 'object' && compressedKey !== null) {
-                // If it's an object, try to extract the string value
-                processedCompressedKey = compressedKey.toString();
-                console.log(`⚠️ [Gateway] Compressed key is object, converted to string: ${processedCompressedKey}`);
-              } else {
-                throw new Error(`Invalid compressed key type: ${typeof compressedKey}`);
-              }
-              
-              // Remove any '0x' prefix if present
-              if (processedCompressedKey.startsWith('0x')) {
-                processedCompressedKey = processedCompressedKey.slice(2);
-              }
-              
               // Ensure compressed key is proper length (33 bytes = 66 hex chars)
-              if (processedCompressedKey.length > 66) {
+              let processedCompressedKey = compressedKey;
+              if (compressedKey.length > 66) {
                 // Take first 66 characters if too long
-                processedCompressedKey = processedCompressedKey.substring(0, 66);
+                processedCompressedKey = compressedKey.substring(0, 66);
                 console.log(`⚠️ [Gateway] Compressed key too long, truncating to 66 chars`);
-              } else if (processedCompressedKey.length < 66) {
+              } else if (compressedKey.length < 66) {
                 // Pad with zeros if too short
-                processedCompressedKey = processedCompressedKey.padEnd(66, '0');
+                processedCompressedKey = compressedKey.padEnd(66, '0');
                 console.log(`⚠️ [Gateway] Compressed key too short, padding to 66 chars`);
               }
               
@@ -472,10 +432,7 @@ export async function waitForGatewayConnection(gate: HaloGateway): Promise<Burne
       }
     } catch (e) {
       console.log("❌ [Gateway] Comprehensive data request failed, falling back to individual calls");
-      console.log("   Error details:", e);
-      console.log("   Error message:", (e as any)?.message);
-      console.log("   Error stack:", (e as any)?.stack);
-      console.log("   Gateway state:", globalGateway);
+      console.log("   Error:", e);
       
       // Fallback to individual calls if comprehensive approach fails
       for (const keyNo of targetSlots) {
