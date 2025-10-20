@@ -35,7 +35,7 @@ export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastPro
   if (!isVisible && !isExiting) return null;
 
   return (
-    <div className="fixed top-20 right-4 z-[100] pointer-events-none">
+    <div className="fixed top-4 right-4 z-[100] pointer-events-none">
       <div
         className={`pointer-events-auto bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg dark:shadow-2xl dark:border dark:border-slate-700 flex items-center gap-3 min-w-[200px] ${
           isExiting ? "toast-slide-out" : "toast-slide-in"
