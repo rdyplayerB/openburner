@@ -4,30 +4,24 @@ import { useMemo, useState, useEffect } from 'react';
 import { getAppConfig, AppConfig } from '@/lib/config/environment';
 
 export function useEnvironment(): AppConfig {
-  const [isClient, setIsClient] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [clientConfig, setClientConfig] = useState<AppConfig | null>(null);
 
   useEffect(() => {
-    setIsClient(true);
     // Detect mobile on client-side only
     const mobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    setIsMobile(mobile);
+    
+    const baseConfig = getAppConfig();
+    const config: AppConfig = {
+      ...baseConfig,
+      isMobile: mobile,
+      isDesktop: !mobile,
+      deviceType: mobile ? 'mobile' : 'desktop',
+      isClient: true
+    };
+    
+    setClientConfig(config);
   }, []);
 
-  return useMemo(() => {
-    const baseConfig = getAppConfig();
-    
-    // Only override mobile detection on client-side
-    if (isClient) {
-      return {
-        ...baseConfig,
-        isMobile,
-        isDesktop: !isMobile,
-        deviceType: isMobile ? 'mobile' : 'desktop',
-        isClient: true
-      };
-    }
-    
-    return baseConfig;
-  }, [isClient, isMobile]);
+  // Return client config if available, otherwise return server config
+  return clientConfig || getAppConfig();
 }

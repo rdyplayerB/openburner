@@ -10,7 +10,8 @@ import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const { isConnected } = useWalletStore();
-  const { isHosted, isMobile, isClient } = useEnvironment();
+  const config = useEnvironment();
+  const { isHosted, isMobile, isClient } = config;
 
   // Show loading state while mobile detection is happening on client-side
   if (!isClient) {
