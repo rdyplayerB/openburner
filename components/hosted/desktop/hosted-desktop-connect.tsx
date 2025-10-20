@@ -163,6 +163,22 @@ export function HostedDesktopConnect() {
 
   async function handleConsentAllow() {
     console.log("✅ [Hosted Desktop] User granted consent");
+    
+    // Open the consent URL in a new tab for the user to complete the actual consent
+    if (consentURL) {
+      console.log("🔗 [Hosted Desktop] Opening consent URL:", consentURL);
+      window.open(consentURL, '_blank', 'noopener,noreferrer');
+      
+      // Show instructions to the user
+      setError("Please complete the consent process in the new tab that opened, then click 'Try Again' below.");
+      setShowConsentModal(false);
+      setConsentURL(null);
+      setIsConnecting(false);
+      isConnectingRef.current = false;
+      return;
+    }
+    
+    // Fallback: try to retry immediately if no consent URL
     setShowConsentModal(false);
     setConsentURL(null);
     
@@ -394,17 +410,6 @@ export function HostedDesktopConnect() {
               </button>
             )}
             
-            {/* Debug Test Button */}
-            <button
-              onClick={() => {
-                console.log("🔍 [Debug] Manually triggering consent modal");
-                setShowConsentModal(true);
-                setConsentURL("http://127.0.0.1:32868/consent?website=" + window.location.origin);
-              }}
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 mt-2"
-            >
-              Test Consent Modal (Debug)
-            </button>
           </div>
 
         </div>

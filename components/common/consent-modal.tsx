@@ -15,18 +15,14 @@ export function ConsentModal({ isOpen, website, onAllow, onDeny, onClose }: Cons
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    console.log("🔍 [ConsentModal] Debug: isOpen changed to:", isOpen);
     if (isOpen) {
       setIsVisible(true);
-      console.log("🔍 [ConsentModal] Debug: Modal should be visible now");
     } else {
       // Delay hiding to allow for smooth animation
       const timer = setTimeout(() => setIsVisible(false), 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
-
-  console.log("🔍 [ConsentModal] Debug: isVisible:", isVisible, "isOpen:", isOpen);
   if (!isVisible) return null;
 
   return (
