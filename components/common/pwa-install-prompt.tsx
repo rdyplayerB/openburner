@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 
 export function PWAInstallPrompt() {
-  const [isDismissed, setIsDismissed] = useState(false);
+  // Check if user previously dismissed - do this without hooks
+  const isDismissed = typeof window !== 'undefined' && sessionStorage.getItem('pwa-install-dismissed') === 'true';
 
   // Don't show if dismissed
   if (isDismissed) {
@@ -26,21 +26,17 @@ export function PWAInstallPrompt() {
   };
 
   const handleDismiss = () => {
-    setIsDismissed(true);
+    // Hide the element by setting display to none
+    const element = document.querySelector('[data-install-prompt]');
+    if (element) {
+      (element as HTMLElement).style.display = 'none';
+    }
     // Remember dismissal for this session
     sessionStorage.setItem('pwa-install-dismissed', 'true');
   };
 
-  // Check if user previously dismissed
-  useEffect(() => {
-    const dismissed = sessionStorage.getItem('pwa-install-dismissed');
-    if (dismissed === 'true') {
-      setIsDismissed(true);
-    }
-  }, []);
-
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto">
+    <div className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto" data-install-prompt>
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg p-4">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
