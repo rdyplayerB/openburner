@@ -17,21 +17,19 @@ export function HostedMobileConnect() {
   const { setWallet } = useWalletStore();
   const { isInstallable, isInstalled, installApp, shouldEnablePWA } = usePWA();
 
-  // Show install message if PWA is installable and not already installed
-  useEffect(() => {
-    if (shouldEnablePWA && isInstallable && !isInstalled) {
-      const dismissed = sessionStorage.getItem('pwa-install-dismissed');
-      if (dismissed !== 'true') {
-        setShowInstallMessage(true);
-      }
-    }
-  }, [shouldEnablePWA, isInstallable, isInstalled]);
+  // No auto-show install message - only show when user taps card
 
   const handleConnect = async () => {
     console.log("\n═══════════════════════════════════════════════════════");
     console.log("📱 [Hosted Mobile] CONNECT BUTTON CLICKED");
     console.log("═══════════════════════════════════════════════════════");
     console.log("⏰ [Hosted Mobile] Timestamp:", new Date().toISOString());
+    
+    // Show install message if PWA is installable and not already installed
+    if (shouldEnablePWA && isInstallable && !isInstalled) {
+      setShowInstallMessage(true);
+      return;
+    }
     
     setIsConnecting(true);
     setError(null);
@@ -151,7 +149,6 @@ export function HostedMobileConnect() {
         <UniversalInstallMessage
           onDismiss={() => {
             setShowInstallMessage(false);
-            sessionStorage.setItem('pwa-install-dismissed', 'true');
           }}
           onInstall={installApp}
         />

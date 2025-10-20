@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Smartphone, Download, X, Share } from "lucide-react";
 
 interface UniversalInstallMessageProps {
@@ -9,150 +9,21 @@ interface UniversalInstallMessageProps {
 }
 
 export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInstallMessageProps) {
-  const [browserInfo, setBrowserInfo] = useState<{
-    name: string;
-    isIOS: boolean;
-    isAndroid: boolean;
-    isChrome: boolean;
-    isSafari: boolean;
-    isFirefox: boolean;
-    isEdge: boolean;
-    isSamsung: boolean;
-  }>({
-    name: 'Browser',
-    isIOS: false,
-    isAndroid: false,
-    isChrome: false,
-    isSafari: false,
-    isFirefox: false,
-    isEdge: false,
-    isSamsung: false,
-  });
-
   const [showInstructions, setShowInstructions] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const userAgent = navigator.userAgent;
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-    const isAndroid = /Android/.test(userAgent);
-    const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
-    const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-    const isFirefox = /Firefox/.test(userAgent);
-    const isEdge = /Edge/.test(userAgent);
-    const isSamsung = /SamsungBrowser/.test(userAgent);
-
-    let browserName = 'Browser';
-    if (isChrome) browserName = 'Chrome';
-    else if (isSafari) browserName = 'Safari';
-    else if (isFirefox) browserName = 'Firefox';
-    else if (isEdge) browserName = 'Edge';
-    else if (isSamsung) browserName = 'Samsung Internet';
-
-    setBrowserInfo({
-      name: browserName,
-      isIOS,
-      isAndroid,
-      isChrome,
-      isSafari,
-      isFirefox,
-      isEdge,
-      isSamsung,
-    });
-  }, []);
-
-  const getInstallInstructions = () => {
-    const { isIOS, isAndroid, isChrome, isSafari, isFirefox, isEdge, isSamsung } = browserInfo;
-
-    if (isIOS) {
-      if (isSafari) {
-        return {
-          title: "Add to Home Screen",
-          steps: [
-            "Tap the Share button (square with arrow up) at the bottom",
-            "Scroll down and tap 'Add to Home Screen'",
-            "Tap 'Add' to confirm"
-          ],
-          icon: <Share className="w-6 h-6" />
-        };
-      } else {
-        return {
-          title: "Add to Home Screen",
-          steps: [
-            "Tap the Share button (square with arrow up) at the bottom",
-            "Look for 'Add to Home Screen' or 'Install App'",
-            "Follow the prompts to add to your home screen"
-          ],
-          icon: <Share className="w-6 h-6" />
-        };
-      }
-    } else if (isAndroid) {
-      if (isChrome) {
-        return {
-          title: "Install App",
-          steps: [
-            "Tap the menu button (three dots) in the address bar",
-            "Look for 'Install app' or 'Add to Home screen'",
-            "Tap it and follow the prompts"
-          ],
-          icon: <Download className="w-6 h-6" />
-        };
-      } else if (isSamsung) {
-        return {
-          title: "Add to Home Screen",
-          steps: [
-            "Tap the menu button (three dots)",
-            "Select 'Add page to'",
-            "Choose 'Home screen' and tap 'Add'"
-          ],
-          icon: <Download className="w-6 h-6" />
-        };
-      } else if (isEdge) {
-        return {
-          title: "Install App",
-          steps: [
-            "Tap the menu button (three dots)",
-            "Select 'Apps'",
-            "Choose 'Install this site as an app' and tap 'Install'"
-          ],
-          icon: <Download className="w-6 h-6" />
-        };
-      } else if (isFirefox) {
-        return {
-          title: "Install App",
-          steps: [
-            "Tap the menu button (three dots)",
-            "Select 'Install'",
-            "Tap 'Add' to confirm"
-          ],
-          icon: <Download className="w-6 h-6" />
-        };
-      } else {
-        return {
-          title: "Add to Home Screen",
-          steps: [
-            "Tap the menu button (three dots)",
-            "Look for 'Add to Home screen' or 'Install app'",
-            "Follow the prompts to install"
-          ],
-          icon: <Download className="w-6 h-6" />
-        };
-      }
-    } else {
-      return {
-        title: "Add to Home Screen",
-        steps: [
-          "Tap the Share button (square with arrow up)",
-          "Look for 'Add to Home Screen' or 'Install app'",
-          "Follow the prompts to add to your home screen"
-        ],
-        icon: <Share className="w-6 h-6" />
-      };
-    }
+  const getUniversalInstructions = () => {
+    return {
+      title: "Add to Home Screen",
+      steps: [
+        "Look for the Share button (square with arrow up) or menu (three dots)",
+        "Find 'Add to Home Screen' or 'Install App' option",
+        "Follow the prompts to add OpenBurner to your home screen"
+      ],
+      icon: <Share className="w-6 h-6" />
+    };
   };
 
-  const instructions = getInstallInstructions();
+  const instructions = getUniversalInstructions();
 
   const handleInstall = () => {
     if (onInstall) {
@@ -162,8 +33,6 @@ export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInsta
   };
 
   const handleDismiss = () => {
-    // Store dismissal in session storage to prevent showing again
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
     onDismiss();
   };
 
