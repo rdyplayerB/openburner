@@ -13,6 +13,7 @@ export function HostedMobileConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showInstallCard, setShowInstallCard] = useState(true);
   const { setWallet } = useWalletStore();
   const { isInstallable, isInstalled, installApp, shouldEnablePWA } = usePWA();
 
@@ -69,6 +70,11 @@ export function HostedMobileConnect() {
 
   const handleInstallCardClick = () => {
     setShowInstructions(true);
+  };
+
+  const handleCloseInstallCard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowInstallCard(false);
   };
 
   const handleCancel = () => {
@@ -158,7 +164,7 @@ export function HostedMobileConnect() {
       </div>
 
       {/* Install Card - show for all mobile hosted users if not already installed - positioned at bottom */}
-      {shouldEnablePWA && !isInstalled && (
+      {shouldEnablePWA && !isInstalled && showInstallCard && (
         <div className="w-full px-4 pb-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-sm w-full mx-auto">
             <div 
@@ -177,7 +183,10 @@ export function HostedMobileConnect() {
                     Add to home screen for quick access
                   </p>
                 </div>
-                <div className="flex-shrink-0">
+                <div 
+                  className="flex-shrink-0 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1 transition-colors"
+                  onClick={handleCloseInstallCard}
+                >
                   <X className="w-4 h-4 text-slate-400" />
                 </div>
               </div>
