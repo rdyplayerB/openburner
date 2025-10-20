@@ -17,15 +17,17 @@ export function HostedMobileConnect() {
   const { setWallet } = useWalletStore();
   const { isInstallable, isInstalled, installApp, shouldEnablePWA } = usePWA();
 
-  // Debug PWA state
+  // Debug PWA state (only on client side to avoid hydration issues)
   useEffect(() => {
-    console.log('🔍 [PWA Debug] State:', {
-      shouldEnablePWA,
-      isInstallable,
-      isInstalled,
-      isHosted: process.env.NEXT_PUBLIC_APP_MODE === 'hosted',
-      userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'SSR'
-    });
+    if (typeof window !== 'undefined') {
+      console.log('🔍 [PWA Debug] State:', {
+        shouldEnablePWA,
+        isInstallable,
+        isInstalled,
+        isHosted: process.env.NEXT_PUBLIC_APP_MODE === 'hosted',
+        userAgent: navigator.userAgent
+      });
+    }
   }, [shouldEnablePWA, isInstallable, isInstalled]);
 
   // No auto-show install message - only show when user taps card
@@ -77,8 +79,9 @@ export function HostedMobileConnect() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200" style={{ minHeight: '100dvh' }}>
-      <div className="max-w-sm w-full space-y-4 -mt-8">
+    <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200" style={{ minHeight: '100dvh' }}>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="max-w-sm w-full space-y-4">
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -152,33 +155,35 @@ export function HostedMobileConnect() {
           </Link>
         </div>
 
-        {/* Install Card - show for all mobile hosted users if not already installed */}
-        {shouldEnablePWA && !isInstalled && (
-          <div className="mt-4">
-            <div 
-              onClick={handleInstallCardClick}
-              className="bg-white dark:bg-slate-800 rounded-xl border border-black/[0.04] dark:border-slate-700/60 shadow-card hover:shadow-card-hover transition-all duration-200 p-4 cursor-pointer active:scale-[0.98] transform"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#FF6B35] rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Download className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-                    Install OpenBurner
-                  </h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
-                    Add to home screen for quick access
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                  <X className="w-4 h-4 text-slate-400" />
-                </div>
+        </div>
+      </div>
+
+      {/* Install Card - show for all mobile hosted users if not already installed - positioned at bottom */}
+      {shouldEnablePWA && !isInstalled && (
+        <div className="max-w-sm w-full mx-auto">
+          <div 
+            onClick={handleInstallCardClick}
+            className="bg-white dark:bg-slate-800 rounded-xl border border-black/[0.04] dark:border-slate-700/60 shadow-card hover:shadow-card-hover transition-all duration-200 p-4 cursor-pointer active:scale-[0.98] transform"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#FF6B35] rounded-lg flex items-center justify-center flex-shrink-0">
+                <Download className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+                  Install OpenBurner
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
+                  Add to home screen for quick access
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <X className="w-4 h-4 text-slate-400" />
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       
       {/* Universal Install Message */}
       {showInstallMessage && (

@@ -23,6 +23,8 @@ export function usePWA() {
   const shouldEnablePWA = isHosted && isMobile;
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     console.log('🔍 [PWA Hook] useEffect running, shouldEnablePWA:', shouldEnablePWA);
     if (!shouldEnablePWA) {
       console.log('❌ [PWA Hook] PWA not enabled, skipping setup');
