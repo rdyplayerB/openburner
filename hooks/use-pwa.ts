@@ -29,7 +29,27 @@ export function usePWA() {
     const checkInstalled = () => {
       if (window.matchMedia('(display-mode: standalone)').matches) {
         setIsInstalled(true);
+        return true;
       }
+      return false;
+    };
+
+    // Check if PWA is installable (fallback method)
+    const checkInstallable = () => {
+      // Check if we're in a mobile browser that supports PWA installation
+      const userAgent = navigator.userAgent;
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
+      const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+      const isFirefox = /Firefox/.test(userAgent);
+      const isEdge = /Edge/.test(userAgent);
+      
+      // Show install message for mobile browsers that support PWA
+      if (isMobile && (isChrome || isSafari || isFirefox || isEdge)) {
+        setIsInstallable(true);
+        return true;
+      }
+      return false;
     };
 
     // Handle install prompt
@@ -37,6 +57,7 @@ export function usePWA() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
+      console.log('[PWA] beforeinstallprompt event fired');
     };
 
     // Handle app installed
@@ -44,6 +65,7 @@ export function usePWA() {
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
+      console.log('[PWA] App installed');
     };
 
     // Handle online/offline status
@@ -57,7 +79,13 @@ export function usePWA() {
     window.addEventListener('offline', handleOffline);
 
     // Initial checks
-    checkInstalled();
+    const isAlreadyInstalled = checkInstalled();
+    if (!isAlreadyInstalled) {
+      // Use fallback method if beforeinstallprompt hasn't fired
+      setTimeout(() => {
+        checkInstallable();
+      }, 1000);
+    }
     setIsOffline(!navigator.onLine);
 
     // Register service worker
@@ -80,22 +108,25 @@ export function usePWA() {
   }, [shouldEnablePWA]);
 
   const installApp = async () => {
-    if (!deferredPrompt) return;
-
-    try {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('[PWA] User accepted the install prompt');
-      } else {
-        console.log('[PWA] User dismissed the install prompt');
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('[PWA] User accepted the install prompt');
+        } else {
+          console.log('[PWA] User dismissed the install prompt');
+        }
+        
+        setDeferredPrompt(null);
+        setIsInstallable(false);
+      } catch (error) {
+        console.error('[PWA] Error during installation:', error);
       }
-      
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-    } catch (error) {
-      console.error('[PWA] Error during installation:', error);
+    } else {
+      // No deferred prompt available, user will need to follow manual instructions
+      console.log('[PWA] No install prompt available, showing manual instructions');
     }
   };
 

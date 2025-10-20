@@ -239,7 +239,7 @@ export function UniversalInstallMessage({ onDismiss, onInstall }: UniversalInsta
             Install OpenBurner
           </h3>
           <p className="text-white/90 text-sm mb-3 leading-relaxed">
-            Add OpenBurner to your home screen for quick access and a better experience
+            Install OpenBurner for quick access and a better experience
           </p>
           
           <div className="flex gap-2">
