@@ -128,31 +128,9 @@ export function HostedDesktopConnect() {
     setShowConsentModal(false);
     setConsentURL(null);
     
-    // Retry the bridge connection after consent
-    try {
-      console.log("🔄 [Hosted Desktop] Retrying bridge connection after consent...");
-      const bridge = getHaloBridgeService();
-      await bridge.retryAfterConsent();
-      
-      // Now get the burner address
-      const { address, publicKey, keySlot } = await getBurnerAddressViaBridge();
-      
-      console.log("\n═══════════════════════════════════════════════════════");
-      console.log(`✅ [Hosted Desktop] HaloBridge connection completed after consent`);
-      console.log("═══════════════════════════════════════════════════════");
-      console.log(`   Address: ${address}`);
-      console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
-      console.log(`   Key Slot: ${keySlot}`);
-      
-      setWallet(address, publicKey, keySlot);
-      
-      console.log("\n═══════════════════════════════════════════════════════");
-      console.log("🎉 [Hosted Desktop] BRIDGE CONNECTION SUCCESSFUL!");
-      console.log("═══════════════════════════════════════════════════════\n");
-    } catch (error) {
-      console.error("❌ [Hosted Desktop] Bridge connection failed after consent:", error);
-      setError(error instanceof Error ? error.message : "Bridge connection failed after consent");
-    }
+    // Bridge retry removed - not supported in hosted environment
+    console.log("⚠️ [Hosted Desktop] Bridge retry not supported in hosted environment");
+    setError("Bridge mode not supported in hosted environment. Please use gateway mode.");
   }
 
   function handleConsentDeny() {
