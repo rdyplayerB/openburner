@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { getAppConfig, AppConfig } from './config/environment';
-import { signTransactionWithBurner } from './burner';
+// Bridge functionality removed - fallback to gateway
 import { signTransactionWithMobileNFC } from './mobile/nfc';
 import { signTransactionWithGateway } from './burner-gateway';
 import { useWalletStore } from '../store/wallet-store';
@@ -65,9 +65,9 @@ export async function signTransactionSmart(
       console.log("🖥️ [Smart Signer] Using local desktop gateway signing");
       return await signTransactionWithGateway(await getGatewayInstance(), transaction, keySlot, pin);
     } else {
-      // Default to bridge for local (e.g., local desktop with no gateway, or local mobile)
-      console.log("🔌 [Smart Signer] Using bridge signing");
-      return await signTransactionWithBurner(transaction, keySlot, pin);
+      // Fallback to gateway for local environments (bridge functionality removed)
+      console.log("🖥️ [Smart Signer] Using gateway fallback for local environment");
+      return await signTransactionWithGateway(await getGatewayInstance(), transaction, keySlot, pin);
     }
   } catch (error: any) {
     console.error("❌ [Smart Signer] Signing failed:", error);

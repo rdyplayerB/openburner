@@ -50,13 +50,13 @@ OpenBurner/
 
 ### Local Development (`NEXT_PUBLIC_APP_MODE=local`)
 - Full functionality with pricing
-- Both bridge and gateway modes
+- Gateway mode only
 - Debugging and development features
 - Uses your CoinGecko API key
 
 ### Hosted Version (`NEXT_PUBLIC_APP_MODE=hosted`)
 - Mobile: Single tap interface
-- Desktop: Bridge and gateway options
+- Desktop: Gateway mode only
 - Pricing disabled (no API costs)
 - Streamlined user experience
 

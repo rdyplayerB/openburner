@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { execHaloCmdWeb } from '@arx-research/libhalo/api/web';
 import { connectWithMobileGateway } from './mobile-gateway';
-import { BurnerKeyInfo } from '../burner';
+import { BurnerKeyInfo } from '../types';
 
 /**
  * Connect with mobile NFC - uses execHaloCmdWeb for direct Halo connection

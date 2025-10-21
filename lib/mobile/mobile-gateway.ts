@@ -1,5 +1,5 @@
 import { HaloGateway } from '@arx-research/libhalo/api/web';
-import { BurnerKeyInfo } from '../burner';
+import { BurnerKeyInfo } from '../types';
 import { ethers } from 'ethers';
 
 /**

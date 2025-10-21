@@ -2,11 +2,7 @@ import { ethers } from "ethers";
 import { HaloGateway } from "@arx-research/libhalo/api/web";
 import QRCode from "qrcode";
 
-export interface BurnerKeyInfo {
-  address: string;
-  publicKey: string;
-  keySlot?: number; // Which key slot was used
-}
+import { BurnerKeyInfo } from './types';
 
 export interface GatewayPairInfo {
   execURL: string;

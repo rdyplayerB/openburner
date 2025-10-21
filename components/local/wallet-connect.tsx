@@ -2,22 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { getBurnerAddress } from "@/lib/burner";
 import { getBurnerAddressViaGateway, startGatewayPairing } from "@/lib/burner-gateway";
 import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, CheckCircle, XCircle, Smartphone, X } from "lucide-react";
 import { QRDisplay } from "./qr-display";
-import { ModeToggle } from "./mode-toggle";
+// ModeToggle removed - only gateway mode supported
 import { ErrorModal } from "./error-modal";
-
-const BRIDGE_WS_URL = "ws://127.0.0.1:32868/ws";
 
 export function WalletConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorMode, setErrorMode] = useState<'bridge' | 'gateway' | null>(null);
-  const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
-  const [readerConnected, setReaderConnected] = useState<boolean | null>(null);
+  const [errorMode, setErrorMode] = useState<'gateway' | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string } | null>(null);
   const { setWallet, connectionMode, setConnectionMode } = useWalletStore();
@@ -33,19 +28,7 @@ export function WalletConnect() {
     console.log('🔄 [WalletConnect] Connection mode changed to:', connectionMode, '- clearing error state');
   }, [connectionMode]);
 
-  useEffect(() => {
-    // Only check bridge status in bridge mode
-    if (connectionMode === 'bridge') {
-      checkBridgeAndReader();
-      // Only check status when NOT connecting to avoid WebSocket conflicts
-      const interval = setInterval(() => {
-        if (!isConnectingRef.current) {
-          checkBridgeAndReader();
-        }
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [connectionMode]);
+  // Bridge functionality removed - only gateway mode supported
 
   // Poll for gateway connection when QR is shown
   useEffect(() => {
@@ -96,73 +79,7 @@ export function WalletConnect() {
     }
   }, [showQR, qrData]);
 
-  async function checkBridgeAndReader() {
-    let ws: WebSocket | null = null;
-    let resolved = false;
-    let bridgeOk = false;
-    
-    try {
-      ws = new WebSocket(BRIDGE_WS_URL);
-
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          if (bridgeOk) {
-            setBridgeConnected(true);
-            setReaderConnected(false);
-          } else {
-            setBridgeConnected(false);
-            setReaderConnected(false);
-          }
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.close();
-          }
-        }
-      }, 2000);
-
-      ws.onopen = () => {
-        bridgeOk = true;
-        console.log("✅ Bridge connected");
-        setBridgeConnected(true);
-        // Don't resolve yet - wait for handle_added event or timeout
-      };
-
-      ws.onmessage = (event: MessageEvent) => {
-        const msg = JSON.parse(event.data);
-        console.log("Bridge message:", msg);
-        
-        if (msg.event === "handle_added" || msg.event === "handle_present") {
-          if (!resolved) {
-            resolved = true;
-            clearTimeout(timeout);
-            console.log("✅ Reader with chip detected");
-            setReaderConnected(true);
-            ws?.close();
-          }
-        }
-      };
-
-      ws.onerror = (e) => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          console.log("❌ Bridge connection error");
-          setBridgeConnected(false);
-          setReaderConnected(false);
-        }
-      };
-
-      ws.onclose = () => {
-        // Don't resolve here - let timeout handle it
-      };
-    } catch (err) {
-      if (!resolved) {
-        resolved = true;
-        setBridgeConnected(false);
-        setReaderConnected(false);
-      }
-    }
-  }
+  // Bridge functionality removed
 
   function handleCancel() {
     console.log("🛑 [WalletConnect] Connection cancelled by user");
@@ -173,39 +90,14 @@ export function WalletConnect() {
   }
 
   function handleTryAgain() {
-    console.log("🔄 [WalletConnect] Try again clicked, switching to error mode:", errorMode);
-    if (errorMode) {
-      // Clear error first
-      setError(null);
-      setErrorMode(null);
-      
-      // Switch to the mode that had the error
-      if (errorMode === 'bridge') {
-        console.log("🔄 [WalletConnect] Switching to bridge mode for retry");
-        setConnectionMode('bridge');
-        // Retry after mode switch
-        setTimeout(() => {
-          handleConnect();
-        }, 150);
-      } else if (errorMode === 'gateway') {
-        console.log("🔄 [WalletConnect] Switching to gateway mode for retry");
-        setConnectionMode('gateway');
-        // Retry after mode switch
-        setTimeout(() => {
-          handleConnect();
-        }, 150);
-      }
-    }
-  }
-
-  function handleModeChange() {
-    // Clear any errors when switching modes
+    console.log("🔄 [WalletConnect] Try again clicked");
+    // Clear error and retry
     setError(null);
     setErrorMode(null);
-    setIsConnecting(false);
-    isConnectingRef.current = false;
-    console.log('🔄 [WalletConnect] Mode changed - clearing error state');
+    handleConnect();
   }
+
+  // Mode change functionality removed - only gateway mode supported
 
   async function handleConnect() {
     console.log("\n═══════════════════════════════════════════════════════");
@@ -222,11 +114,7 @@ export function WalletConnect() {
     setError(null);
 
     try {
-      if (connectionMode === 'bridge') {
-        await handleBridgeConnect();
-      } else {
-        await handleGatewayConnect();
-      }
+      await handleGatewayConnect();
     } catch (err: any) {
       console.log("\n═══════════════════════════════════════════════════════");
       console.error("❌ [WalletConnect] CONNECTION FAILED!");
@@ -249,26 +137,7 @@ export function WalletConnect() {
     }
   }
 
-  async function handleBridgeConnect() {
-    console.log("📞 [WalletConnect] Calling getBurnerAddress()...");
-    const connectStart = Date.now();
-    const { address, publicKey, keySlot } = await getBurnerAddress();
-    const connectDuration = Date.now() - connectStart;
-    
-    console.log("\n═══════════════════════════════════════════════════════");
-    console.log(`✅ [WalletConnect] getBurnerAddress() returned in ${connectDuration}ms`);
-    console.log("═══════════════════════════════════════════════════════");
-    console.log(`   Address: ${address}`);
-    console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
-    console.log(`   Key Slot: ${keySlot}`);
-    
-    console.log("\n💾 [WalletConnect] Calling setWallet() to update store...");
-    setWallet(address, publicKey, keySlot);
-    
-    console.log("\n═══════════════════════════════════════════════════════");
-    console.log("🎉 [WalletConnect] BRIDGE CONNECTION SUCCESSFUL!");
-    console.log("═══════════════════════════════════════════════════════\n");
-  }
+  // Bridge functionality removed
 
   async function handleGatewayConnect() {
     console.log("📞 [WalletConnect] Starting gateway pairing...");
@@ -296,7 +165,7 @@ export function WalletConnect() {
     <div className="max-w-lg mx-auto space-y-6 animate-in fade-in-50 duration-500">
       {/* Mode Toggle */}
       <div className="animate-in slide-in-from-top-4 duration-700">
-        <ModeToggle onModeChange={handleModeChange} />
+        {/* Mode toggle removed - only gateway mode supported */}
       </div>
       
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700/60 shadow-card-lg overflow-hidden transition-colors duration-300">
@@ -333,20 +202,12 @@ export function WalletConnect() {
               {isConnecting ? (
                 <>
                   <Loader2 className="animate-spin h-6 w-6" strokeWidth={2.5} />
-                  <span>
-                    {connectionMode === 'bridge' ? 'Reading card...' : 'Starting gateway...'}
-                  </span>
+                  <span>Starting gateway...</span>
                 </>
               ) : (
                 <>
-                  {connectionMode === 'bridge' ? (
-                    <Nfc className="h-6 w-6" strokeWidth={2.5} />
-                  ) : (
-                    <Smartphone className="h-6 w-6" strokeWidth={2.5} />
-                  )}
-                  <span>
-                    {connectionMode === 'bridge' ? 'Connect with NFC Reader' : 'Connect with Smartphone'}
-                  </span>
+                  <Smartphone className="h-6 w-6" strokeWidth={2.5} />
+                  <span>Connect with Smartphone</span>
                 </>
               )}
             </button>
@@ -375,83 +236,33 @@ export function WalletConnect() {
             </div>
             
             <div className="space-y-3">
-              {connectionMode === 'bridge' ? (
-                <>
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-white/60 dark:bg-slate-700/60 border border-slate-200/60 dark:border-slate-600/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      {bridgeConnected === null ? (
-                        <Loader2 className="w-5 h-5 text-slate-400 dark:text-slate-500 animate-spin" strokeWidth={2.5} />
-                      ) : bridgeConnected ? (
-                        <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
-                      ) : (
-                        <XCircle className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className={`font-medium text-sm transition-colors duration-300 ${bridgeConnected ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-400"}`}>
-                        HaLo Bridge Software
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 transition-colors duration-300">
-                        {bridgeConnected === null ? 'Checking connection...' : 
-                         bridgeConnected ? 'Connected and ready' : 
-                         'Not detected - please start HaLo Bridge'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-white/60 dark:bg-slate-700/60 border border-slate-200/60 dark:border-slate-600/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      {readerConnected === null ? (
-                        <Loader2 className="w-5 h-5 text-slate-400 dark:text-slate-500 animate-spin" strokeWidth={2.5} />
-                      ) : readerConnected ? (
-                        <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
-                      ) : (
-                        <XCircle className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className={`font-medium text-sm transition-colors duration-300 ${readerConnected ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-400"}`}>
-                        NFC Reader & Card
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 transition-colors duration-300">
-                        {readerConnected === null ? 'Checking for card...' : 
-                         readerConnected ? 'Card detected and ready' : 
-                         'Place your Burner card on the reader'}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
-                        Internet Connection
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
-                        Required for gateway communication
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      <Smartphone className="w-6 h-6 text-amber-600" strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
-                        Smartphone with NFC
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
-                        Your phone will act as the NFC reader
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="flex items-center gap-4 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/60 transition-colors duration-300">
+                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
+                    Internet Connection
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
+                    Required for gateway communication
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/60 transition-colors duration-300">
+                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                  <Smartphone className="w-6 h-6 text-amber-600" strokeWidth={2.5} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
+                    Smartphone with NFC
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
+                    Your phone will act as the NFC reader
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

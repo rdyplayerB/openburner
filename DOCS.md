@@ -43,12 +43,11 @@ cp env.example .env.local
 npm run dev
 ```
 
-### HaLo Bridge Setup
+### Gateway Mode Setup
 
-1. Download bridge from [HaLo Tools releases](https://github.com/arx-research/libhalo/releases)
-2. Run the bridge executable (starts on `ws://127.0.0.1:32868/ws`)
-3. Grant consent: Visit `http://127.0.0.1:32868/consent?website=http://localhost:3000`
-4. Plug in NFC reader, tap your Burner Ethereum card
+1. Use your smartphone as an NFC reader
+2. No additional software installation required
+3. Scan QR code with your smartphone to connect
 
 ## Tech Stack
 
@@ -77,7 +76,7 @@ npm run dev
          │ WebSocket
          ↓
 ┌──────────────────┐
-│  HaLo Bridge     │  Local WebSocket server (port 32868)
+│  HaLo Gateway    │  Smartphone-based NFC connection
 │   (localhost)    │  Routes commands to NFC reader
 └────────┬─────────┘
          │ PC/SC
@@ -99,8 +98,8 @@ npm run dev
 ## How It Works
 
 ### 1. Connection
-- Web app connects to HaLo Bridge via WebSocket
-- Bridge detects Burner Ethereum card on NFC reader
+- Web app connects to HaLo Gateway via smartphone
+- Gateway detects Burner Ethereum card via smartphone NFC
 - App fetches Ethereum address from card's secure element
 
 ### 2. View Balances
@@ -111,7 +110,7 @@ npm run dev
 ### 3. Send Transaction
 - User enters recipient address and amount
 - App builds unsigned transaction with ethers.js
-- Transaction sent to Burner Ethereum card via bridge for signing
+- Transaction sent to Burner Ethereum card via gateway for signing
 - Card signs transaction using private key (never exposed)
 - Signed transaction broadcast to blockchain
 
@@ -277,32 +276,30 @@ OpenBurner uses **streamlined token lists** focused on core tokens for optimal p
 
 This limitation is intentional to keep the app simple and local-first. Future versions may include a dynamic token management UI.
 
-## Bridge Connection (Hosted Version)
+## Gateway Connection (Hosted Version)
 
-The hosted version supports USB NFC reader connections through a bridge service that handles consent properly.
+The hosted version uses smartphone-based NFC connections through the HaLo Gateway service.
 
 ### How It Works
 
-1. **HaloBridge Service**: Uses `@arx-research/libhalo` for proper consent handling
-2. **Consent Flow**: Shows a modal matching BurnerOS approval prompt
-3. **WebSocket Communication**: Communicates with local bridge software
-4. **Security**: Requires explicit user consent and HTTPS
+1. **Gateway Service**: Uses `@arx-research/libhalo` for smartphone NFC communication
+2. **QR Code Pairing**: Shows QR code for smartphone to scan and connect
+3. **WebSocket Communication**: Communicates with smartphone via gateway
+4. **Security**: Uses secure WebSocket connections and smartphone NFC
 
-### Bridge Requirements
+### Gateway Requirements
 
-- **Halo Bridge Software**: Must be installed and running locally
-- **USB NFC Reader**: Compatible reader connected to computer
-- **Burner Card**: Physical card placed on reader
-- **User Consent**: Explicit permission granted through consent modal
+- **Smartphone with NFC**: Android or iOS device with NFC capability
+- **Internet Connection**: Required for gateway communication
+- **Burner Card**: Physical card to tap on smartphone
+- **HaLo App**: Installed on smartphone for NFC communication
 
 ### Security Considerations
 
-- Bridge communication is restricted to localhost only
-- User consent is required before any USB access
-- HTTPS is required for hosted version
-- Clear fallback to gateway mode if bridge fails
-
-See [BRIDGE_SECURITY.md](./docs/BRIDGE_SECURITY.md) for detailed security information.
+- Gateway communication uses secure WebSocket connections
+- NFC communication is handled by smartphone's secure element
+- No local software installation required
+- Clear error handling for connection failures
 
 ## Project Structure
 
@@ -318,7 +315,7 @@ openburner/
 │   └── send-token.tsx
 ├── lib/                    # Core libraries
 │   ├── burner.ts          # Burner card integration
-│   ├── burner-bridge.ts   # Bridge WebSocket client
+│   ├── burner-gateway.ts  # Gateway WebSocket client
 │   ├── multicall.ts       # Batch RPC calls
 │   ├── price-oracle.ts    # Price fetching
 │   └── token-lists.ts     # Token metadata
@@ -348,15 +345,16 @@ openburner/
 
 ## Troubleshooting
 
-### Bridge won't connect
-- Check bridge is running: `http://127.0.0.1:32868/health`
-- Grant consent: `http://127.0.0.1:32868/consent?website=http://localhost:3000`
-- Check NFC reader is plugged in
+### Gateway won't connect
+- Check internet connection is working
+- Ensure smartphone has NFC enabled
+- Try refreshing the page and scanning QR code again
+- Check smartphone has HaLo app installed
 
 ### Can't read card
-- Ensure Burner Ethereum card is properly positioned on reader
+- Ensure Burner Ethereum card is properly positioned on smartphone
 - Try removing and re-tapping card
-- Check bridge logs for errors
+- Check smartphone NFC is enabled
 - Verify you have a Burner Ethereum card (not Bitcoin or other variants)
 
 ### Transaction fails
