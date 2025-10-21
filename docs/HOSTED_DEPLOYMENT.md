@@ -5,7 +5,7 @@ This guide explains how to deploy OpenBurner for hosted use on app.openburner.xy
 ## Overview
 
 OpenBurner supports two deployment modes:
-- **Local Development**: Full functionality with pricing, gateway mode only
+- **Local Development**: Full functionality with pricing, both bridge and gateway modes
 - **Hosted Version**: Streamlined for mobile users with pricing disabled
 
 ## Environment Configuration
@@ -58,6 +58,7 @@ npm run start:hosted # Start production server (hosted mode)
 - Streamlined, mobile-optimized UI
 
 ### Desktop Users (Hosted)
+- Bridge mode: USB NFC reader
 - Gateway mode: Smartphone as NFC reader
 - No pricing information (disabled)
 - Full wallet functionality
@@ -65,7 +66,7 @@ npm run start:hosted # Start production server (hosted mode)
 ### Local Development
 - All features enabled
 - Pricing with CoinGecko API
-- Gateway mode only
+- Both bridge and gateway modes
 - Full debugging capabilities
 
 ## Code Organization
