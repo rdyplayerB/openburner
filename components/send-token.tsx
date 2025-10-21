@@ -58,6 +58,7 @@ export function SendToken({
   const [pin, setPin] = useState<string | null>(null);
   const [pinError, setPinError] = useState<string | null>(null);
   const [lastUsedAddress, setLastUsedAddress] = useState<string | null>(null);
+  const [isSigning, setIsSigning] = useState(false);
 
   // Load last used address on mount
   useEffect(() => {
@@ -110,10 +111,17 @@ export function SendToken({
 
   async function handlePinSubmit(enteredPin: string) {
     if (!address || !recipient || !amount || !rpcUrl) return;
+    
+    // Prevent double-clicks
+    if (isSigning) {
+      console.log("⚠️ [SendToken] Signing already in progress, ignoring duplicate call");
+      return;
+    }
 
     setPin(enteredPin);
     setPinError(null);
     setIsSending(true);
+    setIsSigning(true);
     setTxHash(null);
 
     try {
@@ -199,6 +207,7 @@ export function SendToken({
       }
     } finally {
       setIsSending(false);
+      setIsSigning(false);
     }
   }
 

@@ -4,6 +4,9 @@ import { signTransactionWithBurner } from './burner';
 import { signTransactionWithMobileNFC } from './mobile/nfc';
 import { signTransactionWithGateway } from './burner-gateway';
 
+// Track ongoing signing operations to prevent parallel calls
+const ongoingSigning = new Set<string>();
+
 /**
  * Smart transaction signing that automatically detects the connection mode
  * and uses the appropriate signing method
@@ -17,8 +20,26 @@ export async function signTransactionSmart(
   console.log("🚀 [Smart Signer] ENTRY - signTransactionSmart called");
   console.log("🚀 [Smart Signer] Config passed:", config);
   
-  // Use provided config or fall back to server-side config
-  const environmentConfig = config || getAppConfig();
+  // Create a unique key for this signing operation
+  const operationKey = `${transaction.to}-${transaction.value}-${Date.now()}`;
+  
+  // Check if there's already an ongoing signing operation
+  if (ongoingSigning.size > 0) {
+    console.log("⚠️ [Smart Signer] Another signing operation is in progress, waiting...");
+    // Wait a bit and try again
+    await new Promise(resolve => setTimeout(resolve, 100));
+    if (ongoingSigning.size > 0) {
+      throw new Error("Another signing operation is in progress. Please wait and try again.");
+    }
+  }
+  
+  // Mark this operation as ongoing
+  ongoingSigning.add(operationKey);
+  console.log("🔒 [Smart Signer] Marked operation as ongoing:", operationKey);
+  
+  try {
+    // Use provided config or fall back to server-side config
+    const environmentConfig = config || getAppConfig();
   
   console.log("🔍 [Smart Signer] Detecting signing method...");
   console.log(`   Mode: ${environmentConfig.mode}`);
@@ -43,6 +64,10 @@ export async function signTransactionSmart(
   } catch (error: any) {
     console.error("❌ [Smart Signer] Signing failed:", error);
     throw new Error(error.message || "Failed to sign transaction");
+  } finally {
+    // Always clean up the ongoing operation
+    ongoingSigning.delete(operationKey);
+    console.log("🔓 [Smart Signer] Cleared ongoing operation:", operationKey);
   }
 }
 
