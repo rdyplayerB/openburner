@@ -95,6 +95,6 @@ async function connectWithWebNFC(): Promise<BurnerKeyInfo> {
 ## Security Considerations
 
 - No API keys stored on device
-- All wallet operations use existing libBurner
+- All wallet operations use existing libBurner and libHalo libraries
 - Gateway mode uses secure WebSocket connection
 - Web NFC will use same security model as bridge mode

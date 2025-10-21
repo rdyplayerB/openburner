@@ -61,6 +61,7 @@ npm run dev
 **Web3 Libraries:**
 - ethers.js (blockchain interactions)
 - libburner (Burner card communication via WebSocket)
+- libhalo (HaLo card communication and NFC operations)
 - Multicall3 (efficient batch RPC calls)
 
 **APIs:**
