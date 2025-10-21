@@ -2,21 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { getBurnerAddress } from "@/lib/burner";
 import { getBurnerAddressViaGateway, startGatewayPairing } from "@/lib/burner-gateway";
-import { getHaloBridgeService, getBurnerAddressViaBridge, cleanupHaloBridge } from "@/lib/halo-bridge";
 import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, CheckCircle, XCircle, Smartphone, X } from "lucide-react";
 import { QRDisplay } from "@/components/local/qr-display";
-import { ModeToggle } from "@/components/local/mode-toggle";
 import { ErrorModal } from "@/components/common/error-modal";
 import { ConsentModal } from "@/components/common/consent-modal";
 
 export function HostedDesktopConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorMode, setErrorMode] = useState<'bridge' | 'gateway' | null>(null);
-  const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
+  const [errorMode, setErrorMode] = useState<'gateway' | null>(null);
   const [readerConnected, setReaderConnected] = useState<boolean | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string } | null>(null);
@@ -32,28 +28,17 @@ export function HostedDesktopConnect() {
     setError(null);
     setErrorMode(null);
     console.log('🔄 [Hosted Desktop] Connection mode changed to:', connectionMode, '- clearing error state');
-  }, [connectionMode]);
-
-  useEffect(() => {
-    // Only check bridge status in bridge mode
+    
+    // Force gateway mode for hosted environments (bridge doesn't work due to mixed content policy)
     if (connectionMode === 'bridge') {
-      checkHaloBridgeStatus();
-      // Only check status when NOT connecting to avoid conflicts
-      const interval = setInterval(() => {
-        if (!isConnectingRef.current) {
-          checkHaloBridgeStatus();
-        }
-      }, 3000);
-      return () => clearInterval(interval);
+      console.log('🔄 [Hosted Desktop] Bridge mode not supported in hosted environment, switching to gateway');
+      setConnectionMode('gateway');
     }
-  }, [connectionMode]);
+  }, [connectionMode, setConnectionMode]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cleanupHaloBridge();
-    };
-  }, []);
+  // Bridge mode not supported in hosted environment
+
+  // Cleanup on unmount - not needed for gateway-only mode
 
   // Poll for gateway connection when QR is shown
   useEffect(() => {
@@ -100,26 +85,7 @@ export function HostedDesktopConnect() {
     }
   }, [showQR, qrData]);
 
-  async function checkHaloBridgeStatus() {
-    try {
-      const bridge = getHaloBridgeService();
-      const isConnected = bridge.isConnected();
-      
-      if (isConnected) {
-        console.log("✅ HaloBridge connected");
-        setBridgeConnected(true);
-        setReaderConnected(true); // Assume reader is available if bridge is connected
-      } else {
-        console.log("❌ HaloBridge not connected");
-        setBridgeConnected(false);
-        setReaderConnected(false);
-      }
-    } catch (err) {
-      console.log("❌ HaloBridge status check failed:", err);
-      setBridgeConnected(false);
-      setReaderConnected(false);
-    }
-  }
+  // Bridge functions removed - not supported in hosted environment
 
   function handleCancel() {
     console.log("🛑 [Hosted Desktop] Connection cancelled by user");
@@ -130,36 +96,16 @@ export function HostedDesktopConnect() {
   }
 
   function handleTryAgain() {
-    console.log("🔄 [Hosted Desktop] Try again clicked, switching to error mode:", errorMode);
-    if (errorMode) {
-      setError(null);
-      setErrorMode(null);
-      
-      if (errorMode === 'bridge') {
-        console.log("🔄 [Hosted Desktop] Switching to bridge mode for retry");
-        setConnectionMode('bridge');
-        setTimeout(() => {
-          handleConnect();
-        }, 150);
-      } else if (errorMode === 'gateway') {
-        console.log("🔄 [Hosted Desktop] Switching to gateway mode for retry");
-        setConnectionMode('gateway');
-        setTimeout(() => {
-          handleConnect();
-        }, 150);
-      }
-    }
-  }
-
-  function handleModeChange() {
+    console.log("🔄 [Hosted Desktop] Try again clicked, retrying gateway connection");
     setError(null);
     setErrorMode(null);
-    setIsConnecting(false);
-    isConnectingRef.current = false;
-    setShowConsentModal(false);
-    setConsentURL(null);
-    console.log('🔄 [Hosted Desktop] Mode changed - clearing error state');
+    setConnectionMode('gateway');
+    setTimeout(() => {
+      handleConnect();
+    }, 150);
   }
+
+  // Mode change not supported - only gateway mode available
 
   async function handleConsentAllow() {
     console.log("✅ [Hosted Desktop] User granted consent");
@@ -232,33 +178,23 @@ export function HostedDesktopConnect() {
     console.log("🚀 [Hosted Desktop] CONNECT BUTTON CLICKED");
     console.log("═══════════════════════════════════════════════════════");
     console.log("⏰ [Hosted Desktop] Timestamp:", new Date().toISOString());
-    console.log(`🔧 [Hosted Desktop] Mode: ${connectionMode}`);
-    
-    const connectionStartMode = connectionMode;
+    console.log(`🔧 [Hosted Desktop] Mode: ${connectionMode} (gateway only in hosted)`);
     
     setIsConnecting(true);
     isConnectingRef.current = true;
     setError(null);
 
     try {
-      if (connectionMode === 'bridge') {
-        await handleBridgeConnect();
-      } else {
-        await handleGatewayConnect();
-      }
+      // Only gateway mode supported in hosted environment
+      await handleGatewayConnect();
     } catch (err: any) {
       console.log("\n═══════════════════════════════════════════════════════");
       console.error("❌ [Hosted Desktop] CONNECTION FAILED!");
       console.log("═══════════════════════════════════════════════════════");
       console.error("Error:", err);
       
-      if (connectionStartMode === connectionMode) {
-        console.log("✅ [Hosted Desktop] Mode unchanged, setting error");
-        setError(err.message || "Failed to connect Burner card");
-        setErrorMode(connectionStartMode);
-      } else {
-        console.log("⚠️ [Hosted Desktop] Mode changed, ignoring error");
-      }
+      setError(err.message || "Failed to connect Burner card");
+      setErrorMode('gateway');
     } finally {
       setIsConnecting(false);
       isConnectingRef.current = false;
@@ -266,52 +202,7 @@ export function HostedDesktopConnect() {
     }
   }
 
-  async function handleBridgeConnect() {
-    console.log("📞 [Hosted Desktop] Starting HaloBridge connection...");
-    const connectStart = Date.now();
-    
-    try {
-      const { address, publicKey, keySlot } = await getBurnerAddressViaBridge();
-      const connectDuration = Date.now() - connectStart;
-      
-      console.log("\n═══════════════════════════════════════════════════════");
-      console.log(`✅ [Hosted Desktop] HaloBridge connection completed in ${connectDuration}ms`);
-      console.log("═══════════════════════════════════════════════════════");
-      console.log(`   Address: ${address}`);
-      console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
-      console.log(`   Key Slot: ${keySlot}`);
-      
-      setWallet(address, publicKey, keySlot);
-      
-      console.log("\n═══════════════════════════════════════════════════════");
-      console.log("🎉 [Hosted Desktop] BRIDGE CONNECTION SUCCESSFUL!");
-      console.log("═══════════════════════════════════════════════════════\n");
-    } catch (error: any) {
-      console.error("❌ [Hosted Desktop] HaloBridge connection failed:", error);
-      
-      // Check for consent error - either by message or by error type
-      if (error.message === "CONSENT_REQUIRED" || 
-          error.message === "No user consent for this origin." ||
-          error.constructor.name === "NFCBridgeConsentError" ||
-          error.name === "NFCBridgeConsentError") {
-        console.log("🔐 [Hosted Desktop] Consent required - showing consent modal");
-        const bridge = getHaloBridgeService();
-        const consentURL = bridge.getConsentURL();
-        if (consentURL) {
-          setConsentURL(consentURL);
-          setShowConsentModal(true);
-          return; // Don't throw error, wait for user consent
-        }
-      }
-      
-      if (error.message === "BRIDGE_NOT_AVAILABLE") {
-        console.log("🔌 [Hosted Desktop] Bridge not available");
-        throw new Error("HaLo Bridge service not found. Please ensure the HaLo Bridge software is installed and running on your computer. Alternatively, you can use Gateway mode with your smartphone as an NFC reader.");
-      }
-      
-      throw error;
-    }
-  }
+  // Bridge connection removed - not supported in hosted environment
 
   async function handleGatewayConnect() {
     console.log("📞 [Hosted Desktop] Starting gateway pairing...");
@@ -335,10 +226,10 @@ export function HostedDesktopConnect() {
 
   return (
     <div className="max-w-lg mx-auto space-y-6 animate-in fade-in-50 duration-500">
-      {/* Mode Toggle */}
-      <div className="animate-in slide-in-from-top-4 duration-700">
+      {/* Mode Toggle - Hidden in hosted environment (only gateway supported) */}
+      {/* <div className="animate-in slide-in-from-top-4 duration-700">
         <ModeToggle onModeChange={handleModeChange} />
-      </div>
+      </div> */}
       
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700/60 shadow-card-lg overflow-hidden transition-colors duration-300">
         <div className="text-center px-8 pt-10 pb-8">
@@ -357,10 +248,7 @@ export function HostedDesktopConnect() {
               </h1>
             </div>
             <p className="text-slate-600 dark:text-slate-400 text-base font-medium leading-relaxed max-w-sm mx-auto transition-colors duration-300">
-              {connectionMode === 'bridge' 
-                ? 'Connect your Burner card using a USB NFC reader (requires HaLo Bridge software)'
-                : 'Use your smartphone as an NFC reader to connect'
-              }
+              Use your smartphone as an NFC reader to connect
             </p>
           </div>
 
