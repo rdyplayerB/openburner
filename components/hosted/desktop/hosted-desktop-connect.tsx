@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { getBurnerAddressViaGateway, startGatewayPairing } from "@/lib/burner-gateway";
 import { useWalletStore } from "@/store/wallet-store";
-import { Nfc, Loader2, CheckCircle, XCircle, Smartphone, X } from "lucide-react";
+import { Nfc, Loader2, CheckCircle, XCircle, Smartphone, X, ExternalLink } from "lucide-react";
 import { QRDisplay } from "@/components/local/qr-display";
 import { ErrorModal } from "@/components/common/error-modal";
 import { ConsentModal } from "@/components/common/consent-modal";
@@ -310,6 +311,19 @@ export function HostedDesktopConnect() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Website Link */}
+      <div className="text-center mt-6">
+        <Link 
+          href="https://openburner.xyz" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-sm transition-colors duration-200"
+        >
+          <span>Visit openburner.xyz</span>
+          <ExternalLink className="w-3 h-3" strokeWidth={2} />
+        </Link>
       </div>
       
       {/* QR Code Display */}
