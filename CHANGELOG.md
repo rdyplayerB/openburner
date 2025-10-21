@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-01-21 - Architecture Enhancement & Library Integration
+
+### Added
+- **Dual Library Architecture** - Enhanced card communication with both libBurner and libHalo
+  - libBurner for Burner card communication via WebSocket
+  - libHalo for HaLo card communication and NFC operations
+  - Improved compatibility across different card types and connection methods
+
+- **Enhanced Mobile NFC Support** - Direct smartphone NFC integration
+  - Web NFC API support for Chrome/Android devices
+  - Fallback to gateway mode for iOS and other browsers
+  - Streamlined mobile user experience with single-tap connection
+
+- **Comprehensive Gateway Integration** - Smartphone-based NFC reader functionality
+  - QR code pairing for desktop-to-mobile connection
+  - Secure WebSocket communication between devices
+  - Real-time connection status monitoring
+
+### Changed
+- **Connection Architecture** - Unified connection handling across environments
+  - Hosted environments default to gateway mode for optimal user experience
+  - Local environments support both bridge and gateway modes
+  - Environment-aware connection method selection
+
+- **Documentation Structure** - Updated technical documentation
+  - Added comprehensive mobile NFC integration guide
+  - Updated architecture diagrams to reflect dual library usage
+  - Enhanced security considerations for gateway connections
+
+### Technical Improvements
+- **Service Worker Caching** - Improved cache invalidation strategy
+  - Version-based cache management for reliable deployments
+  - Automatic cache clearing on new releases
+  - Enhanced offline functionality
+
+- **Error Handling** - Robust connection failure management
+  - Graceful fallback between connection methods
+  - Clear user feedback for connection issues
+  - Automatic retry mechanisms for transient failures
+
 ## [1.0.1] - 2024-12-19 - Minor Updates
 
 ## [1.0.0] - 2024-12-19 - First Stable Release

@@ -39,14 +39,14 @@ OpenBurner follows [Semantic Versioning (SemVer)](https://semver.org/) for all r
 - `feature/*`: Individual feature development
 - `hotfix/*`: Critical bug fixes for production
 
-## Current Stable Version: v1.0.0
+## Current Stable Version: v1.1.0
 
-This version represents the first stable release with core functionality:
-- HaLo NFC chip integration
-- Multi-chain support
-- Token management
-- Price oracle integration
-- Modern UI/UX
+This version represents the enhanced architecture with dual library support:
+- Dual library architecture (libBurner + libHalo)
+- Enhanced mobile NFC support
+- Comprehensive gateway integration
+- Improved service worker caching
+- Enhanced error handling and connection management
 
 ## Future Development
 
