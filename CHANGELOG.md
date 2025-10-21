@@ -7,15 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.1] - 2025-01-21 - Updated Documentation & Supported Setups
-
-### Added
-- **Supported Setups Documentation** - Clear setup configurations for different environments
-  - Local + Desktop + Bridge - USB NFC reader
-  - Local + Desktop - Smartphone as NFC reader via Halo Gateway
-  - Hosted + Mobile - Tap smartphone NFC directly
-  - Hosted + Desktop - Smartphone as NFC reader via Halo Gateway
-
 ## [1.1.0] - 2025-01-21 - Architecture Enhancement & Library Integration
 
 ### Added
@@ -45,6 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added comprehensive mobile NFC integration guide
   - Updated architecture diagrams to reflect dual library usage
   - Enhanced security considerations for gateway connections
+
+### Supported Setups
+- **Local + Desktop + Bridge** - USB NFC reader
+- **Local + Desktop** - Smartphone as NFC reader via Halo Gateway
+- **Hosted + Mobile** - Tap smartphone NFC directly
+- **Hosted + Desktop** - Smartphone as NFC reader via Halo Gateway
 
 ### Technical Improvements
 - **Service Worker Caching** - Improved cache invalidation strategy
