@@ -270,7 +270,7 @@ export function SendToken({
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl transition-all duration-150 font-semibold shadow-md hover:shadow-glow-orange active:scale-95 text-sm sm:text-base"
             >
-              <span>View on Block Explorer</span>
+              View on Block Explorer
               <ExternalLink className="w-4 h-4" strokeWidth={2.5} />
             </a>
             
