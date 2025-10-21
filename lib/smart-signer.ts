@@ -41,13 +41,12 @@ export async function signTransactionSmart(
     // Use provided config or fall back to server-side config
     const environmentConfig = config || getAppConfig();
   
-  console.log("🔍 [Smart Signer] Detecting signing method...");
-  console.log(`   Mode: ${environmentConfig.mode}`);
-  console.log(`   Device: ${environmentConfig.deviceType}`);
-  console.log(`   Is Hosted: ${environmentConfig.isHosted}`);
-  console.log(`   Is Mobile: ${environmentConfig.isMobile}`);
-  
-  try {
+    console.log("🔍 [Smart Signer] Detecting signing method...");
+    console.log(`   Mode: ${environmentConfig.mode}`);
+    console.log(`   Device: ${environmentConfig.deviceType}`);
+    console.log(`   Is Hosted: ${environmentConfig.isHosted}`);
+    console.log(`   Is Mobile: ${environmentConfig.isMobile}`);
+    
     if (environmentConfig.isHosted && environmentConfig.isMobile) {
       // Mobile hosted version - use mobile NFC (direct connection)
       console.log("📱 [Smart Signer] Using mobile NFC signing");
