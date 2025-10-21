@@ -4,7 +4,7 @@
  * Never caches dynamic data (NFC responses, blockchain data, API calls)
  */
 
-const CACHE_NAME = 'openburner-v1';
+const CACHE_NAME = 'openburner-v2';
 const STATIC_CACHE_URLS = [
   '/',
   '/manifest.json',
