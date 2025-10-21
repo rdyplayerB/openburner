@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time connection status monitoring
 
 ### Changed
+- **App Description** - Updated metadata description to "Start using OpenBurner"
 - **Connection Architecture** - Unified connection handling across environments
   - Hosted environments default to gateway mode for optimal user experience
   - Local environments support both bridge and gateway modes

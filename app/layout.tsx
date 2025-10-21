@@ -7,7 +7,7 @@ const isHosted = process.env.NEXT_PUBLIC_APP_MODE === 'hosted';
 
 export const metadata: Metadata = {
   title: "OpenBurner",
-  description: "Simple Web3 Wallet with HaLo Chip Integration",
+  description: "Start using OpenBurner",
   icons: {
     icon: '/openburnerlogo.ico',
   },
