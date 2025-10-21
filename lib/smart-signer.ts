@@ -14,6 +14,9 @@ export async function signTransactionSmart(
   pin?: string,
   config?: AppConfig
 ): Promise<string> {
+  console.log("🚀 [Smart Signer] ENTRY - signTransactionSmart called");
+  console.log("🚀 [Smart Signer] Config passed:", config);
+  
   // Use provided config or fall back to server-side config
   const environmentConfig = config || getAppConfig();
   

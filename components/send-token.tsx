@@ -166,6 +166,7 @@ export function SendToken({
 
       // Sign with Burner using PIN (smart signer detects connection mode)
       console.log("🔐 Signing transaction with smart signer...");
+      console.log("🔐 [SendToken] Environment config:", environment);
       const signedTx = await signTransactionSmart(transaction, keySlot || 1, enteredPin, environment);
 
       // Hide PIN input on success
