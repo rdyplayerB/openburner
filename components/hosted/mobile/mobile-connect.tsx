@@ -84,8 +84,9 @@ export function HostedMobileConnect() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200" style={{ minHeight: '100dvh' }}>
-      <div className="flex-1 flex items-center justify-center">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200" style={{ minHeight: '100dvh' }}>
+      {/* Main content - perfectly centered */}
+      <div className="flex-1 flex items-center justify-center p-4 relative">
         <div className="max-w-sm w-full space-y-4">
         {/* Header */}
         <div className="text-center">
@@ -163,7 +164,7 @@ export function HostedMobileConnect() {
         </div>
       </div>
 
-      {/* Install Card - show for all mobile hosted users if not already installed - positioned at bottom */}
+      {/* Install Card - positioned at bottom, outside main content area */}
       {shouldEnablePWA && !isInstalled && showInstallCard && (
         <div className="w-full px-4 pb-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-sm w-full mx-auto">
