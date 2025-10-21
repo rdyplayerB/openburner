@@ -3,13 +3,6 @@ import { persist } from "zustand/middleware";
 
 export type ConnectionMode = 'bridge' | 'gateway';
 
-// Helper function to get default connection mode based on environment
-const getDefaultConnectionMode = (): ConnectionMode => {
-  // Check if we're in a hosted environment
-  const isHosted = process.env.NEXT_PUBLIC_APP_MODE === 'hosted';
-  return isHosted ? 'gateway' : 'bridge';
-};
-
 interface WalletState {
   address: string | null;
   publicKey: string | null;
@@ -38,7 +31,7 @@ export const useWalletStore = create<WalletState>()(
       chainName: "Ethereum",
       isConnected: false,
       balance: "0",
-      connectionMode: getDefaultConnectionMode(),
+      connectionMode: 'bridge' as ConnectionMode,
       setWallet: (address, publicKey, keySlot) => {
         console.log("🔐 [Wallet Store] setWallet called:");
         console.log(`  Address: ${address}`);

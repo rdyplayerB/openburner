@@ -28,7 +28,15 @@ export function HostedDesktopConnect() {
     setError(null);
     setErrorMode(null);
     console.log('🔄 [Hosted Desktop] Connection mode changed to:', connectionMode, '- clearing error state');
-  }, [connectionMode]);
+    
+    // Force gateway mode for hosted environments (bridge doesn't work due to mixed content policy)
+    if (connectionMode === 'bridge') {
+      console.log('🔄 [Hosted Desktop] Bridge mode not supported in hosted environment, switching to gateway');
+      setConnectionMode('gateway');
+    }
+  }, [connectionMode, setConnectionMode]);
+
+  // Bridge mode not supported in hosted environment
 
   // Cleanup on unmount - not needed for gateway-only mode
 
