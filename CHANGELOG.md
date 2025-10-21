@@ -10,9 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2025-01-21 - Architecture Enhancement & Library Integration
 
 ### Added
-- **Dual Library Architecture** - Enhanced card communication with both libBurner and libHalo
-  - libBurner for Burner card communication via WebSocket
-  - libHalo for HaLo card communication and NFC operations
+- **Dual Library Architecture** - Enhanced card communication with both LibBurner and LibHalo
+  - LibBurner for Burner card communication via WebSocket
+  - LibHalo for HaLo card communication and NFC operations
   - Improved compatibility across different card types and connection methods
 
 - **Enhanced Mobile NFC Support** - Direct smartphone NFC integration

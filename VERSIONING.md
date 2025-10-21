@@ -42,7 +42,7 @@ OpenBurner follows [Semantic Versioning (SemVer)](https://semver.org/) for all r
 ## Current Stable Version: v1.1.0
 
 This version represents the enhanced architecture with dual library support:
-- Dual library architecture (libBurner + libHalo)
+- Dual library architecture (LibBurner + LibHalo)
 - Enhanced mobile NFC support
 - Comprehensive gateway integration
 - Improved service worker caching
