@@ -13,7 +13,7 @@ export function HostedDesktopConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorMode, setErrorMode] = useState<'gateway' | null>(null);
-  const [readerConnected, setReaderConnected] = useState<boolean | null>(null);
+  // readerConnected removed - not needed for gateway-only mode
   const [showQR, setShowQR] = useState(false);
   const [qrData, setQrData] = useState<{ qrCodeDataURL: string; execURL: string } | null>(null);
   const [showConsentModal, setShowConsentModal] = useState(false);
@@ -140,7 +140,7 @@ export function HostedDesktopConnect() {
     setIsConnecting(false);
     isConnectingRef.current = false;
     setError("Consent denied. Please try again and allow access to HaLo.");
-    setErrorMode('bridge');
+    setErrorMode('gateway');
   }
 
   function handleConsentClose() {
@@ -241,18 +241,14 @@ export function HostedDesktopConnect() {
                 <>
                   <Loader2 className="animate-spin h-6 w-6" strokeWidth={2.5} />
                   <span>
-                    {connectionMode === 'bridge' ? 'Reading card...' : 'Starting gateway...'}
+                    Starting gateway...
                   </span>
                 </>
               ) : (
                 <>
-                  {connectionMode === 'bridge' ? (
-                    <Nfc className="h-6 w-6" strokeWidth={2.5} />
-                  ) : (
-                    <Smartphone className="h-6 w-6" strokeWidth={2.5} />
-                  )}
+                  <Smartphone className="h-6 w-6" strokeWidth={2.5} />
                   <span>
-                    {connectionMode === 'bridge' ? 'Connect with NFC Reader' : 'Connect with Smartphone'}
+                    Connect with Smartphone
                   </span>
                 </>
               )}
@@ -283,83 +279,34 @@ export function HostedDesktopConnect() {
             </div>
             
             <div className="space-y-3">
-              {connectionMode === 'bridge' ? (
-                <>
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-white/60 dark:bg-slate-700/60 border border-slate-200/60 dark:border-slate-600/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      {bridgeConnected === null ? (
-                        <Loader2 className="w-5 h-5 text-slate-400 dark:text-slate-500 animate-spin" strokeWidth={2.5} />
-                      ) : bridgeConnected ? (
-                        <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
-                      ) : (
-                        <XCircle className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className={`font-medium text-sm transition-colors duration-300 ${bridgeConnected ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-400"}`}>
-                        HaLo Bridge Software
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 transition-colors duration-300">
-                        {bridgeConnected === null ? 'Checking connection...' : 
-                         bridgeConnected ? 'Connected and ready' : 
-                         'Not running - install HaLo Bridge software or use Gateway mode'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-white/60 dark:bg-slate-700/60 border border-slate-200/60 dark:border-slate-600/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      {readerConnected === null ? (
-                        <Loader2 className="w-5 h-5 text-slate-400 dark:text-slate-500 animate-spin" strokeWidth={2.5} />
-                      ) : readerConnected ? (
-                        <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
-                      ) : (
-                        <XCircle className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className={`font-medium text-sm transition-colors duration-300 ${readerConnected ? "text-slate-800 dark:text-slate-200" : "text-slate-600 dark:text-slate-400"}`}>
-                        NFC Reader & Card
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 transition-colors duration-300">
-                        {readerConnected === null ? 'Checking for card...' : 
-                         readerConnected ? 'Card detected and ready' : 
-                         'Place your Burner card on the reader'}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
-                        Internet Connection
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
-                        Required for gateway communication
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/60 transition-colors duration-300">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      <Smartphone className="w-6 h-6 text-amber-600" strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
-                        Smartphone with NFC
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
-                        Your phone will act as the NFC reader
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
+              {/* Gateway mode only - bridge mode not supported in hosted environment */}
+              <div className="flex items-center gap-4 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/60 transition-colors duration-300">
+                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
+                    Internet Connection
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
+                    Required for gateway communication
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/60 transition-colors duration-300">
+                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                  <Smartphone className="w-6 h-6 text-amber-600" strokeWidth={2.5} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
+                    Smartphone with NFC
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
+                    Your phone will act as the NFC reader
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
