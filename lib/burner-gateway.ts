@@ -17,6 +17,16 @@ export interface GatewayPairInfo {
 let globalGateway: HaloGateway | null = null;
 
 /**
+ * Get the global gateway instance
+ */
+export function getGlobalGateway(): HaloGateway {
+  if (!globalGateway) {
+    throw new Error("Gateway not initialized. Please connect to wallet first.");
+  }
+  return globalGateway;
+}
+
+/**
  * Clean up gateway connection
  */
 export function cleanupGateway() {

@@ -47,15 +47,11 @@ export async function signTransactionSmart(
 }
 
 /**
- * Get or create a gateway instance for desktop hosted version
- * This is a simplified version - in a real implementation, you'd want to
- * store the gateway instance properly
+ * Get the existing gateway instance for desktop hosted version
+ * This reuses the global gateway instance created during pairing
  */
 async function getGatewayInstance(): Promise<any> {
-  // For now, we'll create a new gateway instance
-  // In a real implementation, you'd want to store and reuse the gateway instance
-  const { HaloGateway } = await import('@arx-research/libhalo/api/web');
-  return new HaloGateway('wss://s1.halo-gateway.arx.org', {
-    createWebSocket: (url: string) => new WebSocket(url)
-  });
+  // Import the global gateway instance from burner-gateway
+  const { getGlobalGateway } = await import('./burner-gateway');
+  return getGlobalGateway();
 }
