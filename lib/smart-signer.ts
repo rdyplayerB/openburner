@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { getAppConfig } from './config/environment';
+import { getAppConfig, AppConfig } from './config/environment';
 import { signTransactionWithBurner } from './burner';
 import { signTransactionWithMobileNFC } from './mobile/nfc';
 import { signTransactionWithGateway } from './burner-gateway';
@@ -11,22 +11,24 @@ import { signTransactionWithGateway } from './burner-gateway';
 export async function signTransactionSmart(
   transaction: ethers.TransactionRequest,
   keySlot: number = 1,
-  pin?: string
+  pin?: string,
+  config?: AppConfig
 ): Promise<string> {
-  const config = getAppConfig();
+  // Use provided config or fall back to server-side config
+  const environmentConfig = config || getAppConfig();
   
   console.log("🔍 [Smart Signer] Detecting signing method...");
-  console.log(`   Mode: ${config.mode}`);
-  console.log(`   Device: ${config.deviceType}`);
-  console.log(`   Is Hosted: ${config.isHosted}`);
-  console.log(`   Is Mobile: ${config.isMobile}`);
+  console.log(`   Mode: ${environmentConfig.mode}`);
+  console.log(`   Device: ${environmentConfig.deviceType}`);
+  console.log(`   Is Hosted: ${environmentConfig.isHosted}`);
+  console.log(`   Is Mobile: ${environmentConfig.isMobile}`);
   
   try {
-    if (config.isHosted && config.isMobile) {
+    if (environmentConfig.isHosted && environmentConfig.isMobile) {
       // Mobile hosted version - use mobile NFC (direct connection)
       console.log("📱 [Smart Signer] Using mobile NFC signing");
       return await signTransactionWithMobileNFC(transaction, keySlot, pin);
-    } else if (config.isHosted && config.isDesktop) {
+    } else if (environmentConfig.isHosted && environmentConfig.isDesktop) {
       // Desktop hosted version - use regular gateway
       console.log("🖥️ [Smart Signer] Using desktop gateway signing");
       return await signTransactionWithGateway(await getGatewayInstance(), transaction, keySlot, pin);

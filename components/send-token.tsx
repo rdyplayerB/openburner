@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 import { signTransactionSmart } from "@/lib/smart-signer";
 import { PinInput } from "./pin-input";
 import { CheckCircle, ExternalLink, Clock, X } from "lucide-react";
+import { useEnvironment } from "@/hooks/use-environment";
 
 interface Token {
   address: string;
@@ -45,6 +46,7 @@ export function SendToken({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const environment = useEnvironment();
   const { address, rpcUrl, chainId, keySlot, chainName } = useWalletStore();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -164,7 +166,7 @@ export function SendToken({
 
       // Sign with Burner using PIN (smart signer detects connection mode)
       console.log("🔐 Signing transaction with smart signer...");
-      const signedTx = await signTransactionSmart(transaction, keySlot || 1, enteredPin);
+      const signedTx = await signTransactionSmart(transaction, keySlot || 1, enteredPin, environment);
 
       // Hide PIN input on success
       setShowPinInput(false);
