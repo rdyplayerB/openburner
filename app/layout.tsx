@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 // PWA metadata - only applies to mobile hosted mode
@@ -76,7 +77,10 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
