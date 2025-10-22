@@ -20,6 +20,8 @@ interface TokenSelectorProps {
   onClose: () => void;
   tokenImages: { [symbol: string]: string };
   tokenPrices: { [symbol: string]: number };
+  title?: string;
+  onAddToken?: () => void;
 }
 
 function formatTokenBalance(balance: string): string {
@@ -37,6 +39,8 @@ export function TokenSelector({
   onClose,
   tokenImages,
   tokenPrices,
+  title = "Select Token",
+  onAddToken,
 }: TokenSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { pricingEnabled } = getAppConfig();
@@ -60,7 +64,7 @@ export function TokenSelector({
         <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
-              Select Token to <span className="text-brand-orange">Send</span>
+              {title}
             </h2>
             <button
               onClick={onClose}
@@ -174,6 +178,19 @@ export function TokenSelector({
                   </div>
                 </motion.button>
               ))}
+            </div>
+          )}
+          
+          {/* Add Token Button */}
+          {onAddToken && (
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+              <button
+                onClick={onAddToken}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-orange/10 hover:bg-brand-orange/20 text-brand-orange font-semibold rounded-xl transition-colors"
+              >
+                <span>+</span>
+                Add Custom Token
+              </button>
             </div>
           )}
         </div>

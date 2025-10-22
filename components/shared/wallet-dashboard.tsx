@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useWalletStore } from "@/store/wallet-store";
 import { TokenList } from "../token-list";
 import { SendToken } from "../send-token";
+import { SwapToken } from "../swap-token";
 import { TokenSelector } from "../token-selector";
 import { Toast } from "../toast";
 import { ethers } from "ethers";
@@ -84,6 +85,7 @@ export function WalletDashboard() {
   const { pricingEnabled } = getAppConfig();
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
+  const [swapToken, setSwapToken] = useState<Token | null>(null);
   const [copied, setCopied] = useState(false);
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
   const [showCustomForm, setShowCustomForm] = useState(false);
@@ -444,15 +446,11 @@ export function WalletDashboard() {
             </button>
 
             <button
-              disabled
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed font-semibold text-base relative group"
+              onClick={() => setSwapToken({ address: 'native', symbol: 'ETH', name: 'Ethereum', decimals: 18, balance: balance })}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-150 font-semibold text-base shadow-md hover:shadow-lg active:scale-95"
             >
               <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
               Swap
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                Planned
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-              </div>
             </button>
 
             <button
@@ -530,6 +528,7 @@ export function WalletDashboard() {
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700 shadow-card hover:shadow-card-hover transition-shadow overflow-hidden">
         <TokenList 
           onSendToken={setSelectedToken} 
+          onSwapToken={setSwapToken}
           onRefresh={loadBalance}
           onTokensLoaded={(tokens, images, prices) => {
             setAvailableTokens(tokens);
@@ -559,6 +558,21 @@ export function WalletDashboard() {
             loadBalance();
             setSelectedToken(null);
           }}
+        />
+      )}
+
+      {/* Swap Token Modal */}
+      {swapToken && (
+        <SwapToken
+          onClose={() => setSwapToken(null)}
+          onSuccess={() => {
+            loadBalance();
+            setSwapToken(null);
+          }}
+          initialFromToken={swapToken}
+          availableTokens={availableTokens}
+          tokenImages={tokenImages}
+          tokenPrices={tokenPrices}
         />
       )}
 

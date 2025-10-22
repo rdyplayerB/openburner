@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useWalletStore } from "@/store/wallet-store";
 import { ethers } from "ethers";
-import { Plus, Send, RefreshCw, X } from "lucide-react";
+import { Plus, Send, RefreshCw, X, ArrowUpDown, Trash2 } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
 import { getTokenPrices, clearPriceCache, getOldestPriceTimestamp } from "@/lib/price-oracle";
@@ -49,10 +49,12 @@ function getNativeTokenInfo(chainId: number): { symbol: string; name: string } {
 
 export function TokenList({ 
   onSendToken, 
+  onSwapToken,
   onRefresh,
   onTokensLoaded
 }: { 
   onSendToken: (token: Token) => void;
+  onSwapToken?: (token: Token) => void;
   onRefresh?: () => void;
   onTokensLoaded?: (tokens: Token[], images: { [symbol: string]: string }, prices: { [symbol: string]: number }) => void;
 }) {
@@ -65,6 +67,7 @@ export function TokenList({
   const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
   const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
   const [isActuallyRefreshing, setIsActuallyRefreshing] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState<string | null>(null);
 
   function formatTokenBalance(balance: string): string {
     const num = parseFloat(balance);
@@ -73,6 +76,29 @@ export function TokenList({
     if (num < 1) return num.toFixed(6);
     if (num < 1000) return num.toFixed(4);
     return num.toFixed(2);
+  }
+
+  // Remove token from wallet
+  function handleRemoveToken(tokenAddress: string) {
+    try {
+      const storedAddresses = getStoredTokenAddresses();
+      const updatedAddresses = storedAddresses.filter(addr => addr.toLowerCase() !== tokenAddress.toLowerCase());
+      localStorage.setItem(`${chainId}_custom_tokens`, JSON.stringify(updatedAddresses));
+      
+      // Remove from cache
+      const cacheKey = `${chainId}_${address}`;
+      const cached = tokenCache.get(cacheKey);
+      if (cached) {
+        const updatedTokens = cached.filter(token => token.address.toLowerCase() !== tokenAddress.toLowerCase());
+        tokenCache.set(cacheKey, updatedTokens);
+        setTokens(updatedTokens);
+      }
+      
+      console.log(`🗑️ [Token] Removed ${tokenAddress} from wallet`);
+      setShowRemoveConfirm(null);
+    } catch (error) {
+      console.error('❌ [Token] Failed to remove token:', error);
+    }
   }
   const loadingRef = useRef(false);
   
@@ -423,24 +449,6 @@ export function TokenList({
     }
   }
 
-  function handleRemoveToken(tokenAddr: string) {
-    removeTokenAddress(tokenAddr);
-    
-    // Remove from current list (no reload)
-    const updatedTokens = tokens.filter(t => t.address.toLowerCase() !== tokenAddr.toLowerCase());
-    setTokens(updatedTokens);
-    
-    // Update cache
-    const cacheKey = `${chainId}_${address}`;
-    tokenCache.set(cacheKey, updatedTokens);
-    
-    // Report updated data to parent
-    if (onTokensLoaded) {
-      onTokensLoaded(updatedTokens, tokenImages, tokenPrices);
-    }
-    
-    console.log(`🗑️ Token removed from list (no auto-refresh)`);
-  }
   
   async function handleManualRefresh() {
     // Clear token list cache and force reload (but keep image cache)
@@ -558,8 +566,7 @@ export function TokenList({
                   delay: index * 0.05,
                   ease: "easeOut"
                 }}
-                onClick={() => onSendToken(token)}
-                className="flex items-center justify-between pl-3 pr-0 py-3 sm:pl-4 sm:pr-0 sm:py-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                className="flex items-center justify-between pl-3 pr-0 py-3 sm:pl-4 sm:pr-0 sm:py-4 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group hover:scale-[1.01] active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {/* Token Icon */}
@@ -615,15 +622,84 @@ export function TokenList({
                   </div>
                 </div>
                 
-                {/* Send indicator on hover */}
-                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg">
+                {/* Action buttons on hover */}
+                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                  {/* Send button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSendToken(token);
+                    }}
+                    className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg hover:bg-brand-orange/20 transition-colors"
+                    title="Send"
+                  >
                     <Send className="w-4 h-4" strokeWidth={2.5} />
-                  </div>
+                  </button>
+                  
+                  {/* Swap button */}
+                  {onSwapToken && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSwapToken(token);
+                      }}
+                      className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
+                      title="Swap"
+                    >
+                      <ArrowUpDown className="w-4 h-4" strokeWidth={2.5} />
+                    </button>
+                  )}
+                  
+                  {/* Remove button for custom tokens */}
+                  {isCustomToken && !isPopularToken && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRemoveConfirm(token.address);
+                      }}
+                      className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                      title="Remove from wallet"
+                    >
+                      <Trash2 className="w-4 h-4" strokeWidth={2.5} />
+                    </button>
+                  )}
                 </div>
               </motion.div>
             );
           })}
+        </div>
+      )}
+
+      {/* Remove Token Confirmation Modal */}
+      {showRemoveConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm"
+          >
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+              Remove Token
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+              Are you sure you want to remove this token from your wallet? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowRemoveConfirm(null)}
+                className="flex-1 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-4 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRemoveToken(showRemoveConfirm)}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
