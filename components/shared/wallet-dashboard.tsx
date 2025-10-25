@@ -901,7 +901,9 @@ export function WalletDashboard() {
                         </div>
                       }
                     >
-                      <span className="cursor-help">Pricing disabled</span>
+                      <span className="cursor-help underline decoration-dotted underline-offset-2 hover:decoration-solid transition-all">
+                        Pricing disabled
+                      </span>
                     </Tooltip>
                   )}
                 </span>
