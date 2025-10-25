@@ -99,6 +99,142 @@ function getApiBaseUrl(): string {
 }
 
 /**
+ * Get CoinGecko platform ID for a given chain ID
+ */
+function getChainPlatformId(chainId: number): string | null {
+  const platformMap: Record<number, string> = {
+    1: "ethereum",
+    10: "optimistic-ethereum", 
+    56: "binance-smart-chain",
+    137: "polygon-pos",
+    250: "fantom",
+    42161: "arbitrum-one",
+    43114: "avalanche",
+    8453: "base",
+    5000: "mantle",
+    34443: "mode",
+  };
+  return platformMap[chainId] || null;
+}
+
+/**
+ * Fetch complete token data (metadata, image, price) by contract address
+ * This replaces separate calls for metadata, images, and prices
+ */
+export async function fetchTokenDataByContract(
+  tokenAddress: string, 
+  chainId: number
+): Promise<{
+  symbol: string;
+  name: string;
+  decimals: number;
+  price: number;
+  imageUrl: string | null;
+  success: boolean;
+} | null> {
+  const platformId = getChainPlatformId(chainId);
+  if (!platformId) {
+    console.warn(`No platform ID mapping for chain ${chainId}`);
+    return null;
+  }
+
+  try {
+    const url = `${getApiBaseUrl()}/coins/${platformId}/contract/${tokenAddress.toLowerCase()}`;
+    console.log(`🔍 [Token Data] Unified contract lookup: ${url}`);
+    
+    const response = await coinGeckoLimiter.fetch(url);
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Extract all data from single response
+      const symbol = data.symbol?.toUpperCase() || 'UNKNOWN';
+      const name = data.name || 'Unknown Token';
+      const decimals = data.detail_platforms?.[platformId]?.decimal_place || 18;
+      const price = data.market_data?.current_price?.usd || 0;
+      const imageUrl = data.image?.large || data.image?.small || data.image?.thumb || null;
+      
+      console.log(`✅ [Token Data] Found complete data via contract: ${symbol} -> $${price}`);
+      
+      return {
+        symbol,
+        name,
+        decimals,
+        price,
+        imageUrl,
+        success: true
+      };
+    } else {
+      console.log(`⚠️ [Token Data] Contract lookup failed with status ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`❌ [Token Data] Contract lookup error for ${tokenAddress}:`, error);
+  }
+  
+  return null;
+}
+
+/**
+ * Fetch price for a token by contract address (legacy function for backward compatibility)
+ */
+async function fetchPriceByContract(
+  tokenAddress: string, 
+  chainId: number
+): Promise<number | null> {
+  const tokenData = await fetchTokenDataByContract(tokenAddress, chainId);
+  return tokenData?.price || null;
+}
+
+/**
+ * Batch fetch complete token data for multiple tokens by contract address
+ * This is the most efficient way to get all token data in one go
+ */
+export async function batchFetchTokenDataByContract(
+  tokens: Array<{ address: string; chainId: number }>
+): Promise<Map<string, {
+  symbol: string;
+  name: string;
+  decimals: number;
+  price: number;
+  imageUrl: string | null;
+  success: boolean;
+}>> {
+  const results = new Map();
+  
+  // Process tokens in parallel with rate limiting
+  const batchSize = 3; // Conservative batch size for CoinGecko API
+  for (let i = 0; i < tokens.length; i += batchSize) {
+    const batch = tokens.slice(i, i + batchSize);
+    console.log(`📦 [Batch Token Data] Processing batch ${Math.floor(i/batchSize) + 1} (tokens ${i + 1}-${Math.min(i + batchSize, tokens.length)})`);
+    
+    const promises = batch.map(async ({ address, chainId }) => {
+      try {
+        const tokenData = await fetchTokenDataByContract(address, chainId);
+        if (tokenData) {
+          results.set(address.toLowerCase(), tokenData);
+          console.log(`✅ [Batch Token Data] ${tokenData.symbol}: SUCCESS`);
+        } else {
+          console.log(`❌ [Batch Token Data] ${address}: NO DATA`);
+        }
+      } catch (error) {
+        console.error(`❌ [Batch Token Data] ${address}: ERROR`, error);
+      }
+    });
+    
+    await Promise.all(promises);
+    
+    // Small delay between batches to respect rate limits
+    if (i + batchSize < tokens.length) {
+      console.log(`⏳ [Batch Token Data] Waiting 1s before next batch...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  console.log(`✅ [Batch Token Data] Complete! Loaded ${results.size} out of ${tokens.length} tokens`);
+  return results;
+}
+
+/**
  * Get the CoinGecko API key (only for local development)
  */
 function getApiKey(): string | undefined {
@@ -231,6 +367,119 @@ export async function getTokenPrice(symbol: string): Promise<number> {
 }
 
 /**
+ * Enhanced token price lookup with contract address support
+ * This is the main function that should be used for dynamic token pricing
+ */
+export async function getTokenPricesWithAddresses(
+  tokens: Array<{ symbol: string; address?: string; chainId?: number }>
+): Promise<{ [symbol: string]: number }> {
+  const config = getAppConfig();
+  
+  // Disable pricing on hosted version
+  if (!config.pricingEnabled) {
+    console.log(`💰 [Pricing] Disabled on hosted version for tokens: ${tokens.map(t => t.symbol).join(', ')}`);
+    return tokens.reduce((acc, token) => ({ ...acc, [token.symbol]: 0 }), {});
+  }
+
+  const now = Date.now();
+  const result: { [symbol: string]: number } = {};
+  const symbolsToFetch: string[] = [];
+  const symbolsToRevalidate: string[] = [];
+  const contractLookups: Array<{ symbol: string; address: string; chainId: number }> = [];
+  
+  // Step 1: Check memory cache and localStorage
+  for (const token of tokens) {
+    const { symbol, address, chainId } = token;
+    
+    // Check memory cache first (fastest)
+    let cached = memoryCache.get(symbol);
+    
+    // If not in memory, check localStorage
+    if (!cached) {
+      cached = loadFromLocalStorage(symbol);
+      if (cached) {
+        // Promote to memory cache
+        memoryCache.set(symbol, cached);
+      }
+    }
+    
+    if (cached) {
+      if (isFresh(cached, symbol, now)) {
+        // Fresh price, use it
+        result[symbol] = cached.usd;
+      } else if (isStaleButUsable(cached, now)) {
+        // Stale but usable - return it immediately and revalidate in background
+        result[symbol] = cached.usd;
+        symbolsToRevalidate.push(symbol);
+      } else {
+        // Too old, fetch fresh
+        if (address && chainId) {
+          contractLookups.push({ symbol, address, chainId });
+        } else {
+          symbolsToFetch.push(symbol);
+        }
+      }
+    } else {
+      // No cache, must fetch
+      if (address && chainId) {
+        contractLookups.push({ symbol, address, chainId });
+      } else {
+        symbolsToFetch.push(symbol);
+      }
+    }
+  }
+  
+  // Step 2: Background revalidation for stale prices (fire and forget)
+  if (symbolsToRevalidate.length > 0) {
+    fetchAndCachePrices(symbolsToRevalidate).catch(err => {
+      console.warn('Background price revalidation failed:', err);
+    });
+  }
+  
+  // Step 3: Fetch missing/expired prices
+  if (symbolsToFetch.length === 0 && contractLookups.length === 0) {
+    return result; // All prices served from cache
+  }
+  
+  // Fetch symbol-based prices
+  if (symbolsToFetch.length > 0) {
+    const fetchedPrices = await fetchAndCachePrices(symbolsToFetch);
+    for (const symbol of symbolsToFetch) {
+      result[symbol] = fetchedPrices[symbol] || 0;
+    }
+  }
+  
+  // Fetch contract-based prices
+  if (contractLookups.length > 0) {
+    console.log(`🔍 [Price Oracle] Fetching prices for ${contractLookups.length} tokens via contract lookup`);
+    
+    for (const { symbol, address, chainId } of contractLookups) {
+      try {
+        const price = await fetchPriceByContract(address, chainId);
+        if (price !== null) {
+          result[symbol] = price;
+          
+          // Cache the result
+          const priceData: TokenPrice = {
+            usd: price,
+            lastUpdated: now,
+          };
+          memoryCache.set(symbol, priceData);
+          saveToLocalStorage(symbol, priceData);
+        } else {
+          result[symbol] = 0;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch price for ${symbol} via contract:`, error);
+        result[symbol] = 0;
+      }
+    }
+  }
+  
+  return result;
+}
+
+/**
  * Get prices for multiple token symbols with advanced caching
  * HOSTED VERSION: Returns zeros for all symbols (pricing disabled)
  * LOCAL VERSION: Returns actual prices with caching
@@ -334,6 +583,7 @@ async function fetchAndCachePrices(symbols: string[]): Promise<{ [symbol: string
   // Map symbols to CoinGecko IDs
   const coinIds: string[] = [];
   const symbolToCoinId: { [symbol: string]: string } = {};
+  const symbolsWithoutMapping: string[] = [];
   
   for (const symbol of symbols) {
     const coinId = SYMBOL_TO_COINGECKO_ID[symbol];
@@ -342,7 +592,8 @@ async function fetchAndCachePrices(symbols: string[]): Promise<{ [symbol: string
       symbolToCoinId[symbol] = coinId;
     } else {
       console.warn(`No CoinGecko ID mapping for symbol: ${symbol}`);
-      result[symbol] = 0;
+      symbolsWithoutMapping.push(symbol);
+      result[symbol] = 0; // Default to 0, will try contract lookup later
     }
   }
   
@@ -388,6 +639,13 @@ async function fetchAndCachePrices(symbols: string[]): Promise<{ [symbol: string
         }
       }
     }
+  }
+  
+  // Try contract-based lookups for symbols without mapping
+  if (symbolsWithoutMapping.length > 0) {
+    console.log(`🔍 [Price Oracle] Attempting contract-based lookups for: ${symbolsWithoutMapping.join(', ')}`);
+    // Note: Contract-based lookups would require token addresses and chain IDs
+    // This would need to be implemented with additional context from the calling code
   }
   
   return result;

@@ -13,6 +13,46 @@ let ws: any = null;
 let currentHandle: string | null = null;
 let messageCallbacks: Map<string, (data: any) => void> = new Map();
 
+/**
+ * Check if a card is currently connected to the bridge
+ */
+export function isCardConnected(): boolean {
+  return currentHandle !== null;
+}
+
+/**
+ * Check if the bridge is running and accessible
+ */
+export async function isBridgeRunning(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve(false);
+      return;
+    }
+
+    try {
+      const testWs = new WebSocket(BRIDGE_WS_URL);
+      
+      testWs.onopen = () => {
+        testWs.close();
+        resolve(true);
+      };
+      
+      testWs.onerror = () => {
+        resolve(false);
+      };
+      
+      // Timeout after 500ms
+      setTimeout(() => {
+        testWs.close();
+        resolve(false);
+      }, 500);
+    } catch (error) {
+      resolve(false);
+    }
+  });
+}
+
 export async function connectToBridge(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
@@ -45,9 +85,14 @@ export async function connectToBridge(): Promise<void> {
       } else if (msg.event === "exec_exception" && msg.uid) {
         const callback = messageCallbacks.get(msg.uid);
         if (callback) {
-          // Check if it's a password error that needs consent redirect
+          // Check if it's a password error - handle it directly instead of opening popup
           const errorMsg = msg.data.exception?.message || "";
-          if (errorMsg.includes("ERROR_CODE_WRONG_PWD") || errorMsg.includes("NEEDS_CONSENT")) {
+          if (errorMsg.includes("ERROR_CODE_WRONG_PWD")) {
+            console.log("🔐 Wrong PIN detected - returning error to UI");
+            callback({ error: "Incorrect PIN. Please try again." });
+            messageCallbacks.delete(msg.uid);
+            return;
+          } else if (errorMsg.includes("NEEDS_CONSENT")) {
             console.log("🔐 PIN required - opening consent page...");
             // Open consent page in a new window for PIN entry
             const consentUrl = `http://localhost:32868/consent?uid=${msg.uid}`;
@@ -74,12 +119,18 @@ export async function connectToBridge(): Promise<void> {
       currentHandle = null;
     };
 
-    // Timeout if no chip detected within 10 seconds
+    // Check immediately if bridge is already connected and has a card
+    if (currentHandle) {
+      resolve();
+      return;
+    }
+
+    // Timeout if no chip detected within 2 seconds (fast but gives card time to be detected)
     setTimeout(() => {
       if (!currentHandle) {
-        reject(new Error("No Burner card detected. Please place Burner card on reader."));
+        reject(new Error("No Burner card detected. Please place your Burner card on the reader and try again."));
       }
-    }, 10000);
+    }, 2000);
   });
 }
 

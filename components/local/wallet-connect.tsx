@@ -303,13 +303,13 @@ export function WalletConnect() {
         <div className="text-center px-8 pt-10 pb-8">
           {/* Icon and Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="flex items-center justify-center gap-2 mb-6">
               <Image 
                 src="/images/openburnerlogo.svg" 
                 alt="OpenBurner logo" 
-                width={56} 
-                height={56} 
-                className="w-14 h-14 drop-shadow-sm"
+                width={40} 
+                height={40} 
+                className="w-10 h-10 drop-shadow-sm -mt-1"
               />
               <h1 className="text-3xl font-bold text-black dark:text-white tracking-tight leading-none transition-colors duration-300">
                 Open<span className="text-[#FF6B35]">Burner</span>

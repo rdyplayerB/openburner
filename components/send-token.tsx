@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useWalletStore } from "@/store/wallet-store";
 import { ethers } from "ethers";
+import { useWalletStore } from "@/store/wallet-store";
+import { rpcRateLimiter } from "@/lib/rpc-rate-limiter";
 import { signTransactionSmart } from "@/lib/smart-signer";
 import { PinInput } from "./pin-input";
 import { CheckCircle, ExternalLink, Clock, X } from "lucide-react";
 import { useEnvironment } from "@/hooks/use-environment";
+import { formatTokenBalance } from "@/lib/format-utils";
 
 interface Token {
   address: string;
@@ -52,6 +54,7 @@ export function SendToken({
   const [amount, setAmount] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentOperation, setCurrentOperation] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showPinInput, setShowPinInput] = useState(false);
@@ -127,29 +130,48 @@ export function SendToken({
     try {
       const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-      // Get transaction parameters
-      const [nonce, feeData] = await Promise.all([
-        provider.getTransactionCount(address),
-        provider.getFeeData(),
-      ]);
+      // Get transaction parameters with rate limiting
+      const [nonce, feeData] = await rpcRateLimiter.makeRequest(async () => {
+        return await Promise.all([
+          provider.getTransactionCount(address),
+          provider.getFeeData(),
+        ]);
+      });
 
       let transaction: ethers.TransactionRequest;
 
+      // Check if we're on Base network (which doesn't support EIP-1559 properly)
+      const isBaseNetwork = chainId === 8453;
+      
       // Handle native ETH transfer vs ERC20 transfer
       if (token.address === "native") {
         // Native ETH transfer
         const amountWei = ethers.parseEther(amount);
         
-        transaction = {
-          to: recipient,
-          value: amountWei,
-          nonce,
-          chainId,
-          type: 2,
-          maxFeePerGas: feeData.maxFeePerGas,
-          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          gasLimit: 21000n, // Standard for ETH transfer
-        };
+        if (isBaseNetwork) {
+          // Use legacy transaction format for Base network
+          transaction = {
+            to: recipient,
+            value: amountWei,
+            nonce,
+            chainId,
+            type: 0,
+            gasPrice: feeData.gasPrice,
+            gasLimit: 21000n, // Standard for ETH transfer
+          };
+        } else {
+          // Use EIP-1559 for other networks
+          transaction = {
+            to: recipient,
+            value: amountWei,
+            nonce,
+            chainId,
+            type: 2,
+            maxFeePerGas: feeData.maxFeePerGas,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+            gasLimit: 21000n, // Standard for ETH transfer
+          };
+        }
       } else {
         // ERC20 token transfer
         const contract = new ethers.Contract(token.address, ERC20_ABI, provider);
@@ -159,29 +181,69 @@ export function SendToken({
           amountWei,
         ]);
 
-        transaction = {
-          to: token.address,
-          value: 0n,
-          data,
-          nonce,
-          chainId,
-          type: 2,
-          maxFeePerGas: feeData.maxFeePerGas,
-          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          gasLimit: 100000n, // Standard for ERC20 transfers
-        };
+        // Estimate gas for ERC20 transfer with rate limiting
+        const gasEstimate = await rpcRateLimiter.makeRequest(async () => {
+          return await provider.estimateGas({
+            to: token.address,
+            data,
+            value: 0n,
+            from: address, // Include the from address for proper gas estimation
+          });
+        });
+
+        // Add 20% buffer to gas estimate
+        const gasLimit = (gasEstimate * 120n) / 100n;
+
+        console.log('🔧 [SendToken] ERC20 transfer gas estimation:', {
+          tokenAddress: token.address,
+          recipient,
+          amount: amountWei.toString(),
+          gasEstimate: gasEstimate.toString(),
+          gasLimit: gasLimit.toString(),
+        });
+
+        if (isBaseNetwork) {
+          // Use legacy transaction format for Base network
+          transaction = {
+            to: token.address,
+            value: 0n,
+            data,
+            nonce,
+            chainId,
+            type: 0,
+            gasPrice: feeData.gasPrice,
+            gasLimit,
+          };
+        } else {
+          // Use EIP-1559 for other networks
+          transaction = {
+            to: token.address,
+            value: 0n,
+            data,
+            nonce,
+            chainId,
+            type: 2,
+            maxFeePerGas: feeData.maxFeePerGas,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+            gasLimit,
+          };
+        }
       }
 
       // Sign with Burner using PIN (smart signer detects connection mode)
       console.log("🔐 Signing transaction with smart signer...");
       console.log("🔐 [SendToken] Environment config:", environment);
+      setCurrentOperation('Signing transaction');
       const signedTx = await signTransactionSmart(transaction, keySlot || 1, enteredPin, environment);
 
       // Hide PIN input on success
       setShowPinInput(false);
 
-      // Broadcast transaction
-      const txResponse = await provider.broadcastTransaction(signedTx);
+      // Broadcast transaction with rate limiting
+      setCurrentOperation('Broadcasting transaction');
+      const txResponse = await rpcRateLimiter.makeRequest(async () => {
+        return await provider.broadcastTransaction(signedTx);
+      });
       setTxHash(txResponse.hash);
 
       console.log("Transaction sent:", txResponse.hash);
@@ -197,17 +259,22 @@ export function SendToken({
     } catch (err: any) {
       console.error("Error sending token:", err);
       
+      const operationContext = currentOperation ? ` (${currentOperation})` : '';
+      
       // Check if it's a PIN error
       if (err.message?.includes("WRONG_PWD") || err.message?.includes("password")) {
-        setPinError("Incorrect PIN. Please try again.");
+        setPinError(`Incorrect PIN${operationContext}. Please try again.`);
         // Keep PIN input open for retry
+      } else if (err.message?.includes('No Burner card detected')) {
+        setPinError(`No Burner card detected${operationContext}. Please place your Burner card on the reader and try again.`);
       } else {
-        setError(err.message || "Failed to send transaction");
+        setError(`${err.message || "Failed to send transaction"}${operationContext}`);
         setShowPinInput(false);
       }
     } finally {
       setIsSending(false);
       setIsSigning(false);
+      setCurrentOperation(null);
     }
   }
 
@@ -297,36 +364,24 @@ export function SendToken({
   }
 
   return (
-    <div className="modal-overlay bg-black/60 flex items-center justify-center p-3 z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-4 sm:p-6 max-w-sm sm:max-w-md w-full mx-2">
+    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md w-full shadow-card-lg mx-2">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-base sm:text-lg font-bold text-slate-900">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900">
             Send <span className="text-brand-orange">{token.symbol}</span>
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
 
-        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-slate-50 rounded-lg">
-          <p className="text-xs text-slate-500 mb-1">Available Balance</p>
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <p className="text-xs text-slate-500 font-medium mb-2">Available Balance</p>
           <p className="text-base sm:text-lg font-semibold text-slate-900">
-            {parseFloat(token.balance).toFixed(6)} {token.symbol}
+            {formatTokenBalance(token.balance)} {token.symbol}
           </p>
         </div>
 
@@ -449,6 +504,8 @@ export function SendToken({
         onSubmit={handlePinSubmit}
         onCancel={handlePinCancel}
         error={pinError}
+        isLoading={isSending || isSigning}
+        loadingMessage={currentOperation || "Processing..."}
       />
     </div>
   );

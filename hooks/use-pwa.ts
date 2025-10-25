@@ -22,12 +22,54 @@ export function usePWA() {
   // Only enable PWA features for mobile hosted mode
   const shouldEnablePWA = isHosted && isMobile;
 
+  // Always register service worker (for caching), regardless of PWA mode
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Register service worker for caching functionality
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('[SW] Service worker registered:', registration);
+          
+          // Wait for the service worker to be ready and check if it's controlling the page
+          return navigator.serviceWorker.ready;
+        })
+        .then((registration) => {
+          console.log('[SW] Service worker ready:', registration);
+          
+          // Check if the page is controlled by the service worker
+          if (navigator.serviceWorker.controller) {
+            console.log('[SW] ✅ Page is controlled by service worker');
+          } else {
+            console.log('[SW] ⚠️ Page is NOT controlled by service worker - reload required');
+            // Send a message to the service worker to skip waiting and take control
+            if (registration.waiting) {
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            if (registration.active) {
+              registration.active.postMessage({ type: 'SKIP_WAITING' });
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('[SW] Service worker registration failed:', error);
+        });
+      
+      // Listen for the service worker taking control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('[SW] 🎉 Service worker now controlling the page!');
+      });
+    }
+  }, []);
+
+  // PWA install features only for mobile hosted mode
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     console.log('🔍 [PWA Hook] useEffect running, shouldEnablePWA:', shouldEnablePWA);
     if (!shouldEnablePWA) {
-      console.log('❌ [PWA Hook] PWA not enabled, skipping setup');
+      console.log('❌ [PWA Hook] PWA install features not enabled');
       return;
     }
 
@@ -66,17 +108,6 @@ export function usePWA() {
     // Initial checks
     checkInstalled();
     setIsOffline(!navigator.onLine);
-
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('[PWA] Service worker registered:', registration);
-        })
-        .catch((error) => {
-          console.error('[PWA] Service worker registration failed:', error);
-        });
-    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);

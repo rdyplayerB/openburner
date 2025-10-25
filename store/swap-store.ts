@@ -104,12 +104,12 @@ export const useSwapStore = create<SwapState>()(
 
       setFromAmount: (amount) => {
         console.log('🔄 [Swap Store] Setting from amount:', amount);
-        set({ fromAmount: amount, toAmount: '', quote: null, quoteError: null });
+        set({ fromAmount: amount, quoteError: null });
       },
 
       setToAmount: (amount) => {
         console.log('🔄 [Swap Store] Setting to amount:', amount);
-        set({ toAmount: amount, fromAmount: '', quote: null, quoteError: null });
+        set({ toAmount: amount, quoteError: null });
       },
 
       setQuote: (quote) => {
@@ -267,7 +267,7 @@ export function getSwapSummary(state: SwapState): {
     from: `${fromAmountDisplay} ${fromToken.symbol}`,
     to: `${toAmountDisplay} ${toToken.symbol}`,
     rate: `1 ${fromToken.symbol} = ${(parseFloat(toAmountDisplay) / parseFloat(fromAmountDisplay)).toFixed(6)} ${toToken.symbol}`,
-    priceImpact: quote.priceImpact,
+    priceImpact: quote.priceImpact || '0',
     minimumReceived: quote.buyAmount,
   };
 }

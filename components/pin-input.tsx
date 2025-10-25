@@ -7,9 +7,11 @@ interface PinInputProps {
   onCancel: () => void;
   isVisible: boolean;
   error?: string | null;
+  isLoading?: boolean;
+  loadingMessage?: string;
 }
 
-export function PinInput({ onSubmit, onCancel, isVisible, error }: PinInputProps) {
+export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = false, loadingMessage = "Processing..." }: PinInputProps) {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -88,6 +90,15 @@ export function PinInput({ onSubmit, onCancel, isVisible, error }: PinInputProps
           </div>
         )}
 
+        {isLoading && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <p className="text-sm text-blue-600">{loadingMessage}</p>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-center gap-3 mb-6">
           {digits.map((digit, index) => (
             <input
@@ -102,7 +113,8 @@ export function PinInput({ onSubmit, onCancel, isVisible, error }: PinInputProps
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={index === 0 ? handlePaste : undefined}
-              className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+              disabled={isLoading}
+              className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
           ))}
         </div>
@@ -110,13 +122,14 @@ export function PinInput({ onSubmit, onCancel, isVisible, error }: PinInputProps
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors font-medium"
+            disabled={isLoading}
+            className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!isComplete}
+            disabled={!isComplete || isLoading}
             className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit

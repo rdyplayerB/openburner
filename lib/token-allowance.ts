@@ -4,6 +4,7 @@
  */
 
 import { ethers } from 'ethers';
+import { rpcRateLimiter } from "./rpc-rate-limiter";
 import { checkTokenAllowance, buildApprovalTransaction } from './swap-api';
 
 export interface AllowanceInfo {
@@ -54,6 +55,7 @@ export async function getAllowanceInfo(
 export async function buildInfiniteApprovalTransaction(
   tokenAddress: string,
   spender: string,
+  owner: string,
   provider: ethers.Provider
 ): Promise<ethers.TransactionRequest> {
   try {
@@ -67,16 +69,65 @@ export async function buildInfiniteApprovalTransaction(
     // Approve max uint256 for infinite allowance
     const data = contract.interface.encodeFunctionData('approve', [spender, ethers.MaxUint256]);
 
+    // Get chain ID to determine transaction type with rate limiting
+    const network = await rpcRateLimiter.makeRequest(async () => {
+      return await provider.getNetwork();
+    });
+    const isBaseNetwork = network.chainId === 8453n;
+
+    // Estimate gas for the approval transaction with rate limiting
+    const gasEstimate = await rpcRateLimiter.makeRequest(async () => {
+      return await provider.estimateGas({
+        to: tokenAddress,
+        data,
+        value: 0n,
+        from: owner, // Include the from address for proper gas estimation
+      });
+    });
+
+    // Add 20% buffer to gas estimate
+    const gasLimit = (gasEstimate * 120n) / 100n;
+
+    // Get the current nonce for the owner address with rate limiting
+    const nonce = await rpcRateLimiter.makeRequest(async () => {
+      return await provider.getTransactionCount(owner, 'pending');
+    });
+
+    // Get fee data for gas pricing with rate limiting
+    const feeData = await rpcRateLimiter.makeRequest(async () => {
+      return await provider.getFeeData();
+    });
+
     const transaction: ethers.TransactionRequest = {
       to: tokenAddress,
       data,
       value: 0n,
+      nonce,
+      chainId: Number(network.chainId),
+      type: isBaseNetwork ? 0 : 2, // Use legacy format for Base network
+      gasLimit,
+      ...(isBaseNetwork
+        ? { gasPrice: feeData.gasPrice }
+        : {
+            maxFeePerGas: feeData.maxFeePerGas,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+          }
+      ),
     };
 
     console.log('🔧 [Infinite Approval] Transaction built:', {
       tokenAddress,
       spender,
+      owner,
       amount: 'infinite',
+      nonce,
+      chainId: Number(network.chainId),
+      type: isBaseNetwork ? 0 : 2,
+      gasLimit: gasLimit.toString(),
+      gasEstimate: gasEstimate.toString(),
+      gasPrice: isBaseNetwork ? feeData.gasPrice?.toString() : undefined,
+      maxFeePerGas: !isBaseNetwork ? feeData.maxFeePerGas?.toString() : undefined,
+      maxPriorityFeePerGas: !isBaseNetwork ? feeData.maxPriorityFeePerGas?.toString() : undefined,
     });
 
     return transaction;

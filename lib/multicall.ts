@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { rpcRateLimiter } from "./rpc-rate-limiter";
 
 // Multicall3 contract deployed on most chains at the same address
 const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
@@ -26,23 +27,43 @@ export async function multicall3(
   provider: ethers.JsonRpcProvider,
   calls: Call[]
 ): Promise<Result[]> {
-  const multicall = new ethers.Contract(
-    MULTICALL3_ADDRESS,
-    MULTICALL3_ABI,
-    provider
-  );
+  return rpcRateLimiter.makeRequest(async () => {
+    const multicall = new ethers.Contract(
+      MULTICALL3_ADDRESS,
+      MULTICALL3_ABI,
+      provider
+    );
 
-  try {
-    // Use staticCall for read-only operations (ethers v6)
-    const results = await multicall.aggregate3.staticCall(calls);
-    return results.map((r: any) => ({
-      success: r.success,
-      returnData: r.returnData,
-    }));
-  } catch (err) {
-    console.error("Multicall failed:", err);
-    throw err;
-  }
+    try {
+      // Use staticCall for read-only operations (ethers v6)
+      const results = await multicall.aggregate3.staticCall(calls);
+      return results.map((r: any) => ({
+        success: r.success,
+        returnData: r.returnData,
+      }));
+    } catch (err) {
+      console.error("Multicall failed:", err);
+      console.error("Multicall contract address used:", MULTICALL3_ADDRESS);
+      console.error("Multicall calls:", calls);
+      throw err;
+    }
+  });
+}
+
+/**
+ * Test if Multicall3 is available on this network
+ */
+async function testMulticallAvailability(provider: ethers.JsonRpcProvider): Promise<boolean> {
+  return rpcRateLimiter.makeRequest(async () => {
+    try {
+      // Check if the Multicall3 contract exists by getting its code
+      const code = await provider.getCode(MULTICALL3_ADDRESS);
+      return code !== "0x";
+    } catch (err) {
+      console.log("Multicall3 not available on this network:", err);
+      return false;
+    }
+  });
 }
 
 /**
@@ -57,6 +78,31 @@ export async function batchGetBalances(
   const balanceInterface = new ethers.Interface([
     "function balanceOf(address) view returns (uint256)",
   ]);
+
+  // Check if Multicall3 is available on this network first
+  const multicallAvailable = await testMulticallAvailability(provider);
+  
+  if (!multicallAvailable) {
+    console.log("Multicall3 not available, using individual calls directly");
+    // Skip multicall and go straight to individual calls
+    const balances = new Map<string, bigint>();
+    const ERC20_ABI = ["function balanceOf(address) view returns (uint256)"];
+    
+    for (const tokenAddr of tokenAddresses) {
+      try {
+        await rpcRateLimiter.makeRequest(async () => {
+          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+          const balance = await contract.balanceOf(walletAddress);
+          // Store all balances, including zero (for buying tokens)
+          balances.set(tokenAddr.toLowerCase(), balance);
+        });
+      } catch (err) {
+        console.error(`Failed to check balance for ${tokenAddr}:`, err);
+      }
+    }
+    
+    return balances;
+  }
 
   // Try multicall first (much faster if it works)
   try {
@@ -87,22 +133,22 @@ export async function batchGetBalances(
     return balances;
   } catch (err) {
     console.warn("Multicall failed, falling back to individual calls:", err);
+    console.error("Multicall contract address used:", MULTICALL3_ADDRESS);
     
-    // Fallback: Check balances individually with delays
+    // Fallback: Check balances individually with rate limiting
     const balances = new Map<string, bigint>();
     const ERC20_ABI = ["function balanceOf(address) view returns (uint256)"];
     
     for (const tokenAddr of tokenAddresses) {
       try {
-        const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
-        const balance = await contract.balanceOf(walletAddress);
-        if (balance > 0n) {
+        await rpcRateLimiter.makeRequest(async () => {
+          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+          const balance = await contract.balanceOf(walletAddress);
+          // Store all balances, including zero (for buying tokens)
           balances.set(tokenAddr.toLowerCase(), balance);
-        }
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        });
       } catch (err) {
-        console.log(`Failed to check balance for ${tokenAddr}`);
+        console.error(`Failed to check balance for ${tokenAddr}:`, err);
       }
     }
     
@@ -128,6 +174,44 @@ export async function batchGetTokenMetadata(
     "function name() view returns (string)",
     "function decimals() view returns (uint8)",
   ]);
+
+  // Check if Multicall3 is available on this network first
+  const multicallAvailable = await testMulticallAvailability(provider);
+  
+  if (!multicallAvailable) {
+    console.log("Multicall3 not available for metadata, using individual calls directly");
+    // Skip multicall and go straight to individual calls
+    const metadata = new Map();
+    const ERC20_ABI = [
+      "function symbol() view returns (string)",
+      "function name() view returns (string)",
+      "function decimals() view returns (uint8)",
+    ];
+    
+    for (const tokenAddr of tokenAddresses) {
+      try {
+        await rpcRateLimiter.makeRequest(async () => {
+          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+          const [symbol, name, decimals] = await Promise.all([
+            contract.symbol(),
+            contract.name(),
+            contract.decimals(),
+          ]);
+          
+          metadata.set(tokenAddr.toLowerCase(), {
+            symbol,
+            name,
+            decimals: Number(decimals),
+            success: true,
+          });
+        });
+      } catch (err) {
+        console.error(`Failed to fetch metadata for ${tokenAddr}:`, err);
+      }
+    }
+    
+    return metadata;
+  }
 
   // Try multicall first (much faster if it works)
   try {
@@ -193,8 +277,9 @@ export async function batchGetTokenMetadata(
     return metadata;
   } catch (err) {
     console.warn("Multicall metadata failed, falling back to individual calls:", err);
+    console.error("Multicall contract address used:", MULTICALL3_ADDRESS);
     
-    // Fallback: Fetch metadata individually with delays
+    // Fallback: Fetch metadata individually with rate limiting
     const metadata = new Map();
     const ERC20_ABI = [
       "function symbol() view returns (string)",
@@ -204,24 +289,23 @@ export async function batchGetTokenMetadata(
     
     for (const tokenAddr of tokenAddresses) {
       try {
-        const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
-        const [symbol, name, decimals] = await Promise.all([
-          contract.symbol(),
-          contract.name(),
-          contract.decimals(),
-        ]);
-        
-        metadata.set(tokenAddr.toLowerCase(), {
-          symbol,
-          name,
-          decimals: Number(decimals),
-          success: true,
+        await rpcRateLimiter.makeRequest(async () => {
+          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+          const [symbol, name, decimals] = await Promise.all([
+            contract.symbol(),
+            contract.name(),
+            contract.decimals(),
+          ]);
+          
+          metadata.set(tokenAddr.toLowerCase(), {
+            symbol,
+            name,
+            decimals: Number(decimals),
+            success: true,
+          });
         });
-        
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 150));
       } catch (err) {
-        console.log(`Failed to fetch metadata for ${tokenAddr}`);
+        console.error(`Failed to fetch metadata for ${tokenAddr}:`, err);
       }
     }
     

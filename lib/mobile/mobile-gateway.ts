@@ -133,17 +133,26 @@ export async function signTransactionWithMobileGateway(
     await gateway.waitConnected();
     console.log(`✅ [Mobile Gateway] Card connected for signing`);
 
-    // Create a Transaction object with explicit string types
+    // Check if we're on Base network (which doesn't support EIP-1559 properly)
+    const isBaseNetwork = transaction.chainId === 8453;
+    
+    // Create a Transaction object with appropriate transaction type
     const tx = ethers.Transaction.from({
       to: transaction.to as string,
       value: transaction.value?.toString(),
       data: transaction.data as string,
       nonce: transaction.nonce as number,
       gasLimit: transaction.gasLimit?.toString(),
-      maxFeePerGas: transaction.maxFeePerGas?.toString(),
-      maxPriorityFeePerGas: transaction.maxPriorityFeePerGas?.toString(),
       chainId: transaction.chainId as number,
-      type: 2,
+      type: isBaseNetwork ? 0 : 2, // Use legacy format for Base network
+      // Use gasPrice for Base network, maxFeePerGas/maxPriorityFeePerGas for others
+      ...(isBaseNetwork 
+        ? { gasPrice: transaction.gasPrice?.toString() }
+        : { 
+            maxFeePerGas: transaction.maxFeePerGas?.toString(),
+            maxPriorityFeePerGas: transaction.maxPriorityFeePerGas?.toString()
+          }
+      ),
     });
 
     const txHash = tx.unsignedHash;

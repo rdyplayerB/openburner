@@ -71,7 +71,22 @@ export async function signTransactionSmart(
     }
   } catch (error: any) {
     console.error("❌ [Smart Signer] Signing failed:", error);
-    throw new Error(error.message || "Failed to sign transaction");
+    
+    // Provide better error messages for common issues
+    let errorMessage = error.message || "Failed to sign transaction";
+    
+    // Prioritize card detection error over signing conflict
+    if (error.message?.includes('No Burner card detected')) {
+      errorMessage = 'No Burner card detected. Please place your Burner card on the reader and try again.';
+    } else if (error.message?.includes('WRONG_PWD') || error.message?.includes('password')) {
+      errorMessage = 'Incorrect PIN. Please try again.';
+    } else if (error.message?.includes('transaction type not supported')) {
+      errorMessage = 'Transaction type not supported. Please try again.';
+    } else if (error.message?.includes('Another signing operation is in progress')) {
+      errorMessage = 'Please wait for the current operation to complete before trying again.';
+    }
+    
+    throw new Error(errorMessage);
   } finally {
     // Always clean up the ongoing operation
     ongoingSigning.delete(operationKey);

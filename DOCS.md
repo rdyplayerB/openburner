@@ -234,7 +234,7 @@ OpenBurner uses **streamlined token lists** focused on core tokens for optimal p
 - WETH, USDC, USDT, WBTC
 
 **Base:**
-- WETH, USDC, USD2
+- WETH, USDC
 
 **Arbitrum One:**
 - WETH, USDC, USDT, WBTC

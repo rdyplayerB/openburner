@@ -4,12 +4,11 @@
  * Never caches dynamic data (NFC responses, blockchain data, API calls)
  */
 
-const CACHE_NAME = 'openburner-v2';
+const CACHE_NAME = 'openburner-static';
+const TOKEN_IMAGES_CACHE = 'openburner-token-images';
+// Only cache files that definitely exist and won't cause installation to fail
 const STATIC_CACHE_URLS = [
-  '/',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
   '/images/openburnerlogo.svg',
   '/openburnerlogo.ico',
 ];
@@ -21,15 +20,25 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Caching static assets...');
-        return cache.addAll(STATIC_CACHE_URLS);
+        console.log('[SW] Attempting to cache static assets...');
+        // Cache files individually - don't let failures block installation
+        return Promise.allSettled(
+          STATIC_CACHE_URLS.map((url) =>
+            cache.add(url)
+              .then(() => console.log(`[SW] ✓ Cached: ${url}`))
+              .catch((err) => console.warn(`[SW] ✗ Failed to cache ${url}:`, err.message))
+          )
+        );
       })
-      .then(() => {
-        console.log('[SW] Static assets cached successfully');
+      .then((results) => {
+        const successful = results.filter((r) => r.status === 'fulfilled').length;
+        console.log(`[SW] Static cache: ${successful}/${STATIC_CACHE_URLS.length} assets cached`);
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] Failed to cache static assets:', error);
+        console.error('[SW] Cache setup error:', error);
+        // Still skip waiting even if cache fails - token caching is what matters
+        return self.skipWaiting();
       })
   );
 });
@@ -43,7 +52,8 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME) {
+            // Keep current static cache and token images cache
+            if (cacheName !== CACHE_NAME && cacheName !== TOKEN_IMAGES_CACHE) {
               console.log('[SW] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -67,7 +77,57 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Skip cross-origin requests (except for our static assets)
+  // Handle CoinGecko token images (cache-first strategy)
+  // Only cache images from coin-images.coingecko.com, NOT API calls from api.coingecko.com
+  if (url.hostname === 'coin-images.coingecko.com' && 
+      (url.pathname.includes('/coins/images/') || url.pathname.endsWith('.png') || 
+       url.pathname.endsWith('.jpg') || url.pathname.endsWith('.jpeg') || 
+       url.pathname.endsWith('.webp'))) {
+    
+    event.respondWith(
+      caches.match(request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            console.log('[SW] Token image served from cache:', url.pathname);
+            return cachedResponse;
+          }
+          
+          console.log('[SW] Token image fetching from network:', url.pathname);
+          // Use no-cors mode to allow opaque responses from cross-origin images
+          return fetch(request, { mode: 'no-cors' })
+            .then((response) => {
+              // For opaque responses (status 0), we can't check the status, but we can cache them
+              // For same-origin or CORS responses, check status
+              if (response.type === 'opaque' || (response.status >= 200 && response.status < 300)) {
+                const responseClone = response.clone();
+                
+                caches.open(TOKEN_IMAGES_CACHE)
+                  .then((cache) => {
+                    return cache.put(request, responseClone);
+                  })
+                  .then(() => {
+                    console.log('[SW] ✅ Cached token image:', url.pathname);
+                  })
+                  .catch((error) => {
+                    console.error('[SW] Failed to cache token image:', url.pathname, error);
+                  });
+              }
+              return response;
+            })
+            .catch((error) => {
+              console.error('[SW] Token image fetch failed:', error);
+              // Return a transparent 1x1 pixel as fallback
+              return new Response(
+                new Blob([''], { type: 'image/png' }),
+                { status: 200, statusText: 'OK' }
+              );
+            });
+        })
+    );
+    return; // Exit early for token images
+  }
+  
+  // Skip cross-origin requests (except for token images handled above)
   if (url.origin !== location.origin) {
     return;
   }

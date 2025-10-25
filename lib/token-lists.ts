@@ -20,7 +20,6 @@ export const TOKEN_LISTS: Record<number, TokenInfo[]> = {
   8453: [
     { address: "0x4200000000000000000000000000000000000006", symbol: "WETH", name: "Wrapped Ether", decimals: 18 },
     { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", symbol: "USDC", name: "USD Coin", decimals: 6 },
-    { address: "0xfe26e72431bd82c285655e897f25104e547c4c07", symbol: "USD2", name: "USD2", decimals: 6 },
   ],
   
   // Arbitrum One

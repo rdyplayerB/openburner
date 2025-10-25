@@ -18,11 +18,13 @@ interface WalletState {
   setBalance: (balance: string) => void;
   setConnectionMode: (mode: ConnectionMode) => void;
   disconnect: () => void;
+  clearCache: () => void;
+  initialize: () => void;
 }
 
 export const useWalletStore = create<WalletState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       address: null,
       publicKey: null,
       keySlot: null,
@@ -43,6 +45,30 @@ export const useWalletStore = create<WalletState>()(
       setChain: (chainId, rpcUrl, chainName) => {
         console.log(`🌐 [Wallet Store] Switching to chain: ${chainName} (ID: ${chainId})`);
         console.log(`  RPC URL: ${rpcUrl}`);
+        
+        // Force update RPC URLs to official ones for all networks
+        const officialRPCs: Record<number, string> = {
+          1: "https://ethereum.publicnode.com",
+          8453: "https://mainnet.base.org",
+          56: "https://bsc-dataseed1.binance.org",
+          42161: "https://arb1.arbitrum.io/rpc",
+          43114: "https://api.avax.network/ext/bc/C/rpc",
+          81457: "https://rpc.blast.io",
+          59144: "https://rpc.linea.build",
+          5000: "https://rpc.mantle.xyz",
+          34443: "https://mainnet.mode.network",
+          10: "https://mainnet.optimism.io",
+          137: "https://polygon-rpc.com",
+          534352: "https://rpc.scroll.io",
+          1301: "https://sepolia.unichain.org",
+        };
+
+        if (officialRPCs[chainId] && rpcUrl !== officialRPCs[chainId]) {
+          const newRpcUrl = officialRPCs[chainId];
+          console.log(`🔄 [Wallet Store] Updating ${chainId} RPC from ${rpcUrl} to ${newRpcUrl}`);
+          rpcUrl = newRpcUrl;
+        }
+        
         set({ chainId, rpcUrl, chainName, balance: "0" });
       },
       setBalance: (balance) => {
@@ -80,6 +106,39 @@ export const useWalletStore = create<WalletState>()(
           console.log("🔍 [Wallet Store] Verifying localStorage after disconnect:");
           console.log(stored);
         }, 100);
+      },
+      clearCache: () => {
+        console.log("🗑️ [Wallet Store] Clearing localStorage cache");
+        localStorage.removeItem("openburner-storage");
+        console.log("✅ [Wallet Store] Cache cleared - page will refresh with new settings");
+        // Force page reload to pick up new settings
+        window.location.reload();
+      },
+      // Initialize and fix RPC URLs to official ones for all networks
+      initialize: () => {
+        const state = get();
+        const officialRPCs: Record<number, string> = {
+          1: "https://ethereum.publicnode.com",
+          8453: "https://mainnet.base.org",
+          56: "https://bsc-dataseed1.binance.org",
+          42161: "https://arb1.arbitrum.io/rpc",
+          43114: "https://api.avax.network/ext/bc/C/rpc",
+          81457: "https://rpc.blast.io",
+          59144: "https://rpc.linea.build",
+          5000: "https://rpc.mantle.xyz",
+          34443: "https://mainnet.mode.network",
+          10: "https://mainnet.optimism.io",
+          137: "https://polygon-rpc.com",
+          534352: "https://rpc.scroll.io",
+          1301: "https://sepolia.unichain.org",
+        };
+
+        if (officialRPCs[state.chainId] && state.rpcUrl !== officialRPCs[state.chainId]) {
+          console.log(`🔄 [Wallet Store] Auto-fixing ${state.chainId} RPC URL on initialization`);
+          const newRpcUrl = officialRPCs[state.chainId];
+          set({ rpcUrl: newRpcUrl });
+          console.log(`✅ [Wallet Store] Updated ${state.chainId} RPC from ${state.rpcUrl} to ${newRpcUrl}`);
+        }
       },
     }),
     {

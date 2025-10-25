@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { connectToBridge, execBridgeCommand, disconnectBridge } from "./burner-bridge";
+import { connectToBridge, execBridgeCommand, disconnectBridge, isCardConnected, isBridgeRunning } from "./burner-bridge";
 
 export interface BurnerKeyInfo {
   address: string;
@@ -262,19 +262,34 @@ export async function signTransactionWithBurner(
   pin?: string
 ): Promise<string> {
   try {
+    // Check if bridge is running first
+    const bridgeRunning = await isBridgeRunning();
+    if (!bridgeRunning) {
+      throw new Error("No Burner card detected. Please place your Burner card on the reader and try again.");
+    }
+
     await connectToBridge();
     
-    // Create a Transaction object with explicit string types
+    // Check if we're on Base network (which doesn't support EIP-1559 properly)
+    const isBaseNetwork = transaction.chainId === 8453;
+    
+    // Create a Transaction object with appropriate transaction type
     const tx = ethers.Transaction.from({
       to: transaction.to as string,
       value: transaction.value?.toString(),
       data: transaction.data as string,
       nonce: transaction.nonce as number,
       gasLimit: transaction.gasLimit?.toString(),
-      maxFeePerGas: transaction.maxFeePerGas?.toString(),
-      maxPriorityFeePerGas: transaction.maxPriorityFeePerGas?.toString(),
       chainId: transaction.chainId as number,
-      type: 2,
+      type: isBaseNetwork ? 0 : 2, // Use legacy format for Base network
+      // Use gasPrice for Base network, maxFeePerGas/maxPriorityFeePerGas for others
+      ...(isBaseNetwork 
+        ? { gasPrice: transaction.gasPrice?.toString() }
+        : { 
+            maxFeePerGas: transaction.maxFeePerGas?.toString(),
+            maxPriorityFeePerGas: transaction.maxPriorityFeePerGas?.toString()
+          }
+      ),
     });
 
     const txHash = tx.unsignedHash;

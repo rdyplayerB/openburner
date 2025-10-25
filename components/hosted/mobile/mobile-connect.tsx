@@ -90,13 +90,13 @@ export function HostedMobileConnect() {
         <div className="max-w-sm w-full space-y-4">
         {/* Header */}
         <div className="text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <Image 
               src="/images/openburnerlogo.svg" 
               alt="OpenBurner logo" 
-              width={48} 
-              height={48} 
-              className="w-12 h-12 drop-shadow-sm"
+              width={36} 
+              height={36} 
+              className="w-9 h-9 drop-shadow-sm -mt-1"
             />
             <h1 className="text-3xl font-bold text-black dark:text-white tracking-tight leading-none transition-colors duration-200">
               Open<span className="text-[#FF6B35]">Burner</span>
