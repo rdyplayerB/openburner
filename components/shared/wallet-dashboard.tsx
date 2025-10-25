@@ -356,9 +356,12 @@ export function WalletDashboard() {
       setShowTransactionWaiting(false);
       setShowTransactionCompletion(true);
       
-      if (error.message?.includes('Transaction not found')) {
+      // Handle error with proper type checking
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('Transaction not found')) {
         console.log(`⚠️ [Transaction] Transaction not found - it may still be pending or failed`);
-      } else if (error.message?.includes('Transaction failed')) {
+      } else if (errorMessage.includes('Transaction failed')) {
         console.log(`❌ [Transaction] Transaction failed on-chain`);
       } else {
         console.log(`⚠️ [Transaction] Unknown error occurred during confirmation`);
