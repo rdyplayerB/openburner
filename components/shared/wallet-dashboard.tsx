@@ -322,6 +322,11 @@ export function WalletDashboard() {
         // This gives block explorers time to update and reduces the chance of showing
         // the success modal before the transaction appears in the explorer
         const receipt = await tx.wait(2); // Wait for 2 confirmations
+        
+        if (!receipt) {
+          throw new Error('Transaction receipt not found');
+        }
+        
         console.log(`🎉 [Transaction] Transaction confirmed! Block: ${receipt.blockNumber}`);
         
         // Verify the transaction was successful
