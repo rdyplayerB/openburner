@@ -236,7 +236,20 @@ export async function getTokenImage(
       console.log(`📋 [Token Icon] Strategy 1 - Symbol mapping lookup for ${symbol}: ${coinGeckoId}`);
       
       try {
-        const url = `https://api.coingecko.com/api/v3/coins/${coinGeckoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`;
+        // Build URL for our proxy API
+        const isBrowser = typeof window !== 'undefined';
+        let url: string;
+        
+        if (isBrowser) {
+          // Use our proxy API route
+          const endpoint = `coins/${coinGeckoId}`;
+          const params = `localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`;
+          url = `/api/coingecko?endpoint=${endpoint}&${params}`;
+        } else {
+          // Direct API call on server
+          url = `https://api.coingecko.com/api/v3/coins/${coinGeckoId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`;
+        }
+        
         console.log(`🌐 [Token Icon] Fetching: ${url}`);
         
         const response = await coinGeckoLimiter.fetch(url);
@@ -270,7 +283,19 @@ export async function getTokenImage(
       
       if (platformId) {
         try {
-          const url = `https://api.coingecko.com/api/v3/coins/${platformId}/contract/${tokenAddress.toLowerCase()}`;
+          // Build URL for our proxy API
+          const isBrowser = typeof window !== 'undefined';
+          let url: string;
+          
+          if (isBrowser) {
+            // Use our proxy API route
+            const endpoint = `coins/${platformId}/contract/${tokenAddress.toLowerCase()}`;
+            url = `/api/coingecko?endpoint=${endpoint}`;
+          } else {
+            // Direct API call on server
+            url = `https://api.coingecko.com/api/v3/coins/${platformId}/contract/${tokenAddress.toLowerCase()}`;
+          }
+          
           console.log(`🌐 [Token Icon] Strategy 2 - Contract lookup: ${url}`);
           
           const contractResponse = await coinGeckoLimiter.fetch(url);
@@ -301,7 +326,20 @@ export async function getTokenImage(
     }
     
     // Strategy 3: Try to search by symbol (fallback)
-    const searchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`;
+    // Build URL for our proxy API
+    const isBrowser = typeof window !== 'undefined';
+    let searchUrl: string;
+    
+    if (isBrowser) {
+      // Use our proxy API route
+      const endpoint = `search`;
+      const params = `query=${encodeURIComponent(symbol)}`;
+      searchUrl = `/api/coingecko?endpoint=${endpoint}&${params}`;
+    } else {
+      // Direct API call on server
+      searchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`;
+    }
+    
     console.log(`🔍 [Token Icon] Strategy 3 - Search by symbol: ${searchUrl}`);
     
     const searchResponse = await coinGeckoLimiter.fetch(searchUrl);

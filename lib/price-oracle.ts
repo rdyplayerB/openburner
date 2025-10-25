@@ -93,8 +93,16 @@ const SYMBOL_TO_COINGECKO_ID: { [symbol: string]: string } = {
 
 /**
  * Get the CoinGecko API base URL
+ * In browser, use our proxy API route to avoid CORS issues
+ * In server, use direct CoinGecko API
  */
 function getApiBaseUrl(): string {
+  // Check if we're running in the browser
+  if (typeof window !== 'undefined') {
+    // Use our proxy API route in the browser
+    return "/api/coingecko";
+  }
+  // Use direct CoinGecko API on the server
   return process.env.NEXT_PUBLIC_COINGECKO_API_URL || "https://api.coingecko.com/api/v3";
 }
 
@@ -139,7 +147,19 @@ export async function fetchTokenDataByContract(
   }
 
   try {
-    const url = `${getApiBaseUrl()}/coins/${platformId}/contract/${tokenAddress.toLowerCase()}`;
+    // Build URL for our proxy API
+    const isBrowser = typeof window !== 'undefined';
+    let url: string;
+    
+    if (isBrowser) {
+      // Use our proxy API route
+      const endpoint = `coins/${platformId}/contract/${tokenAddress.toLowerCase()}`;
+      url = `${getApiBaseUrl()}?endpoint=${endpoint}`;
+    } else {
+      // Direct API call on server
+      url = `${getApiBaseUrl()}/coins/${platformId}/contract/${tokenAddress.toLowerCase()}`;
+    }
+    
     console.log(`🔍 [Token Data] Unified contract lookup: ${url}`);
     
     const response = await coinGeckoLimiter.fetch(url);
@@ -318,7 +338,19 @@ async function fetchPricesFromCoinGecko(coinIds: string[]): Promise<CoinGeckoRes
   const apiKey = getApiKey();
   
   const idsParam = coinIds.join(",");
-  const url = `${baseUrl}/simple/price?ids=${idsParam}&vs_currencies=usd`;
+  
+  // Build URL for our proxy API
+  const isBrowser = typeof window !== 'undefined';
+  let url: string;
+  
+  if (isBrowser) {
+    // Use our proxy API route
+    const endpoint = `simple/price`;
+    url = `${baseUrl}?endpoint=${endpoint}&ids=${idsParam}&vs_currencies=usd`;
+  } else {
+    // Direct API call on server
+    url = `${baseUrl}/simple/price?ids=${idsParam}&vs_currencies=usd`;
+  }
   
   const headers: HeadersInit = {
     "Accept": "application/json",
