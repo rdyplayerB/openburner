@@ -20,6 +20,7 @@ import { getAppConfig } from "@/lib/config/environment";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { isSwapSupported, getUnsupportedChainMessage } from "@/lib/supported-chains";
 import { formatTokenBalance } from "@/lib/format-utils";
+import { Tooltip } from "../common/tooltip";
 import Image from "next/image";
 
 interface Token {
@@ -880,7 +881,29 @@ export function WalletDashboard() {
                 })()
               ) : (
                 <span className="text-slate-400 dark:text-slate-500">
-                  {pricingEnabled ? "Calculating..." : "Pricing disabled (hosted version)"}
+                  {pricingEnabled ? "Calculating..." : (
+                    <Tooltip
+                      content={
+                        <div className="space-y-2">
+                          <p className="font-medium">Pricing Disabled</p>
+                          <p className="text-xs text-slate-300">
+                            To see real-time prices, run OpenBurner locally with your own CoinGecko API key.
+                          </p>
+                          <a
+                            href="https://github.com/rdyplayerB/openburner"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-xs underline inline-flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View setup instructions <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      }
+                    >
+                      <span className="cursor-help">Pricing disabled</span>
+                    </Tooltip>
+                  )}
                 </span>
               )}
             </p>

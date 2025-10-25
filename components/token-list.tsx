@@ -1016,7 +1016,7 @@ export function TokenList({
                               <span className="text-slate-400">Refresh to see price</span>
                             )
                           ) : (
-                            <span className="text-slate-400">Pricing disabled (hosted version)</span>
+                            <span className="text-slate-400">-</span>
                           )}
                         </p>
                       </>
