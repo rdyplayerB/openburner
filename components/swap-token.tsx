@@ -835,6 +835,15 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
                   {formatSwapBalance(ethers.formatEther(quote.buyAmount))} {toToken?.symbol}
                 </span>
               </div>
+              {/* Affiliate Fee Display */}
+              {quote.fees?.integratorFee && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">Platform Fee</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                    {formatSwapBalance(ethers.formatEther(quote.fees.integratorFee.amount))} {fromToken?.symbol} (0.875%)
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

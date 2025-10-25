@@ -1,6 +1,6 @@
 /**
  * Chains supported by 0x API for swapping
- * Based on 0x API documentation: https://0x.org/docs/api
+ * Based on 0x API documentation: https://0x.org/docs/category/swap-api
  */
 
 export const SUPPORTED_SWAP_CHAINS = new Set([

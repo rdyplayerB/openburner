@@ -890,7 +890,7 @@ export function WalletDashboard() {
                             To see real-time prices, run OpenBurner locally with your own CoinGecko API key.
                           </p>
                           <a
-                            href="https://github.com/rdyplayerB/openburner"
+                            href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-400 hover:text-blue-300 text-xs underline inline-flex items-center gap-1"

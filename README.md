@@ -12,7 +12,7 @@ An open source Web3 wallet for Burner Ethereum hardware wallets. Built with Next
 
 ## What is OpenBurner?
 
-OpenBurner is a wallet application for Burner Ethereum hardware wallets. It runs locally on your machine. Private keys remain in the card's secure element.
+OpenBurner is a wallet application for Burner Ethereum hardware wallets. It supports both local and hosted deployment modes. Private keys remain in the card's secure element.
 
 ## ✨ Features
 
@@ -21,15 +21,33 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. It runs
 - 🌐 **Multi-Chain Support** - Extends Burner use across Ethereum, Base, Arbitrum, Optimism, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM chain
 - 💰 **Token Management** - View balances for ETH and ERC-20 tokens
 - 💸 **Send Transactions** - Native and ERC-20 transfers with hardware signing
-- 📊 **Real-Time Prices** - CoinGecko integration with intelligent caching
+- 🔄 **Token Swaps** - Decentralized swaps using [0x Standard Swap API](https://0x.org/docs/category/swap-api) (local: requires API key, hosted: limited)
+- 📊 **Real-Time Prices** - CoinGecko integration (local version only)
 - 🚀 **Custom RPCs** - Connect to any EVM-compatible chain
 
 ### Technical Highlights
 - **Multicall3 Integration** - Batch RPC calls for efficient balance queries
-- **Advanced Caching** - Multi-tier price caching with stale-while-revalidate
+- **Advanced Caching** - Multi-tier price caching (local version only)
 - **Burner Card Integration** - NFC-based hardware wallet support
 - **Modern Stack** - Next.js 14, TypeScript, Tailwind CSS, ethers.js v6
 - **State Persistence** - localStorage-backed state management with Zustand
+
+## Local vs Hosted
+
+**Local Version (Full Features)**
+- Real-time pricing with your CoinGecko API key
+- Token swaps with your 0x Standard Swap API key
+- Complete wallet functionality
+- Development and debugging features
+
+**Hosted Version (Pricing Disabled)**
+- Limited token swaps (basic functionality)
+- Core wallet features (send, receive, manage)
+- Shows "-" instead of USD prices (with helpful tooltip)
+- No API costs or setup required
+- Deploy with limited functionality (API keys required for full features)
+
+*Note: Real-time prices and token swaps require running locally with your own CoinGecko and 0x API keys. Hosted version has limited functionality to avoid API costs. OpenBurner uses 0x's standard swap API (not gasless) - users must pay their own gas fees.*
 
 ## 🚀 Quick Start
 
@@ -85,7 +103,7 @@ Complete guide covering:
 │  • Wallet UI                            │
 │  • Transaction Building                 │
 │  • Token Management                     │
-│  • Price Oracle Integration             │
+│  • Price Oracle (local only)           │
 └─────────────┬───────────────────────────┘
               │
               │ WebSocket (127.0.0.1:32868)

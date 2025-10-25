@@ -26,6 +26,29 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. It runs
 
 Both work with the same Burner Ethereum card - your addresses and keys remain the same.
 
+## Local vs Hosted Versions
+
+OpenBurner supports two deployment modes with different capabilities:
+
+### Local Version (Full Features)
+- **Real-time pricing**: Requires your own CoinGecko API key
+- **Token swaps**: Requires your own 0x API key
+- **All features**: Complete wallet functionality
+- **Development mode**: Full debugging and customization
+- **API costs**: You pay for your own API usage
+- **Fee customization**: Can modify swap fee recipient address in code
+
+### Hosted Version (Pricing Disabled)
+- **No pricing**: Real-time prices are disabled to avoid API costs
+- **Clean UI**: Shows "-" instead of prices with helpful tooltips
+- **Token swaps**: Full swap functionality with 0.875% platform fee
+- **Core features**: Send, receive, and manage tokens
+- **Public deployment**: Can be deployed without API keys
+- **Cost-free**: No ongoing API expenses
+- **Supports development**: Swap fees automatically support the project
+
+**Important**: If you want to see real-time token prices and use token swaps, you must run OpenBurner locally with your own CoinGecko and 0x API keys. The hosted version shows token balances but displays "-" instead of USD values to avoid API costs. Hover over "Pricing disabled" for setup instructions.
+
 ## Quick Start
 
 ### Prerequisites
@@ -65,7 +88,8 @@ npm run dev
 - Multicall3 (efficient batch RPC calls)
 
 **APIs:**
-- CoinGecko API (token prices)
+- CoinGecko API (token prices - local version only)
+- 0x API (token swaps - both versions)
 - Custom RPC endpoints (blockchain data)
 
 ## Architecture
@@ -164,9 +188,9 @@ const prices = await getTokenPrices([
 clearPriceCache();
 ```
 
-**Price Caching Strategy:**
+**Price Caching Strategy (Local Version Only):**
 
-OpenBurner uses an aggressive multi-tier caching strategy to minimize CoinGecko API calls and stay within the free tier limits (10-30 calls/minute):
+The local version uses an aggressive multi-tier caching strategy to minimize CoinGecko API calls and stay within the API rate limits (10-30 calls/minute):
 
 | Token Type | Cache Duration | Examples |
 |------------|----------------|----------|
@@ -189,19 +213,62 @@ OpenBurner uses an aggressive multi-tier caching strategy to minimize CoinGecko 
 **Why This Matters:**
 - With 100 tokens, 1 refresh = 1 API call (not 100)
 - With 1000 users refreshing randomly across 1 hour = ~16 calls/min (sustainable)
-- Free tier limit: 10-30 calls/minute
+- API rate limit: 10-30 calls/minute
 - If you need more frequent updates, consider upgrading to CoinGecko Pro
 
 **UI Indicator:**
 The token list shows "Updated Xm ago" next to the refresh button, so users know price freshness.
 
-## Environment Variables
+## Token Swaps (Both Versions)
+
+OpenBurner supports token swaps on both local and hosted versions using the [0x Standard Swap API](https://0x.org/docs/category/swap-api). The 0x protocol provides:
+
+- **Decentralized swaps**: No custody of your tokens
+- **Best price routing**: Automatically finds optimal swap paths
+- **Multi-DEX aggregation**: Routes through multiple decentralized exchanges
+- **Gas optimization**: Efficient transaction batching
+- **User pays gas fees**: Standard swap API requires users to pay their own gas fees
+- **API key required**: 0x API requires authentication for production use
+
+**Note**: OpenBurner uses 0x's **standard swap API**, not their gasless API. Users must have native tokens (ETH, BNB, POL, etc.) to pay for gas fees when executing swaps.
+
+**Swap Fees:**
+- **0.875% platform fee** on all swaps (matches popular wallets like MetaMask and Phantom)
+- **Transparent pricing**: Fee amount displayed before confirming swap
+- **Fees collected in sell token**: Paid in the token you're swapping from
+- **Supports development**: Fees help maintain and improve OpenBurner
+
+**Supported Networks:**
+- All EVM-compatible chains supported by OpenBurner
+- Automatic network detection and routing
+- Real-time quote fetching and execution
+
+## Environment Variables (Local Version)
 
 ```bash
-# Optional - CoinGecko API (free tier works without key)
+# Required for real-time pricing (local version only)
 NEXT_PUBLIC_COINGECKO_API_KEY=your_key_here
 NEXT_PUBLIC_COINGECKO_API_URL=https://api.coingecko.com/api/v3
+
+# Required for token swaps (local version only)
+NEXT_PUBLIC_0X_API_KEY=your_0x_api_key_here
+
+# Note: Hosted version doesn't use these variables to avoid API costs
 ```
+
+### Getting API Keys
+
+**CoinGecko API Key:**
+1. Sign up at [CoinGecko API](https://www.coingecko.com/en/api)
+2. Get your free API key from the dashboard
+3. Add it to your `.env.local` file
+
+**0x API Key:**
+1. Sign up at [0x.org](https://0x.org)
+2. Get your free API key from the dashboard
+3. Add it to your `.env.local` file
+
+**Note**: The 0x API key is used for the standard swap API endpoints (`/swap/allowance-holder/price` and `/swap/allowance-holder/quote`), not the gasless API endpoints.
 
 ## Supported Networks
 
@@ -421,12 +488,23 @@ You're encouraged to fork OpenBurner for your own use:
 
 If you find OpenBurner useful, there are a few ways you can help:
 
+**Automatic Support (Easiest):**
+- **Use token swaps**: Every swap includes a 0.875% platform fee that supports development
+- **Keep default fee recipient**: When running locally, the default fee address supports the project
+- **Use hosted version**: Swaps on the hosted version automatically support development
+
+**Community Support:**
 - Share your feedback by [opening an issue](https://github.com/rdyplayerB/openburner/issues), reaching out on [𝕏](https://x.com/rdyplayerB), [Farcaster](https://farcaster.xyz/rdyplayerb), or [email me](mailto:rdyplayerb@gmail.com)
 - You can also find me in the official [Burner Telegram channel](https://t.me/burnerofficial) (@rdyplayerB)
 - Share OpenBurner on [𝕏](https://x.com/rdyplayerB) or [Farcaster](https://farcaster.xyz/rdyplayerb)
 - Use my link to get a [Burner](https://arx-burner.myshopify.com/OPENBURNER) or my link for the [recommended USB NFC reader](https://amzn.to/3ISNwd7)
+
+**Direct Support:**
 - Support development with a donation to `rdyplayerB.eth`
 - Fork the project and experiment with your own ideas
+
+**Why the swap fee?**
+The 0.875% platform fee is competitive with popular wallets (MetaMask, Phantom) and helps maintain OpenBurner's development, server costs, and continuous improvements. Since OpenBurner is open source, this fee provides sustainable funding while keeping the project free to use.
 
 ## Links
 

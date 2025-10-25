@@ -13,7 +13,7 @@ interface QueuedRequest {
 class CoinGeckoRateLimiter {
   private queue: QueuedRequest[] = [];
   private processing = false;
-  private readonly delayMs = 3000; // 3 seconds between requests (conservative for free tier)
+  private readonly delayMs = 3000; // 3 seconds between requests (conservative for API rate limits)
   private lastRequestTime = 0;
   private dailyCallCount = 0;
   private lastResetDate = new Date().toDateString();

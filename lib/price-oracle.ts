@@ -27,8 +27,8 @@ interface CoinGeckoResponse {
   };
 }
 
-// Cache durations - Conservative settings for CoinGecko free tier
-// Free tier limit: ~10-30 calls/minute
+// Cache durations - Conservative settings for CoinGecko API rate limits
+// API rate limit: ~10-30 calls/minute
 // With batched requests, 1000 users = ~1000 calls/hour = ~16 calls/min (sustainable)
 const CACHE_DURATIONS = {
   STABLECOIN: 2 * 60 * 60 * 1000,  // 2 hours (stablecoins barely move)

@@ -1,19 +1,28 @@
 /**
- * 0x Swap API Integration
+ * 0x Standard Swap API Integration
  * Handles quote fetching, transaction building, and swap execution
+ * 
+ * Note: This uses 0x's standard swap API (not gasless API)
+ * - Users must pay their own gas fees
+ * - Uses /swap/allowance-holder/price and /swap/allowance-holder/quote endpoints
+ * - Requires native tokens (ETH, BNB, POL, etc.) for gas fees
  */
 
 import { ethers } from 'ethers';
 import { rpcRateLimiter } from "./rpc-rate-limiter";
 
-// 0x API Configuration
+// 0x Standard Swap API Configuration
 const ZEROX_API_BASE_URL = 'https://api.0x.org';
 const ZEROX_API_KEY = process.env.NEXT_PUBLIC_0X_API_KEY;
 
 // Default slippage tolerance (0.5%)
 const DEFAULT_SLIPPAGE_PERCENTAGE = 0.5;
 
-// Supported chains by 0x API
+// Affiliate fee configuration
+const AFFILIATE_FEE_RECIPIENT = '0x084A66020a0CAc73a7161dD473740C82295683Fb';
+const AFFILIATE_FEE_BPS = 87.5; // 0.875% in basis points (87.5/10000 = 0.875%)
+
+// Supported chains by 0x Standard Swap API
 export const SUPPORTED_CHAINS = {
   1: 'ethereum',      // Ethereum Mainnet
   8453: 'base',       // Base
@@ -30,7 +39,7 @@ export const SUPPORTED_CHAINS = {
   324: 'zksync',      // zkSync Era
 };
 
-// Special address used by 0x API to represent native tokens (ETH, BNB, POL, etc.)
+// Special address used by 0x Standard Swap API to represent native tokens (ETH, BNB, POL, etc.)
 const NATIVE_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 export interface SwapQuote {
@@ -123,7 +132,7 @@ export interface TokenAllowance {
 }
 
 /**
- * Convert native token address to the special address used by 0x API
+ * Convert native token address to the special address used by 0x Standard Swap API
  */
 function convertNativeToZeroXFormat(tokenAddress: string): string {
   if (tokenAddress === 'native') {
@@ -134,7 +143,7 @@ function convertNativeToZeroXFormat(tokenAddress: string): string {
 
 /**
  * Get the API URL for the given chain
- * Uses our Next.js API route to proxy 0x API requests and avoid CORS issues
+ * Uses our Next.js API route to proxy 0x Standard Swap API requests and avoid CORS issues
  */
 function getApiUrl(chainId: number): string {
   const chainName = SUPPORTED_CHAINS[chainId as keyof typeof SUPPORTED_CHAINS];
@@ -146,7 +155,7 @@ function getApiUrl(chainId: number): string {
 }
 
 /**
- * Get headers for 0x API requests
+ * Get headers for 0x Standard Swap API requests
  */
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
@@ -162,7 +171,7 @@ function getHeaders(): HeadersInit {
 }
 
 /**
- * Check price and liquidity availability from 0x API
+ * Check price and liquidity availability from 0x Standard Swap API
  */
 export async function getSwapPrice(params: SwapQuoteParams): Promise<any> {
   const { sellToken, buyToken, sellAmount, buyAmount, takerAddress, chainId } = params;
@@ -186,6 +195,10 @@ export async function getSwapPrice(params: SwapQuoteParams): Promise<any> {
     buyToken: convertedBuyToken,
     taker: takerAddress,
     chainId: chainId.toString(),
+    // Affiliate fee parameters
+    swapFeeRecipient: AFFILIATE_FEE_RECIPIENT,
+    swapFeeBps: AFFILIATE_FEE_BPS.toString(),
+    swapFeeToken: convertedSellToken, // Receive fees in sell token
   });
 
   if (sellAmount) {
@@ -242,7 +255,7 @@ export async function getSwapPrice(params: SwapQuoteParams): Promise<any> {
 }
 
 /**
- * Fetch a swap quote from 0x API
+ * Fetch a swap quote from 0x Standard Swap API
  */
 export async function getSwapQuote(params: SwapQuoteParams): Promise<SwapQuote> {
   const { sellToken, buyToken, sellAmount, buyAmount, slippagePercentage, takerAddress, chainId } = params;
@@ -267,6 +280,10 @@ export async function getSwapQuote(params: SwapQuoteParams): Promise<SwapQuote> 
     taker: takerAddress,
     chainId: chainId.toString(),
     slippagePercentage: (slippagePercentage || DEFAULT_SLIPPAGE_PERCENTAGE).toString(),
+    // Affiliate fee parameters
+    swapFeeRecipient: AFFILIATE_FEE_RECIPIENT,
+    swapFeeBps: AFFILIATE_FEE_BPS.toString(),
+    swapFeeToken: convertedSellToken, // Receive fees in sell token
   });
 
   if (sellAmount) {

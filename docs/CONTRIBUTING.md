@@ -1,6 +1,10 @@
 # Contributing to OpenBurner
 
-Thank you for your interest in contributing to OpenBurner! This guide will help you understand the codebase structure and contribution guidelines.
+Thank you for your interest in OpenBurner! This is a personal project, so pull requests are not being accepted. However, feel free to report issues if you encounter bugs or have suggestions.
+
+**Report issues here:** [https://github.com/rdyplayerB/openburner/issues](https://github.com/rdyplayerB/openburner/issues)
+
+This guide will help you understand the codebase structure if you want to fork the project for your own use.
 
 ## Code Organization
 
@@ -159,28 +163,28 @@ npm run start:hosted
 # Test production build
 ```
 
-## Pull Request Guidelines
+## Forking and Customization
 
-1. **Create a feature branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+Since this is a personal project, you're encouraged to fork OpenBurner for your own use:
+
+1. **Fork the repository:**
+   - Click the "Fork" button on GitHub
+   - Clone your fork locally
 
 2. **Make your changes:**
    - Follow the code organization guidelines
    - Add appropriate documentation
    - Test both local and hosted modes
 
-3. **Commit your changes:**
-   ```bash
-   git add .
-   git commit -m "feat: add your feature description"
-   ```
+3. **Deploy your version:**
+   - Deploy to Vercel, Netlify, or your preferred platform
+   - Customize for your specific needs
 
-4. **Push and create PR:**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
+**Use cases for forking:**
+- Add support for specific L2s or custom chains
+- Build a branded wallet for your project
+- Experiment with new Burner card features
+- Create specialized tools (NFT minting, DAO voting, etc.)
 
 ## Code Style
 
@@ -197,6 +201,10 @@ npm run start:hosted
 - Update deployment guides if needed
 - Include screenshots for UI changes
 
-## Questions?
+## Questions or Issues?
 
-Feel free to open an issue or reach out to the maintainers for help!
+Feel free to open an issue if you encounter bugs or have suggestions:
+
+**Report issues here:** [https://github.com/rdyplayerB/openburner/issues](https://github.com/rdyplayerB/openburner/issues)
+
+For questions about forking or customization, you can also reach out on social media or through the official Burner community channels.
