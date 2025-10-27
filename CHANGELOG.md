@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-01-26 - Token Swaps with 0x Integration
+
+### Added
+- **Token Swaps via 0x Protocol** - Comprehensive swap functionality across 13 networks
+  - Support for ERC-20 to ERC-20, ERC-20 to native, and native to ERC-20 swaps
+  - Real-time price quotes with customizable slippage tolerance (default 0.5%)
+  - Price impact warnings and transaction confirmation
+  - Supported networks: Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll, zkSync Era
+  - Complete swap UX flow with automatic token approval handling
+  - Transaction completion modal with block explorer links
+
 ## [1.1.0] - 2025-01-21 - Architecture Enhancement & Library Integration
 
 ### Added
