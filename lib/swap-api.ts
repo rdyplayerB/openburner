@@ -20,7 +20,7 @@ const DEFAULT_SLIPPAGE_PERCENTAGE = 0.5;
 
 // Affiliate fee configuration
 const AFFILIATE_FEE_RECIPIENT = '0x084A66020a0CAc73a7161dD473740C82295683Fb';
-const AFFILIATE_FEE_BPS = 88; // 0.875% in basis points (88/10000 = 0.88%)
+const AFFILIATE_FEE_BPS = 88; // 0.88% in basis points (88/10000 = 0.88%)
 
 // Supported chains by 0x Standard Swap API
 export const SUPPORTED_CHAINS = {

@@ -37,6 +37,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
+    // Log all incoming parameters for debugging
+    console.log('🔍 [API Proxy] Incoming request URL:', request.url);
+    console.log('🔍 [API Proxy] All query params:', Object.fromEntries(searchParams));
+    
     // Extract query parameters
     const sellToken = searchParams.get('sellToken');
     const buyToken = searchParams.get('buyToken');
@@ -87,7 +91,7 @@ export async function GET(request: NextRequest) {
     
     // Add affiliate fee parameters
     zeroXUrl.searchParams.set('swapFeeRecipient', '0x084A66020a0CAc73a7161dD473740C82295683Fb');
-    zeroXUrl.searchParams.set('swapFeeBps', '88'); // 0.875% in basis points (rounded to integer)
+    zeroXUrl.searchParams.set('swapFeeBps', '88'); // 0.88% in basis points (88/10000 = 0.88%)
     zeroXUrl.searchParams.set('swapFeeToken', convertedSellToken); // Receive fees in sell token
     
     // Convert slippage percentage to basis points (0.5% = 50 bps) - only for quote endpoint
@@ -131,6 +135,16 @@ export async function GET(request: NextRequest) {
     });
 
     console.log('🌐 [API Proxy] Full 0x API URL:', zeroXUrl.toString());
+    console.log('🔧 [API Proxy] Parameters being sent to 0x API:', {
+      sellToken: convertedSellToken,
+      buyToken: convertedBuyToken,
+      taker: takerAddress,
+      chainId,
+      sellAmount,
+      buyAmount,
+      swapFeeBps: '88',
+      apiEndpoint
+    });
 
     // Make request to 0x API
     const response = await fetch(zeroXUrl.toString(), {

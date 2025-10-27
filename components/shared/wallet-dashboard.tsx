@@ -211,9 +211,7 @@ export function WalletDashboard() {
       
       // Trigger a refresh to fetch the balance for the newly added token
       console.log(`🔄 [Wallet Dashboard] Triggering refresh to fetch balance for ${token.symbol}`);
-      if (onRefreshAssets) {
-        onRefreshAssets();
-      }
+      refreshTokens();
     } else {
       console.log(`⚠️ [Wallet Dashboard] Token ${token.symbol} already exists in storage`);
     }
