@@ -166,12 +166,14 @@ export function WalletDashboard() {
     
     // Add all other token balances
     for (const token of tokens) {
-      if (token.address !== "native" && parseFloat(token.balance) > 0) {
+      if (token.address !== "native") {
         const tokenPrice = prices[token.symbol] || 0;
-        if (tokenPrice > 0) {
+        if (tokenPrice > 0 && parseFloat(token.balance) > 0) {
           const tokenValue = parseFloat(token.balance) * tokenPrice;
           total += tokenValue;
           console.log(`💰 [Total Balance] ${token.symbol}: ${token.balance} * $${tokenPrice} = $${tokenValue.toFixed(2)}`);
+        } else if (parseFloat(token.balance) > 0) {
+          console.log(`💰 [Total Balance] ${token.symbol}: ${token.balance} * $0.00 = $0.00 (no price data)`);
         }
       }
     }
@@ -207,9 +209,11 @@ export function WalletDashboard() {
       console.log(`💾 [Wallet Dashboard] Updated token list:`, current);
       console.log(`💾 [Wallet Dashboard] Raw localStorage value after update:`, localStorage.getItem(key));
       
-      // DON'T trigger a full refresh - it causes RPC failures and data loss
-      // The token is already added to the UI state above
-      console.log(`✅ [Wallet Dashboard] Token added to UI without triggering refresh`);
+      // Trigger a refresh to fetch the balance for the newly added token
+      console.log(`🔄 [Wallet Dashboard] Triggering refresh to fetch balance for ${token.symbol}`);
+      if (onRefreshAssets) {
+        onRefreshAssets();
+      }
     } else {
       console.log(`⚠️ [Wallet Dashboard] Token ${token.symbol} already exists in storage`);
     }

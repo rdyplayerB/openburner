@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     
     // Add affiliate fee parameters
     zeroXUrl.searchParams.set('swapFeeRecipient', '0x084A66020a0CAc73a7161dD473740C82295683Fb');
-    zeroXUrl.searchParams.set('swapFeeBps', '87.5'); // 0.875% in basis points
+    zeroXUrl.searchParams.set('swapFeeBps', '88'); // 0.875% in basis points (rounded to integer)
     zeroXUrl.searchParams.set('swapFeeToken', convertedSellToken); // Receive fees in sell token
     
     // Convert slippage percentage to basis points (0.5% = 50 bps) - only for quote endpoint
