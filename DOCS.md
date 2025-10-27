@@ -497,10 +497,9 @@ You're encouraged to fork OpenBurner for your own use:
 If you find OpenBurner useful, there are a few ways you can help:
 
 **Automatic Support (Easiest):**
-- **Use token swaps**: Every swap includes a 0.88% platform fee that supports development
-- **Keep default fee recipient**: When running locally, the default fee address supports the project
-- **Use hosted version**: Swaps on the hosted version automatically support development
-- **Making swaps is appreciated**: If you find OpenBurner useful, making token swaps is a great way to support the project
+- Use token swaps - Every swap includes a 0.88% platform fee that supports development
+- Keep default fee recipient - When running locally, the default fee address supports the project
+- Use hosted version - Swaps on the hosted version automatically support development
 
 **Community Support:**
 - Share your feedback by [opening an issue](https://github.com/rdyplayerB/openburner/issues), reaching out on [𝕏](https://x.com/rdyplayerB), [Farcaster](https://farcaster.xyz/rdyplayerb), or [email me](mailto:rdyplayerb@gmail.com)

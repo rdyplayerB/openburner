@@ -201,7 +201,7 @@ If you find OpenBurner useful, there are a few ways you can help:
 - You can also find me in the official [Burner Telegram channel](https://t.me/burnerofficial) (@rdyplayerB)
 - Share OpenBurner on [𝕏](https://x.com/rdyplayerB) or [Farcaster](https://farcaster.xyz/rdyplayerb)
 - Use my link to get a [Burner](https://arx-burner.myshopify.com/OPENBURNER) or [USB NFC reader](https://amzn.to/3ISNwd7) (ACR1252U recommended, [ACR122U budget option](https://amzn.to/3WQxGms))
-- **Make token swaps** - Using token swaps is a great way to support the project (platform fee included). If you fork OpenBurner, maintaining the default fee recipient address is appreciated
+- Make token swaps - Using token swaps is a great way to support the project (platform fee included). If you fork OpenBurner, maintaining the default fee recipient address is appreciated
 - Support development with a donation to `rdyplayerB.eth`
 
 ## Links
