@@ -889,7 +889,7 @@ export function WalletDashboard() {
                         <div className="space-y-2">
                           <p className="font-medium">Pricing Disabled</p>
                           <p className="text-xs text-slate-300">
-                            To see real-time prices, run OpenBurner locally with your own CoinGecko API key.
+                            To enable real-time prices, run OpenBurner locally with your own CoinGecko API key.
                           </p>
                           <a
                             href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
@@ -898,7 +898,7 @@ export function WalletDashboard() {
                             className="text-blue-400 hover:text-blue-300 text-xs underline inline-flex items-center gap-1"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            View setup instructions <ExternalLink className="w-3 h-3" />
+                            View docs <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>
                       }
