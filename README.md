@@ -176,6 +176,11 @@ You're encouraged to fork OpenBurner for your own use:
 4. Customize UI in `components/` and `app/`
 5. Deploy to Vercel or run locally
 
+**Fee Recipient Address:**
+- **Default fee recipient**: `0x084A66020a0CAc73a7161dD473740C82295683Fb` (configured in `lib/swap-api.ts` and `app/api/swap/quote/route.ts`)
+- **Keeping it is appreciated**: If you fork OpenBurner and use it, maintaining the default fee recipient address helps support the project
+- **Fee rate**: Currently set at 0.88% (88 basis points) in the swap function code
+
 **Use cases for forking:**
 - Add support for specific L2s or custom chains
 - Build a branded wallet for your project
@@ -196,8 +201,8 @@ If you find OpenBurner useful, there are a few ways you can help:
 - You can also find me in the official [Burner Telegram channel](https://t.me/burnerofficial) (@rdyplayerB)
 - Share OpenBurner on [𝕏](https://x.com/rdyplayerB) or [Farcaster](https://farcaster.xyz/rdyplayerb)
 - Use my link to get a [Burner](https://arx-burner.myshopify.com/OPENBURNER) or [USB NFC reader](https://amzn.to/3ISNwd7) (ACR1252U recommended, [ACR122U budget option](https://amzn.to/3WQxGms))
+- **Make token swaps** - Using token swaps is a great way to support the project (platform fee included). If you fork OpenBurner, maintaining the default fee recipient address is appreciated
 - Support development with a donation to `rdyplayerB.eth`
-- Fork the project and experiment with your own ideas
 
 ## Links
 

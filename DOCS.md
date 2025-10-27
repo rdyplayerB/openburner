@@ -235,9 +235,10 @@ OpenBurner supports token swaps on both local and hosted versions using the [0x 
 **Note**: OpenBurner uses 0x's **standard swap API**, not their gasless API. Users must have native tokens (ETH, BNB, POL, etc.) to pay for gas fees when executing swaps.
 
 **Swap Fees:**
-- **0.875% platform fee** on all swaps (matches popular wallets like MetaMask and Phantom)
+- **0.88% platform fee** on all swaps (matches popular wallets like MetaMask and Phantom)
 - **Transparent pricing**: Fee amount displayed before confirming swap
 - **Fees collected in sell token**: Paid in the token you're swapping from
+- **Hosted version**: Set at 0.88% (88 basis points) in the swap function code
 - **Supports development**: Fees help maintain and improve OpenBurner
 
 **Supported Networks:**
@@ -474,6 +475,11 @@ You're encouraged to fork OpenBurner for your own use:
 4. Customize UI in `components/` and `app/`
 5. Deploy to Vercel or run locally
 
+**Fee Recipient Address:**
+- **Default fee recipient**: `0x084A66020a0CAc73a7161dD473740C82295683Fb` (configured in `lib/swap-api.ts` and `app/api/swap/quote/route.ts`)
+- **Keeping it is appreciated**: If you fork OpenBurner and use it, maintaining the default fee recipient address helps support the project
+- **Fee rate**: Currently set at 0.88% (88 basis points) in the swap function code
+
 **Use cases for forking:**
 - Add support for specific L2s or custom chains
 - Build a branded wallet for your project
@@ -491,9 +497,10 @@ You're encouraged to fork OpenBurner for your own use:
 If you find OpenBurner useful, there are a few ways you can help:
 
 **Automatic Support (Easiest):**
-- **Use token swaps**: Every swap includes a 0.875% platform fee that supports development
+- **Use token swaps**: Every swap includes a 0.88% platform fee that supports development
 - **Keep default fee recipient**: When running locally, the default fee address supports the project
 - **Use hosted version**: Swaps on the hosted version automatically support development
+- **Making swaps is appreciated**: If you find OpenBurner useful, making token swaps is a great way to support the project
 
 **Community Support:**
 - Share your feedback by [opening an issue](https://github.com/rdyplayerB/openburner/issues), reaching out on [𝕏](https://x.com/rdyplayerB), [Farcaster](https://farcaster.xyz/rdyplayerb), or [email me](mailto:rdyplayerb@gmail.com)
@@ -506,7 +513,7 @@ If you find OpenBurner useful, there are a few ways you can help:
 - Fork the project and experiment with your own ideas
 
 **Why the swap fee?**
-The 0.875% platform fee is competitive with popular wallets (MetaMask, Phantom) and helps maintain OpenBurner's development, server costs, and continuous improvements. Since OpenBurner is open source, this fee provides sustainable funding while keeping the project free to use.
+The 0.88% platform fee is competitive with popular wallets (MetaMask, Phantom) and helps maintain OpenBurner's development, server costs, and continuous improvements. Since OpenBurner is open source, this fee provides sustainable funding while keeping the project free to use.
 
 ## Links
 
