@@ -923,24 +923,31 @@ export function WalletDashboard() {
               Send
             </button>
 
-            <button
-              onClick={() => {
-                if (isSwapSupported(chainId)) {
-                  resetSwap(); // Clear previous swap state
-                  setSwapToken({ address: 'native', symbol: 'ETH', name: 'Ethereum', decimals: 18, balance: balance });
-                }
-              }}
-              disabled={!isSwapSupported(chainId)}
-              title={!isSwapSupported(chainId) ? getUnsupportedChainMessage(chainId, chainName) : 'Swap tokens'}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-150 font-semibold text-base shadow-md active:scale-95 ${
-                isSwapSupported(chainId) 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg' 
-                  : 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
-              }`}
+            <Tooltip
+              content={
+                !isSwapSupported(chainId)
+                  ? getUnsupportedChainMessage(chainId, chainName)
+                  : 'Swap tokens'
+              }
             >
-              <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
-              Swap
-            </button>
+              <button
+                onClick={() => {
+                  if (isSwapSupported(chainId)) {
+                    resetSwap(); // Clear previous swap state
+                    setSwapToken({ address: 'native', symbol: 'ETH', name: 'Ethereum', decimals: 18, balance: balance });
+                  }
+                }}
+                disabled={!isSwapSupported(chainId)}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-150 font-semibold text-base shadow-md active:scale-95 ${
+                  isSwapSupported(chainId) 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg' 
+                    : 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
+                Swap
+              </button>
+            </Tooltip>
 
             <button
               onClick={() => setShowReceiveModal(true)}
