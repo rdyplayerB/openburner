@@ -929,7 +929,7 @@ export function WalletDashboard() {
                   ? getUnsupportedChainMessage(chainId, chainName)
                   : 'Swap tokens'
               }
-              className="flex-1"
+              className="flex flex-1"
             >
               <button
                 onClick={() => {

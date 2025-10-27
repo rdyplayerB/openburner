@@ -80,11 +80,17 @@ export function Tooltip({ children, content, className = '' }: TooltipProps) {
     setIsVisible(false);
   };
 
+  // Check if className already includes a display utility
+  const hasDisplayUtility = className?.split(' ').some(cls => 
+    cls === 'flex' || cls === 'block' || cls === 'inline' || 
+    cls === 'inline-flex' || cls === 'inline-block' || cls === 'grid'
+  );
+
   return (
     <>
       <div
         ref={triggerRef}
-        className={`inline-block ${className}`}
+        className={hasDisplayUtility ? className : `inline-block ${className}`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onFocus={() => setIsVisible(true)}
