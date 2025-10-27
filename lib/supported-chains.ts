@@ -73,7 +73,7 @@ export function isSwapSupported(chainId: number): boolean {
  * Get a user-friendly message for unsupported chains
  */
 export function getUnsupportedChainMessage(chainId: number, chainName: string): string {
-  return `Swap not supported on ${chainName}. Please switch to a supported chain.`;
+  return `Swap is not supported on ${chainName}. Please switch to a supported chain.`;
 }
 
 /**
