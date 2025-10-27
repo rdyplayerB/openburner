@@ -54,7 +54,9 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. It supp
 ### Prerequisites
 
 1. **Burner Card** - [Order here](https://arx-burner.myshopify.com/OPENBURNER)
-2. **Desktop NFC Reader** - ACR1252U or compatible USB NFC reader ([Get on Amazon](https://amzn.to/3ISNwd7))
+2. **Desktop NFC Reader** - ACR1252U (recommended) or ACR122U (budget option) USB NFC reader
+   - Recommended: [ACR1252U on Amazon](https://amzn.to/3ISNwd7)
+   - Budget option: [ACR122U on Amazon](https://amzn.to/3WQxGms)
 3. **HaLo Bridge** - Local WebSocket bridge software ([HaLo Tools](https://github.com/arx-research/libhalo/releases))
 4. **Node.js 18+** - [Download](https://nodejs.org)
 
@@ -193,7 +195,7 @@ If you find OpenBurner useful, there are a few ways you can help:
 - Share your feedback by [opening an issue](https://github.com/rdyplayerB/openburner/issues), reaching out on [𝕏](https://x.com/rdyplayerB), [Farcaster](https://farcaster.xyz/rdyplayerb), or [email me](mailto:rdyplayerb@gmail.com)
 - You can also find me in the official [Burner Telegram channel](https://t.me/burnerofficial) (@rdyplayerB)
 - Share OpenBurner on [𝕏](https://x.com/rdyplayerB) or [Farcaster](https://farcaster.xyz/rdyplayerb)
-- Use my link to get a [Burner](https://arx-burner.myshopify.com/OPENBURNER) or my link for the [recommended USB NFC reader](https://amzn.to/3ISNwd7)
+- Use my link to get a [Burner](https://arx-burner.myshopify.com/OPENBURNER) or [USB NFC reader](https://amzn.to/3ISNwd7) (ACR1252U recommended, [ACR122U budget option](https://amzn.to/3WQxGms))
 - Support development with a donation to `rdyplayerB.eth`
 - Fork the project and experiment with your own ideas
 
