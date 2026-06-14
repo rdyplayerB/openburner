@@ -92,7 +92,9 @@ export async function GET(request: NextRequest) {
       url.searchParams.set("owner", owner);
       url.searchParams.set("withMetadata", "true");
       url.searchParams.set("pageSize", "100");
-      url.searchParams.set("excludeFilters[]", "SPAM");
+      // NOTE: excludeFilters[]=SPAM requires Alchemy's Growth (paid) plan and
+      // returns 403 on the free tier. We instead drop spam ourselves below
+      // using the contract.isSpam flag, which is returned on all plans.
       if (pageKey) url.searchParams.set("pageKey", pageKey);
 
       const response = await fetch(url.toString(), {
@@ -113,6 +115,9 @@ export async function GET(request: NextRequest) {
       const owned = data.ownedNfts || [];
 
       for (const nft of owned) {
+        // Drop spam ourselves (free-tier-friendly; replaces excludeFilters=SPAM).
+        if (nft.contract?.isSpam) continue;
+
         const tokenType =
           nft.tokenType === "ERC1155" || nft.contract?.tokenType === "ERC1155"
             ? "ERC1155"
