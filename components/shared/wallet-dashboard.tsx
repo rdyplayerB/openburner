@@ -786,17 +786,41 @@ export function WalletDashboard() {
 
         {/* dApp connect + Hamburger Menu */}
         <div className="flex items-center gap-2">
+          {/* Connected dApp(s) — favicon + green presence dot (opens the menu) */}
+          {wcSessions.length > 0 && (() => {
+            const meta = wcSessions[0]?.peer?.metadata || {};
+            const icon = meta.icons?.[0];
+            const name = meta.name || "dApp";
+            const extra = wcSessions.length - 1;
+            return (
+              <button
+                onClick={() => setShowHamburgerMenu(true)}
+                className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-lg sw-surface border border-[var(--sw-line)] hover:border-[var(--sw-accent)]/50 transition-all max-w-[150px]"
+                title={`Connected to ${name}${extra > 0 ? ` +${extra} more` : ""}`}
+              >
+                <span className="relative flex-shrink-0">
+                  <span className="block w-5 h-5 rounded-full overflow-hidden bg-[var(--sw-line-soft)]">
+                    {icon ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={icon} alt={name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Globe className="w-3.5 h-3.5 m-[3px] text-[var(--sw-muted)]" />
+                    )}
+                  </span>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--sw-up)] border-2 border-[var(--sw-surface)]" />
+                </span>
+                <span className="text-xs font-medium text-[var(--sw-ink)] truncate">
+                  {extra > 0 ? `${name} +${extra}` : name}
+                </span>
+              </button>
+            );
+          })()}
           <button
             onClick={() => setShowWcConnect(true)}
-            className="relative p-2 rounded-lg sw-surface border border-[var(--sw-line)] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-all"
+            className="p-2 rounded-lg sw-surface border border-[var(--sw-line)] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-all"
             title="Connect to dApp"
           >
             <ScanLine className="w-5 h-5" strokeWidth={2.5} />
-            {wcSessions.length > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-brand-orange text-white text-[10px] font-bold flex items-center justify-center">
-                {wcSessions.length}
-              </span>
-            )}
           </button>
           <div className="relative hamburger-menu">
           <button
