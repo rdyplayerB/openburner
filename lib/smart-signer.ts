@@ -84,8 +84,18 @@ export async function signTransactionSmart(
       errorMessage = 'Transaction type not supported. Please try again.';
     } else if (error.message?.includes('Another signing operation is in progress')) {
       errorMessage = 'Please wait for the current operation to complete before trying again.';
+    } else if (
+      error.message?.includes('GATEWAY_SESSION_CLOSED') ||
+      error.message?.includes('no connection open')
+    ) {
+      errorMessage = 'Phone connection dropped. Reconnect your phone and keep it awake, then try again.';
+    } else if (
+      error.message?.includes('GATEWAY_EXECUTOR_TIMEOUT') ||
+      error.message?.includes('no executor connected')
+    ) {
+      errorMessage = 'Waiting on your phone timed out. Wake your phone (keep the gateway page open), then try again.';
     }
-    
+
     throw new Error(errorMessage);
   } finally {
     // Always clean up the ongoing operation
@@ -132,6 +142,16 @@ export async function signDigestSmart(
       errorMessage = 'No Burner card detected. Please place your Burner card on the reader and try again.';
     } else if (error.message?.includes('WRONG_PWD') || error.message?.includes('password')) {
       errorMessage = 'Incorrect PIN. Please try again.';
+    } else if (
+      error.message?.includes('GATEWAY_SESSION_CLOSED') ||
+      error.message?.includes('no connection open')
+    ) {
+      errorMessage = 'Phone connection dropped. Reconnect your phone and keep it awake, then try again.';
+    } else if (
+      error.message?.includes('GATEWAY_EXECUTOR_TIMEOUT') ||
+      error.message?.includes('no executor connected')
+    ) {
+      errorMessage = 'Waiting on your phone timed out. Wake your phone (keep the gateway page open), then try again.';
     }
     throw new Error(errorMessage);
   } finally {

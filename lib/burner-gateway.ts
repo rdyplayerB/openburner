@@ -26,6 +26,137 @@ export function getGlobalGateway(): HaloGateway {
   return globalGateway;
 }
 
+// ─── Session resilience ──────────────────────────────────────────────────
+//
+// The gateway has two links: this desktop tab ↔ server (the "requestor"
+// socket, which we control) and the phone ↔ server (the "executor"). By
+// default libhalo closes our requestor socket 3s after the phone drops
+// (screen lock / backgrounded tab), which destroys the session and forces a
+// brand-new QR scan. We cancel that timer so the session survives the phone
+// being briefly asleep — when it reconnects to the same session, signing
+// resumes with no re-pairing. Each signature still needs a physical card tap.
+
+export type GatewayConnState = "connected" | "executor-away" | "closed";
+
+interface SessionResilience {
+  getState: () => GatewayConnState;
+  waitForExecutor: (timeoutMs: number) => Promise<void>;
+  onStateChange: (cb: (s: GatewayConnState) => void) => () => void;
+}
+
+let resilience: SessionResilience | null = null;
+
+function installSessionResilience(gateway: HaloGateway): SessionResilience {
+  // libhalo marks ws/closeTimeout as TS-private; they're plain props at runtime.
+  const g = gateway as any;
+  let state: GatewayConnState = "closed";
+  const listeners = new Set<(s: GatewayConnState) => void>();
+
+  const setState = (s: GatewayConnState) => {
+    if (s === state) return;
+    state = s;
+    console.log(`🔌 [Gateway] Connection state: ${s}`);
+    listeners.forEach((cb) => {
+      try {
+        cb(s);
+      } catch {
+        /* listener errors are non-fatal */
+      }
+    });
+  };
+
+  const cancelAutoClose = () => {
+    if (g.closeTimeout !== null && g.closeTimeout !== undefined) {
+      clearTimeout(g.closeTimeout);
+      g.closeTimeout = null;
+    }
+  };
+
+  g.ws.onUnpackedMessage.addListener((data: any) => {
+    if (data?.type === "executor_connected") {
+      cancelAutoClose();
+      setState("connected");
+    } else if (data?.type === "executor_disconnected") {
+      // Keep the requestor socket open so the same session can be resumed.
+      cancelAutoClose();
+      setState("executor-away");
+    }
+  });
+
+  g.ws.onClose.addListener(() => setState("closed"));
+
+  const onStateChange = (cb: (s: GatewayConnState) => void) => {
+    listeners.add(cb);
+    return () => {
+      listeners.delete(cb);
+    };
+  };
+
+  const waitForExecutor = (timeoutMs: number) =>
+    new Promise<void>((resolve, reject) => {
+      if (state === "connected") return resolve();
+      if (state === "closed") return reject(new Error("GATEWAY_SESSION_CLOSED"));
+      let unsub = () => {};
+      const timer = setTimeout(() => {
+        unsub();
+        reject(new Error("GATEWAY_EXECUTOR_TIMEOUT"));
+      }, timeoutMs);
+      unsub = onStateChange((s) => {
+        if (s === "connected") {
+          clearTimeout(timer);
+          unsub();
+          resolve();
+        } else if (s === "closed") {
+          clearTimeout(timer);
+          unsub();
+          reject(new Error("GATEWAY_SESSION_CLOSED"));
+        }
+      });
+    });
+
+  return { getState: () => state, waitForExecutor, onStateChange };
+}
+
+/** Current gateway link state, or "closed" if no session is active. */
+export function getGatewayConnectionState(): GatewayConnState {
+  return resilience ? resilience.getState() : "closed";
+}
+
+/** Subscribe to gateway connection-state changes. Returns an unsubscribe fn. */
+export function onGatewayStateChange(
+  cb: (s: GatewayConnState) => void
+): () => void {
+  if (!resilience) return () => {};
+  return resilience.onStateChange(cb);
+}
+
+/**
+ * Run a gateway command, tolerating the phone briefly dropping off. Waits for
+ * the executor to be present (up to timeoutMs), and retries once if the link
+ * blips mid-command while the session is still alive.
+ */
+async function execHaloCmdResilient(
+  gate: HaloGateway,
+  command: any,
+  timeoutMs = 120_000
+): Promise<any> {
+  if (resilience) await resilience.waitForExecutor(timeoutMs);
+  try {
+    return await gate.execHaloCmd(command);
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    const transient =
+      msg.includes("no executor connected") ||
+      msg.includes("Failed to send request");
+    if (transient && resilience && resilience.getState() !== "closed") {
+      console.log("🔁 [Gateway] Link blipped mid-command — waiting for phone to resume...");
+      await resilience.waitForExecutor(timeoutMs);
+      return await gate.execHaloCmd(command);
+    }
+    throw e;
+  }
+}
+
 /**
  * Clean up gateway connection
  */
@@ -34,6 +165,7 @@ export function cleanupGateway() {
     try {
       // Close the gateway connection
       globalGateway = null;
+      resilience = null;
       console.log("🧹 [Gateway] Gateway connection cleaned up");
     } catch (error) {
       console.error("❌ [Gateway] Error cleaning up gateway:", error);
@@ -297,6 +429,9 @@ export async function startGatewayPairing(): Promise<GatewayPairInfo> {
     globalGateway = new HaloGateway('wss://s1.halo-gateway.arx.org', {
       createWebSocket: (url) => new WebSocket(url)
     });
+
+    // Keep the session alive across brief phone drops (no constant re-scanning)
+    resilience = installSessionResilience(globalGateway);
 
     // Start pairing process
     console.log("📡 [Gateway] Starting pairing process...");
@@ -601,8 +736,8 @@ export async function signTransactionWithGateway(
     if (pin) {
       command.password = pin;
     }
-    
-    const result = await gate.execHaloCmd(command);
+
+    const result = await execHaloCmdResilient(gate, command);
 
     // Construct the signature (gateway returns raw.r, raw.s, raw.v)
     const sig = result.signature.raw || result.signature;
@@ -637,7 +772,7 @@ export async function signDigestWithGateway(
     const command: any = { name: "sign", keyNo: keySlot, digest: hex };
     if (pin) command.password = pin;
 
-    const result = await gate.execHaloCmd(command);
+    const result = await execHaloCmdResilient(gate, command);
     const sig = result.signature.raw || result.signature;
     let v = Number(sig.v);
     if (v < 27) v += 27;
