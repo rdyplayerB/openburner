@@ -130,17 +130,56 @@ export function onGatewayStateChange(
   return resilience.onStateChange(cb);
 }
 
+// Wait this long for the phone to be present before sending a command.
+const EXECUTOR_WAIT_MS = 120_000;
+// Once a command is in flight, if the phone drops, give the user this long to
+// reload the gateway page (which resumes the same session and replays the
+// command) before we give up and close the session.
+const INFLIGHT_AWAY_MS = 90_000;
+
 /**
- * Run a gateway command, tolerating the phone briefly dropping off. Waits for
- * the executor to be present (up to timeoutMs), and retries once if the link
- * blips mid-command while the session is still alive.
+ * Run a gateway command, tolerating the phone briefly dropping off.
+ *
+ * - Waits for the executor to be present before sending.
+ * - If the phone drops while the command is in flight, waits up to
+ *   INFLIGHT_AWAY_MS for it to return (a phone-side page reload reconnects to
+ *   the same session and libhalo replays the command), then closes the session
+ *   so we surface a clear error instead of hanging forever.
  */
 async function execHaloCmdResilient(
   gate: HaloGateway,
-  command: any,
-  timeoutMs = 120_000
+  command: any
 ): Promise<any> {
-  if (resilience) await resilience.waitForExecutor(timeoutMs);
+  if (resilience) await resilience.waitForExecutor(EXECUTOR_WAIT_MS);
+
+  const g = gate as any;
+  let awayTimer: ReturnType<typeof setTimeout> | null = null;
+  const armAwayClose = () => {
+    if (awayTimer) return;
+    awayTimer = setTimeout(() => {
+      console.warn("⏱️ [Gateway] Phone stayed away too long mid-command — closing session.");
+      try {
+        g.ws.close();
+      } catch {
+        /* ignore */
+      }
+    }, INFLIGHT_AWAY_MS);
+  };
+  const disarmAwayClose = () => {
+    if (awayTimer) {
+      clearTimeout(awayTimer);
+      awayTimer = null;
+    }
+  };
+
+  const unsub = resilience
+    ? resilience.onStateChange((s) => {
+        if (s === "executor-away") armAwayClose();
+        else disarmAwayClose(); // resumed ("connected") or already ending ("closed")
+      })
+    : () => {};
+  if (resilience && resilience.getState() === "executor-away") armAwayClose();
+
   try {
     return await gate.execHaloCmd(command);
   } catch (e: any) {
@@ -148,12 +187,14 @@ async function execHaloCmdResilient(
     const transient =
       msg.includes("no executor connected") ||
       msg.includes("Failed to send request");
-    if (transient && resilience && resilience.getState() !== "closed") {
-      console.log("🔁 [Gateway] Link blipped mid-command — waiting for phone to resume...");
-      await resilience.waitForExecutor(timeoutMs);
+    if (transient && resilience && resilience.getState() === "connected") {
+      console.log("🔁 [Gateway] Link blipped — retrying command...");
       return await gate.execHaloCmd(command);
     }
     throw e;
+  } finally {
+    disarmAwayClose();
+    unsub();
   }
 }
 

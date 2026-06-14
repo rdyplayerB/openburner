@@ -24,6 +24,7 @@ import { useWalletConnectStore } from "@/store/walletconnect-store";
 import { QRCodeSVG } from "qrcode.react";
 import { getTokenPrice } from "@/lib/price-oracle";
 import { getAppConfig } from "@/lib/config/environment";
+import { getGatewayConnectionState, onGatewayStateChange, type GatewayConnState } from "@/lib/burner-gateway";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { isSwapSupported, getUnsupportedChainMessage } from "@/lib/supported-chains";
 import { formatTokenBalance } from "@/lib/format-utils";
@@ -122,7 +123,15 @@ export function WalletDashboard() {
     // Initialize wallet store to fix Base RPC URL if needed
     useWalletStore.getState().initialize();
   }, []);
-  
+
+  // Track the HaLo gateway link so we can prompt a phone reload if it drops
+  // mid-session (gateway/hosted-desktop mode only; no-op otherwise).
+  const [gatewayState, setGatewayState] = useState<GatewayConnState>("connected");
+  useEffect(() => {
+    setGatewayState(getGatewayConnectionState());
+    return onGatewayStateChange(setGatewayState);
+  }, []);
+
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const [swapToken, setSwapToken] = useState<Token | null>(null);
@@ -576,6 +585,18 @@ export function WalletDashboard() {
 
   return (
     <div className="space-y-3">
+      {/* Gateway link dropped — guide the user to reload their phone (same session) */}
+      {gatewayState === "executor-away" && (
+        <div className="rounded-lg border border-[var(--sw-accent)]/40 bg-[var(--sw-accent)]/10 px-3.5 py-2.5">
+          <p className="text-[12px] font-semibold text-[var(--sw-ink)]">Phone disconnected</p>
+          <p className="text-[11px] text-[var(--sw-muted)] leading-relaxed mt-0.5">
+            Your phone&apos;s link to the gateway dropped — it likely went to sleep. Reload the
+            HaLo Gateway page on your phone (tap&nbsp;↻); it rejoins the same session with no
+            re-scan, and any pending signature will resume.
+          </p>
+        </div>
+      )}
+
       {/* Header with Network Selector and Hamburger Menu */}
       <div className="flex items-center justify-between">
         <div className="relative network-dropdown">
