@@ -786,32 +786,48 @@ export function WalletDashboard() {
 
         {/* dApp connect + Hamburger Menu */}
         <div className="flex items-center gap-2">
-          {/* Connected dApp(s) — favicon + green presence dot (opens the menu) */}
+          {/* Connected dApp(s) — overlapping favicons + green dot (opens the menu) */}
           {wcSessions.length > 0 && (() => {
-            const meta = wcSessions[0]?.peer?.metadata || {};
-            const icon = meta.icons?.[0];
-            const name = meta.name || "dApp";
-            const extra = wcSessions.length - 1;
+            const MAX = 3;
+            const shown = wcSessions.slice(0, MAX);
+            const extra = wcSessions.length - shown.length;
+            const names = wcSessions
+              .map((s: any) => s?.peer?.metadata?.name || "dApp")
+              .join(", ");
             return (
               <button
                 onClick={() => setShowHamburgerMenu(true)}
-                className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-lg sw-surface border border-[var(--sw-line)] hover:border-[var(--sw-accent)]/50 transition-all max-w-[150px]"
-                title={`Connected to ${name}${extra > 0 ? ` +${extra} more` : ""}`}
+                className="flex items-center p-2 rounded-lg sw-surface border border-[var(--sw-line)] hover:border-[var(--sw-accent)]/50 transition-all"
+                title={`Connected to ${names}`}
               >
-                <span className="relative flex-shrink-0">
-                  <span className="block w-5 h-5 rounded-full overflow-hidden bg-[var(--sw-line-soft)]">
-                    {icon ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={icon} alt={name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Globe className="w-3.5 h-3.5 m-[3px] text-[var(--sw-muted)]" />
-                    )}
-                  </span>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--sw-up)] border-2 border-[var(--sw-surface)]" />
-                </span>
-                <span className="text-xs font-medium text-[var(--sw-ink)] truncate">
-                  {extra > 0 ? `${name} +${extra}` : name}
-                </span>
+                {shown.map((s: any, i: number) => {
+                  const meta = s?.peer?.metadata || {};
+                  const icon = meta.icons?.[0];
+                  const name = meta.name || "dApp";
+                  const isLast = i === shown.length - 1;
+                  return (
+                    <span
+                      key={s.topic}
+                      className={`relative ${i > 0 ? "-ml-2" : ""}`}
+                      style={{ zIndex: shown.length - i }}
+                    >
+                      <span className="block w-5 h-5 rounded-full overflow-hidden bg-[var(--sw-line-soft)] ring-2 ring-[var(--sw-surface)]">
+                        {icon ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={icon} alt={name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Globe className="w-3.5 h-3.5 m-[3px] text-[var(--sw-muted)]" />
+                        )}
+                      </span>
+                      {isLast && (
+                        <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--sw-up)] border-2 border-[var(--sw-surface)]" />
+                      )}
+                    </span>
+                  );
+                })}
+                {extra > 0 && (
+                  <span className="ml-1 text-[11px] font-semibold text-[var(--sw-muted)]">+{extra}</span>
+                )}
               </button>
             );
           })()}
