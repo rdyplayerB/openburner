@@ -84,55 +84,55 @@ export function HostedMobileConnect() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors duration-200" style={{ minHeight: '100dvh' }}>
+    <div className="flex flex-col" style={{ minHeight: '100dvh' }}>
       {/* Main content - perfectly centered */}
       <div className="flex-1 flex items-center justify-center p-4 relative">
         <div className="max-w-sm w-full space-y-4">
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Image 
-              src="/images/openburnerlogo.svg" 
-              alt="OpenBurner logo" 
-              width={36} 
-              height={36} 
-              className="w-9 h-9 drop-shadow-sm -mt-1"
+            <Image
+              src="/images/openburnerlogo.svg"
+              alt="OpenBurner logo"
+              width={36}
+              height={36}
+              className="w-9 h-9 -mt-1"
             />
-            <h1 className="text-3xl font-bold text-black dark:text-white tracking-tight leading-none transition-colors duration-200">
-              Open<span className="text-[#FF6B35]">Burner</span>
+            <h1 className="text-3xl font-bold text-[var(--sw-ink)] tracking-tight leading-none">
+              Open<span className="sw-accent">Burner</span>
             </h1>
           </div>
-          <p className="text-slate-600 dark:text-slate-400 text-base font-medium leading-relaxed transition-colors duration-200">
+          <p className="text-[var(--sw-ink-soft)] text-base leading-relaxed">
             Tap your Burner card to your device
           </p>
         </div>
 
         {/* Connect Button */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-black/[0.04] dark:border-slate-700/60 shadow-card-lg overflow-hidden transition-colors duration-200">
+        <div className="sw-surface rounded-xl border border-[var(--sw-line)] overflow-hidden">
           <div className="p-6">
             <button
               onClick={handleConnect}
               disabled={isConnecting}
-              className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#E55A2B] hover:to-[#FF7A3A] text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:shadow-orange-500/25 text-lg active:scale-[0.98] transform hover:scale-[1.02] disabled:hover:scale-100"
+              className="sw-btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
             >
               {isConnecting ? (
                 <>
-                  <Loader2 className="animate-spin h-6 w-6" strokeWidth={2.5} />
-                  <span>Reading Card...</span>
+                  <Loader2 className="animate-spin h-5 w-5" strokeWidth={2.5} />
+                  <span>Reading card…</span>
                 </>
               ) : (
                 <>
-                  <Nfc className="h-6 w-6" strokeWidth={2.5} />
-                  <span>Tap Your Burner</span>
+                  <Nfc className="h-5 w-5" strokeWidth={2.5} />
+                  <span>Tap your Burner</span>
                 </>
               )}
             </button>
-            
+
             {/* Cancel Button - only show when connecting */}
             {isConnecting && (
               <button
                 onClick={handleCancel}
-                className="w-full mt-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                className="sw-btn-ghost w-full mt-3 py-3 text-sm flex items-center justify-center gap-2"
               >
                 <X className="h-4 w-4" strokeWidth={2.5} />
                 <span>Cancel</span>
@@ -142,7 +142,7 @@ export function HostedMobileConnect() {
         </div>
 
         {/* Error Modal */}
-        <MobileErrorModal 
+        <MobileErrorModal
           error={error}
           onClose={() => setError(null)}
           onRetry={handleConnect}
@@ -150,11 +150,11 @@ export function HostedMobileConnect() {
 
         {/* Website Link */}
         <div className="text-center mt-6">
-          <Link 
-            href="https://openburner.xyz" 
-            target="_blank" 
+          <Link
+            href="https://openburner.xyz"
+            target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-sm transition-colors duration-200"
+            className="inline-flex items-center gap-2 text-[var(--sw-muted)] hover:text-[var(--sw-accent)] text-sm transition-colors duration-200"
           >
             <span>Visit openburner.xyz</span>
             <ExternalLink className="w-3 h-3" strokeWidth={2} />
@@ -168,27 +168,27 @@ export function HostedMobileConnect() {
       {shouldEnablePWA && !isInstalled && showInstallCard && (
         <div className="w-full px-4 pb-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-sm w-full mx-auto">
-            <div 
+            <div
               onClick={handleInstallCardClick}
-              className="bg-white dark:bg-slate-800 rounded-xl border border-black/[0.04] dark:border-slate-700/60 shadow-card hover:shadow-card-hover transition-all duration-200 p-4 cursor-pointer active:scale-[0.98] transform"
+              className="sw-surface rounded-xl border border-[var(--sw-line)] transition-all duration-200 p-4 cursor-pointer active:scale-[0.98] transform"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#FF6B35] rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Download className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 sw-mark rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Download className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+                  <h3 className="font-semibold text-[var(--sw-ink)] text-sm">
                     Install OpenBurner
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
+                  <p className="text-[var(--sw-muted)] text-xs mt-0.5">
                     Add to home screen for quick access
                   </p>
                 </div>
-                <div 
-                  className="flex-shrink-0 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1 transition-colors"
+                <div
+                  className="flex-shrink-0 cursor-pointer text-[var(--sw-muted)] hover:text-[var(--sw-ink)] rounded-full p-1 transition-colors"
                   onClick={handleCloseInstallCard}
                 >
-                  <X className="w-4 h-4 text-slate-400" />
+                  <X className="w-4 h-4" />
                 </div>
               </div>
             </div>
@@ -198,35 +198,31 @@ export function HostedMobileConnect() {
       
       {/* Instructions Popup */}
       {showInstructions && (
-        <div className="fixed inset-0 bg-gray-900/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 p-6 max-w-sm w-full">
-            <div className="text-white text-center">
-              <h3 className="text-lg mb-4">
-                Add to Home Screen
-              </h3>
-              
-              <p className="text-sm mb-6">
-                Install OpenBurner for quick access from your home screen
+        <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3">
+          <div className="sw-surface rounded-xl border border-[var(--sw-line)] overflow-hidden p-6 max-w-sm w-full">
+            <div className="text-center">
+              <div className="sw-uplabel mb-4">Add to home screen</div>
+
+              <p className="text-sm text-[var(--sw-ink-soft)] mb-6 leading-relaxed">
+                Install OpenBurner for quick access from your home screen.
               </p>
 
-              <div className="text-left mb-6">
-                <p className="text-sm mb-3">
-                  How to install:
+              <div className="text-left mb-6 space-y-2">
+                <p className="sw-uplabel mb-1">How to install</p>
+                <p className="text-sm text-[var(--sw-ink-soft)]">
+                  1. Tap the Share button (square with arrow up) or menu (three dots)
                 </p>
-                <p className="text-sm mb-2">
-                  1. Look for the Share button (square with arrow up) or menu (three dots)
+                <p className="text-sm text-[var(--sw-ink-soft)]">
+                  2. Find &apos;Add to Home Screen&apos; or &apos;Install App&apos;
                 </p>
-                <p className="text-sm mb-2">
-                  2. Find 'Add to Home Screen' or 'Install App' option
-                </p>
-                <p className="text-sm mb-4">
-                  3. Follow the prompts to add OpenBurner to your home screen
+                <p className="text-sm text-[var(--sw-ink-soft)]">
+                  3. Follow the prompts to add OpenBurner
                 </p>
               </div>
-              
+
               <button
                 onClick={() => setShowInstructions(false)}
-                className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-6 text-sm"
+                className="sw-btn-primary w-full py-3 text-sm"
               >
                 Got it
               </button>

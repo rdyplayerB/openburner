@@ -63,66 +63,64 @@ export function TransactionWaitingModal({
   const chainName = getChainName(chainId);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-        {/* Loading Animation */}
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
+      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+        <div className="px-5 py-5">
+          {/* Loading Animation */}
+          <div className="flex justify-center mb-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--sw-accent)]"></div>
           </div>
-        </div>
 
-        {/* Title */}
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-2">
-          Transaction Submitted
-        </h2>
+          {/* Title */}
+          <h2 className="text-lg font-bold text-[var(--sw-ink)] text-center mb-1">
+            Transaction submitted
+          </h2>
 
-        {/* Subtitle */}
-        <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-6">
-          Waiting for confirmation on {chainName}...
-        </p>
+          {/* Subtitle */}
+          <p className="text-sm text-[var(--sw-ink-soft)] text-center mb-6">
+            Waiting for confirmation on {chainName}
+          </p>
 
-        {/* Transaction Details */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-          <div className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
-            <div className="flex justify-between">
-              <span>From:</span>
-              <span className="font-medium">{fromAmount} {fromToken}</span>
+          {/* Transaction Details */}
+          <div className="sw-list mb-6">
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">From</span>
+              <span className="text-[var(--sw-ink)] font-medium sw-mono text-xs text-right break-all">{fromAmount} {fromToken}</span>
             </div>
-            <div className="flex justify-between">
-              <span>To:</span>
-              <span className="font-medium">{toAmount} {toToken}</span>
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">To</span>
+              <span className="text-[var(--sw-ink)] font-medium sw-mono text-xs text-right break-all">{toAmount} {toToken}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Network:</span>
-              <span className="font-medium">{chainName}</span>
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">Network</span>
+              <span className="text-[var(--sw-ink)] font-medium text-right">{chainName}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>Transaction:</span>
-              <span className="font-mono text-xs text-blue-600 dark:text-blue-400 break-all">
-                {txHash.slice(0, 10)}...{txHash.slice(-8)}
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">Transaction</span>
+              <span className="sw-mono text-xs text-[var(--sw-ink)] break-all text-right">
+                {txHash.slice(0, 10)}…{txHash.slice(-8)}
               </span>
             </div>
           </div>
+
+          {/* View on Scanner Button */}
+          <a
+            href={scannerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sw-btn-primary w-full py-3 px-4 text-sm flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span>View on {chainName} Scanner</span>
+          </a>
+
+          {/* Status Message */}
+          <p className="text-xs text-[var(--sw-muted)] text-center mt-4">
+            This may take a few moments depending on network congestion
+          </p>
         </div>
-
-        {/* View on Scanner Button */}
-        <a
-          href={scannerUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-          <span>View on {chainName} Scanner</span>
-        </a>
-
-        {/* Status Message */}
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
-          This may take a few moments depending on network congestion
-        </p>
       </div>
     </div>
   );

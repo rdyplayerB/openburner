@@ -204,29 +204,26 @@ export function HostedDesktopConnect() {
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6 animate-in fade-in-50 duration-500">
+    <div className="max-w-lg mx-auto space-y-6">
       {/* Mode Toggle - Hidden in hosted environment (only gateway supported) */}
-      {/* <div className="animate-in slide-in-from-top-4 duration-700">
-        <ModeToggle onModeChange={handleModeChange} />
-      </div> */}
-      
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700/60 shadow-card-lg overflow-hidden transition-colors duration-300">
+
+      <div className="sw-surface rounded-xl border border-[var(--sw-line)] overflow-hidden">
         <div className="text-center px-8 pt-10 pb-8">
           {/* Icon and Header */}
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-6">
-              <Image 
-                src="/images/openburnerlogo.svg" 
-                alt="OpenBurner logo" 
-                width={40} 
-                height={40} 
-                className="w-10 h-10 drop-shadow-sm -mt-1"
+              <Image
+                src="/images/openburnerlogo.svg"
+                alt="OpenBurner logo"
+                width={40}
+                height={40}
+                className="w-10 h-10 -mt-1"
               />
-              <h1 className="text-3xl font-bold text-black dark:text-white tracking-tight leading-none transition-colors duration-300">
-                Open<span className="text-[#FF6B35]">Burner</span>
+              <h1 className="text-3xl font-bold text-[var(--sw-ink)] tracking-tight leading-none">
+                Open<span className="sw-accent">Burner</span>
               </h1>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 text-base font-medium leading-relaxed max-w-sm mx-auto transition-colors duration-300">
+            <p className="text-[var(--sw-ink-soft)] text-base leading-relaxed max-w-sm mx-auto">
               Use your smartphone as an NFC reader to connect
             </p>
           </div>
@@ -236,77 +233,71 @@ export function HostedDesktopConnect() {
             <button
               onClick={handleConnect}
               disabled={isConnecting}
-              className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#E55A2B] hover:to-[#FF7A3A] text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:shadow-orange-500/25 text-lg active:scale-[0.98] transform hover:scale-[1.02] disabled:hover:scale-100"
+              className="sw-btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
             >
               {isConnecting ? (
                 <>
-                  <Loader2 className="animate-spin h-6 w-6" strokeWidth={2.5} />
+                  <Loader2 className="animate-spin h-5 w-5" strokeWidth={2.5} />
                   <span>
-                    Starting gateway...
+                    Starting gateway…
                   </span>
                 </>
               ) : (
                 <>
-                  <Smartphone className="h-6 w-6" strokeWidth={2.5} />
+                  <Smartphone className="h-5 w-5" strokeWidth={2.5} />
                   <span>
-                    Connect with Smartphone
+                    Connect with smartphone
                   </span>
                 </>
               )}
             </button>
-            
+
             {/* Cancel Button - only show when connecting */}
             {isConnecting && (
               <button
                 onClick={handleCancel}
-                className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                className="sw-btn-ghost w-full py-3 text-sm flex items-center justify-center gap-2"
               >
                 <X className="h-4 w-4" strokeWidth={2.5} />
                 <span>Cancel</span>
               </button>
             )}
-            
+
           </div>
 
         </div>
 
         {/* Requirements List */}
-        <div className="bg-slate-50/80 dark:bg-slate-800/80 px-8 py-6 border-t border-slate-200/60 dark:border-slate-700/60 transition-colors duration-300">
-          <div className="space-y-4">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300">
-                Connection Requirements
-              </h3>
-            </div>
-            
-            <div className="space-y-3">
-              {/* Gateway mode only - bridge mode not supported in hosted environment */}
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/60 transition-colors duration-300">
-                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
-                    Internet Connection
-                  </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
-                    Required for gateway communication
-                  </p>
-                </div>
+        <div className="px-8 py-6 border-t border-[var(--sw-line)]">
+          <div className="sw-uplabel mb-4">Connection requirements</div>
+
+          <div className="sw-list">
+            {/* Gateway mode only - bridge mode not supported in hosted environment */}
+            <div className="flex items-center gap-4 py-3">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-[var(--sw-up)]" strokeWidth={2.5} />
               </div>
-              
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/60 transition-colors duration-300">
-                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                  <Smartphone className="w-6 h-6 text-amber-600" strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm text-slate-800 dark:text-slate-200 transition-colors duration-300">
-                    Smartphone with NFC
-                  </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 transition-colors duration-300">
-                    Your phone will act as the NFC reader
-                  </p>
-                </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm text-[var(--sw-ink)]">
+                  Internet connection
+                </p>
+                <p className="text-xs text-[var(--sw-muted)] mt-0.5">
+                  Required for gateway communication
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 py-3">
+              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <Smartphone className="w-5 h-5 text-[var(--sw-accent)]" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm text-[var(--sw-ink)]">
+                  Smartphone with NFC
+                </p>
+                <p className="text-xs text-[var(--sw-muted)] mt-0.5">
+                  Your phone will act as the NFC reader
+                </p>
               </div>
             </div>
           </div>
@@ -315,11 +306,11 @@ export function HostedDesktopConnect() {
 
       {/* Website Link */}
       <div className="text-center mt-6">
-        <Link 
-          href="https://openburner.xyz" 
-          target="_blank" 
+        <Link
+          href="https://openburner.xyz"
+          target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-sm transition-colors duration-200"
+          className="inline-flex items-center gap-2 text-[var(--sw-muted)] hover:text-[var(--sw-accent)] text-sm transition-colors duration-200"
         >
           <span>Visit openburner.xyz</span>
           <ExternalLink className="w-3 h-3" strokeWidth={2} />

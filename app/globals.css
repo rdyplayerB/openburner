@@ -3,9 +3,40 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #1E1E1E;
+  --foreground: #111114;
   --background: #FAFAFA;
   --brand-orange: #E4572E;
+
+  /* ===== Swiss Editorial design tokens (light) ===== */
+  --sw-paper: #FAFAFA;
+  --sw-surface: #FFFFFF;
+  --sw-ink: #111114;
+  --sw-ink-soft: #5B5B62;
+  --sw-muted: #9A9AA2;
+  --sw-line: rgba(17, 17, 20, 0.14);
+  --sw-line-soft: rgba(17, 17, 20, 0.08);
+  --sw-accent: #E4572E;
+  --sw-accent-press: #C94A26;
+  --sw-up: #1F9D57;
+  --sw-down: #D8442B;
+}
+
+.dark {
+  --foreground: #F2F2F4;
+  --background: #0E0E11;
+
+  /* ===== Swiss Editorial design tokens (dark) ===== */
+  --sw-paper: #0E0E11;
+  --sw-surface: #161619;
+  --sw-ink: #F2F2F4;
+  --sw-ink-soft: #A6A6AE;
+  --sw-muted: #6C6C75;
+  --sw-line: rgba(255, 255, 255, 0.16);
+  --sw-line-soft: rgba(255, 255, 255, 0.08);
+  --sw-accent: #FF6B35;
+  --sw-accent-press: #E4572E;
+  --sw-up: #34D27B;
+  --sw-down: #FF6B57;
 }
 
 html,
@@ -44,6 +75,74 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ===================================================================
+   Swiss Editorial — shared component utilities
+   Flat surfaces, hairline rules, tabular numerals, single orange accent.
+   =================================================================== */
+.sw-screen { background: var(--sw-paper); color: var(--sw-ink); }
+.sw-surface { background: var(--sw-surface); }
+
+.sw-uplabel {
+  font-size: 0.625rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--sw-muted);
+}
+.sw-seclabel {
+  font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--sw-ink);
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--sw-line);
+}
+.sw-rule { height: 1px; background: var(--sw-line); }
+.sw-rule-soft { height: 1px; background: var(--sw-line-soft); }
+.sw-divide > * + * { border-top: 1px solid var(--sw-line-soft); }
+
+.sw-mono { font-family: var(--font-geist-mono, ui-monospace, "JetBrains Mono", monospace); }
+.sw-num {
+  font-family: var(--font-geist-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: -0.01em;
+}
+.sw-display { font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+
+.sw-accent { color: var(--sw-accent); }
+
+/* Buttons — Swiss = minimal radius, uppercase, single accent */
+.sw-btn-primary {
+  background: var(--sw-accent); color: #fff; border: none; border-radius: 3px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  transition: filter 0.15s, transform 0.1s;
+}
+.sw-btn-primary:hover { filter: brightness(1.06); }
+.sw-btn-primary:active { transform: scale(0.985); }
+.sw-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+
+.sw-btn-ghost {
+  background: transparent; color: var(--sw-ink); border: 1px solid var(--sw-ink);
+  border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  transition: background 0.15s, transform 0.1s;
+}
+.sw-btn-ghost:hover { background: color-mix(in srgb, var(--sw-ink) 6%, transparent); }
+.sw-btn-ghost:active { transform: scale(0.985); }
+
+/* Tabs — left aligned, orange underline */
+.sw-tab { color: var(--sw-muted); font-weight: 600; transition: color 0.15s; }
+.sw-tab:hover { color: var(--sw-ink); }
+.sw-tab-active { color: var(--sw-ink); box-shadow: inset 0 -2px 0 var(--sw-accent); }
+
+/* Inputs */
+.sw-input {
+  background: transparent; color: var(--sw-ink); border: 0;
+  border-bottom: 1px solid var(--sw-line); border-radius: 0;
+  transition: border-color 0.15s;
+}
+.sw-input::placeholder { color: var(--sw-muted); }
+.sw-input:focus { outline: none; border-bottom-color: var(--sw-accent); }
+
+/* Token / chain mark (squared) */
+.sw-mark { border-radius: 7px; background: var(--sw-mark, var(--sw-ink)); color: var(--sw-paper); }
+
+/* Rows */
+.sw-row { display: flex; align-items: center; gap: 0.75rem; }
+.sw-list > * + * { border-top: 1px solid var(--sw-line-soft); }
 
 @layer utilities {
 
@@ -182,6 +281,180 @@ body {
   }
   50% {
     box-shadow: 0 0 30px rgba(228, 87, 46, 0.5), 0 0 40px rgba(228, 87, 46, 0.3);
+  }
+}
+
+/* ===== DREAD SPLASH EFFECTS ===== */
+
+/* Rising Ember Particles */
+@keyframes ember-rise {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(var(--drift, 20px)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Slow Fire Pulse - ominous breathing */
+@keyframes fire-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    filter: blur(80px);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(100px);
+  }
+}
+
+/* Vignette Pulse */
+@keyframes vignette-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* Subtle Flicker */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.8; }
+  94% { opacity: 1; }
+  96% { opacity: 0.9; }
+  97% { opacity: 1; }
+}
+
+/* Chromatic Aberration */
+@keyframes chromatic-shift {
+  0%, 100% {
+    text-shadow: -1px 0 rgba(255,0,0,0.3), 1px 0 rgba(0,255,255,0.3);
+  }
+  50% {
+    text-shadow: -2px 0 rgba(255,0,0,0.4), 2px 0 rgba(0,255,255,0.4);
+  }
+}
+
+/* Card Entrance - slower, more ominous */
+@keyframes dread-entrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Ember Glow Pulse */
+@keyframes ember-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 30px rgba(255, 107, 53, 0.2),
+      0 0 60px rgba(139, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 40px rgba(255, 107, 53, 0.3),
+      0 0 80px rgba(139, 0, 0, 0.15);
+  }
+}
+
+/* Dark Apocalyptic Background */
+.dread-bg {
+  background: radial-gradient(ellipse at center, #1a0a0a 0%, #0a0505 50%, #000 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Vignette Overlay */
+.vignette::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.8) 100%);
+  pointer-events: none;
+  z-index: 1;
+  animation: vignette-pulse 8s ease-in-out infinite;
+}
+
+/* Fire Glow - ambient light source */
+.fire-glow::before {
+  content: '';
+  position: fixed;
+  bottom: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200%;
+  height: 100%;
+  background: radial-gradient(ellipse at center bottom,
+    rgba(255, 107, 53, 0.15) 0%,
+    rgba(139, 0, 0, 0.08) 30%,
+    transparent 60%);
+  animation: fire-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Heavy Noise/Grain */
+.grain-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+
+/* Dark Glass Card */
+.glass-card-dark {
+  background: rgba(10, 5, 5, 0.8);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid rgba(255, 107, 53, 0.1);
+  animation: ember-glow 4s ease-in-out infinite;
+}
+
+/* Chromatic Text */
+.text-chromatic {
+  animation: chromatic-shift 4s ease-in-out infinite;
+}
+
+/* Flicker Effect */
+.flicker {
+  animation: flicker 8s infinite;
+}
+
+/* Dread Entrance */
+.dread-entrance {
+  animation: dread-entrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .dread-entrance,
+  .flicker,
+  .text-chromatic,
+  .glass-card-dark,
+  .vignette::after,
+  .fire-glow::before {
+    animation: none !important;
+  }
+
+  .dread-entrance {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }
 

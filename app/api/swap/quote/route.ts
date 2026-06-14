@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, checkOrigin } from '@/lib/rate-limit';
 
 const ZEROX_API_BASE_URL = 'https://api.0x.org';
-const ZEROX_API_KEY = process.env.NEXT_PUBLIC_0X_API_KEY;
+// Prefer the server-only key (not exposed in the client bundle); fall back to the
+// legacy NEXT_PUBLIC var for backwards compatibility / local dev.
+const ZEROX_API_KEY = process.env.ZEROX_API_KEY || process.env.NEXT_PUBLIC_0X_API_KEY;
 
 // Supported chains by 0x API
 const SUPPORTED_CHAINS = {
@@ -35,8 +38,11 @@ function convertNativeToZeroXFormat(tokenAddress: string): string {
 
 export async function GET(request: NextRequest) {
   try {
+    const blocked = checkOrigin(request) || rateLimit(request, 'swap', 40, 60_000);
+    if (blocked) return blocked;
+
     const { searchParams } = new URL(request.url);
-    
+
     // Log all incoming parameters for debugging
     console.log('🔍 [API Proxy] Incoming request URL:', request.url);
     console.log('🔍 [API Proxy] All query params:', Object.fromEntries(searchParams));
@@ -114,10 +120,12 @@ export async function GET(request: NextRequest) {
       '0x-version': 'v2',
     };
 
-    console.log('🔑 [API Proxy] API Key status:', ZEROX_API_KEY ? 'Present' : 'Missing');
-    
-    if (ZEROX_API_KEY) {
-      headers['0x-api-key'] = ZEROX_API_KEY;
+    // User-provided key (forwarded by the client) takes precedence over the env var.
+    const zeroxKey = request.headers.get('x-0x-key') || ZEROX_API_KEY;
+    console.log('🔑 [API Proxy] API Key status:', zeroxKey ? 'Present' : 'Missing');
+
+    if (zeroxKey) {
+      headers['0x-api-key'] = zeroxKey;
       console.log('🔑 [API Proxy] API Key added to headers');
     } else {
       console.log('❌ [API Proxy] No API key found!');

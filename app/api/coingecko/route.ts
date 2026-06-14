@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, checkOrigin, cacheGet, cacheSet } from '@/lib/rate-limit';
 
 const COINGECKO_API_BASE_URL = 'https://api.coingecko.com/api/v3';
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
@@ -9,8 +10,11 @@ const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
  */
 export async function GET(request: NextRequest) {
   try {
+    const blocked = checkOrigin(request) || rateLimit(request, 'coingecko', 90, 60_000);
+    if (blocked) return blocked;
+
     const { searchParams } = new URL(request.url);
-    
+
     // Extract the endpoint path from the request
     const endpoint = searchParams.get('endpoint');
     if (!endpoint) {
@@ -18,6 +22,15 @@ export async function GET(request: NextRequest) {
         { error: 'Missing required parameter: endpoint' },
         { status: 400 }
       );
+    }
+
+    // Serve a recent cached price response if available.
+    const cacheKey = `cg:${request.url.split('/api/coingecko')[1] || ''}`;
+    const cachedData = cacheGet(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData, {
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      });
     }
 
     // Build the CoinGecko API URL
@@ -36,9 +49,10 @@ export async function GET(request: NextRequest) {
       'Content-Type': 'application/json',
     };
 
-    // Add API key if available
-    if (COINGECKO_API_KEY) {
-      headers['x-cg-pro-api-key'] = COINGECKO_API_KEY;
+    // User-provided key (forwarded by the client) takes precedence over the env var.
+    const coingeckoKey = request.headers.get('x-coingecko-key') || COINGECKO_API_KEY;
+    if (coingeckoKey) {
+      headers['x-cg-pro-api-key'] = coingeckoKey;
     }
 
     console.log('🔄 [CoinGecko Proxy] Fetching from:', coingeckoUrl.toString());
@@ -71,6 +85,8 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     console.log('✅ [CoinGecko Proxy] Data received successfully');
+
+    cacheSet(cacheKey, data, 30_000); // 30s — prices are fine slightly stale
 
     // Return the data with CORS headers
     return NextResponse.json(data, {

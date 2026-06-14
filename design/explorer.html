@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenBurner — Design Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --orange:#E4572E; --orange-br:#FF6B35; --logo:#FF5C00;
+    --geist:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'Geist Mono',ui-monospace,monospace;
+  }
+  body{background:#0a0a0d;color:#e8e8ea;font-family:var(--geist);padding:0 0 80px;-webkit-font-smoothing:antialiased;}
+
+  /* top bar */
+  .top{position:sticky;top:0;z-index:50;background:rgba(10,10,13,.86);backdrop-filter:blur(14px);border-bottom:1px solid #1c1c22;padding:18px 36px;}
+  .top .inner{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+  .top .brand{display:flex;align-items:center;gap:10px;}
+  .top .brand .wm{font-weight:700;font-size:17px;letter-spacing:-.01em;}
+  .top .brand .wm b{color:var(--orange-br);font-weight:700;}
+  .top .brand .sub{color:#6a6a74;font-size:12px;margin-left:4px;}
+  .nav{display:flex;gap:6px;margin-left:auto;background:#141419;border:1px solid #23232b;border-radius:999px;padding:5px;}
+  .nav button{font-family:inherit;border:none;background:transparent;color:#9a9aa4;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;cursor:pointer;transition:.18s;}
+  .nav button:hover{color:#e8e8ea;}
+  .nav button.on{background:linear-gradient(135deg,var(--orange-br),var(--orange));color:#fff;box-shadow:0 6px 16px -6px rgba(255,107,53,.6);}
+
+  .intro{max-width:1320px;margin:34px auto 8px;padding:0 36px;}
+  .intro h2{font-size:24px;font-weight:800;letter-spacing:-.02em;}
+  .intro h2 span{color:var(--orange-br);}
+  .intro p{color:#8a8a92;margin-top:8px;font-size:14.5px;max-width:760px;line-height:1.55;}
+  .intro .tags{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;}
+  .intro .tags b{font-size:11px;font-weight:600;color:#cfcfd6;background:#16161b;border:1px solid #26262e;border-radius:999px;padding:5px 11px;}
+
+  .grid{max-width:1320px;margin:30px auto 0;padding:0 36px;display:grid;grid-template-columns:repeat(3,1fr);gap:38px 34px;}
+  .cell{display:flex;flex-direction:column;}
+  .clabel{font-size:13px;font-weight:600;color:#b9b9c2;margin-bottom:12px;display:flex;gap:8px;align-items:center;}
+  .clabel i{font-style:normal;color:#5a5a64;border:1px solid #26262e;border-radius:6px;padding:2px 7px;font-size:11px;}
+  .pane{display:none;}
+  .pane.on{display:block;}
+  .iframewrap{max-width:1320px;margin:24px auto 0;padding:0 36px;}
+  .iframewrap iframe{width:100%;height:1640px;border:1px solid #23232b;border-radius:18px;background:#0b0b0e;}
+
+  /* ===================== PHONE FRAME ===================== */
+  .frame{width:100%;aspect-ratio:320/660;border-radius:38px;overflow:hidden;position:relative;
+    box-shadow:0 30px 60px -22px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);}
+  .app{position:absolute;inset:0;display:flex;flex-direction:column;padding:22px 18px 18px;z-index:3;}
+  .logo{display:inline-block;}
+  .logo svg{display:block;}
+  svg{stroke-linecap:round;stroke-linejoin:round;}
+
+  /* shared atoms */
+  .between{display:flex;align-items:center;justify-content:space-between;}
+  .uplabel{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.15em;}
+  .balnum{font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;}
+  .actions{display:grid;grid-template-columns:repeat(3,1fr);}
+  .act{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-weight:600;}
+  .act svg{width:17px;height:17px;}
+  .tabs{display:flex;}
+  .tab{font-weight:600;}
+  .asset{display:flex;align-items:center;gap:12px;}
+  .coin{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex:0 0 auto;}
+  .amt{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;}
+  .nftgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:4px;}
+  .nftart{width:100%;aspect-ratio:1;border-radius:14px;position:relative;overflow:hidden;}
+  .nftart.a{background:radial-gradient(120% 90% at 20% 10%,#ffd28a,transparent 55%),radial-gradient(120% 100% at 90% 30%,#ff6b9d,transparent 55%),linear-gradient(150deg,#7b5aff,#22d3ee);}
+  .nftart.b{background:radial-gradient(120% 90% at 80% 10%,#a0ffce,transparent 55%),linear-gradient(150deg,#0ea5e9,#4338ca);}
+  .nftart.c{background:radial-gradient(120% 90% at 30% 80%,#fda4af,transparent 55%),linear-gradient(150deg,#f59e0b,#b91c1c);}
+  .nftart.d{background:radial-gradient(120% 90% at 60% 20%,#fff,transparent 50%),linear-gradient(150deg,#334155,#0f172a);}
+  .field{display:flex;flex-direction:column;}
+  .row-li{display:flex;align-items:center;gap:13px;}
+  .toggle{width:38px;height:22px;border-radius:999px;position:relative;flex:0 0 auto;}
+  .toggle::after{content:"";position:absolute;width:17px;height:17px;border-radius:50%;background:#fff;top:2.5px;left:2.5px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .toggle.on::after{left:18.5px;}
+  .qr{width:150px;height:150px;border-radius:14px;display:grid;place-items:center;margin:0 auto;}
+
+  /* ============================================================
+     THEME A — LIQUID GLASS (.lg)
+  ============================================================ */
+  .frame.lg{background:linear-gradient(160deg,#e0e8f6 0%,#eef1f8 42%,#f8e9ef 100%);color:#1b212e;font-family:var(--geist);}
+  .frame.lg::before{content:"";position:absolute;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(255,140,90,.55),transparent 68%);top:-70px;right:-60px;filter:blur(28px);}
+  .frame.lg::after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(120,150,214,.5),transparent 68%);bottom:-50px;left:-70px;filter:blur(32px);}
+  .lg .glass{background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.92);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 22px 50px -24px rgba(40,52,92,.42);}
+  .lg .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;}
+  .lg .dot{width:8px;height:8px;border-radius:50%;background:var(--orange);}
+  .lg .menu{width:36px;height:36px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#1b212e;}
+  .lg .menu svg{width:18px;height:18px;}
+  .lg .uplabel{color:#737a89;}
+  .lg .balnum{font-size:50px;color:#141a27;margin:9px 0 7px;}
+  .lg .balsub{font-size:12.5px;color:#737a89;font-weight:500;}
+  .lg .balsub .up{color:#1f9d57;font-weight:600;}
+  .lg .card{border-radius:24px;padding:20px;}
+  .lg .actions{gap:10px;margin-top:20px;}
+  .lg .act{padding:13px 0;border-radius:16px;font-size:11px;}
+  .lg .act.sec{color:#28304a;}
+  .lg .act.prime{background:linear-gradient(135deg,var(--orange-br),var(--orange));color:#fff;box-shadow:0 12px 26px -10px rgba(255,107,53,.6);}
+  .lg .tabs{gap:8px;margin:22px 0 12px;}
+  .lg .tab{flex:1;text-align:center;border-radius:999px;padding:9px 0;font-size:12.5px;color:#737a89;}
+  .lg .tab.on{background:rgba(255,255,255,.7);color:#141a27;box-shadow:0 4px 12px rgba(40,52,92,.16);backdrop-filter:blur(10px);}
+  .lg .listcard{border-radius:20px;padding:5px 14px;}
+  .lg .asset{padding:13px 2px;}
+  .lg .asset+.asset{border-top:1px solid rgba(20,22,28,.07);}
+  .lg .coin{width:34px;height:34px;border-radius:50%;font-size:13px;}
+  .lg .nm{font-weight:600;font-size:13.5px;}
+  .lg .sub{font-size:11px;color:#737a89;margin-top:2px;}
+  .lg .amt{font-weight:600;font-size:13.5px;}
+  .lg .amt .s{display:block;font-size:11px;color:#737a89;font-weight:500;margin-top:2px;}
+  .lg .prime-btn{border:none;border-radius:15px;padding:15px;font-family:inherit;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--orange-br),var(--orange));box-shadow:0 14px 30px -10px rgba(255,107,53,.6);display:flex;align-items:center;justify-content:center;gap:9px;width:100%;}
+  .lg .prime-btn svg{width:17px;height:17px;}
+  .lg .ghost-btn{border:1px solid rgba(255,255,255,.92);background:rgba(255,255,255,.5);backdrop-filter:blur(12px);border-radius:15px;padding:15px;font-family:inherit;font-size:14px;font-weight:600;color:#28304a;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;}
+  .lg .ghost-btn svg{width:17px;height:17px;}
+  .lg .seg{display:flex;background:rgba(20,22,28,.05);border:1px solid rgba(20,22,28,.08);border-radius:14px;padding:4px;gap:4px;}
+  .lg .seg b{flex:1;font-size:12px;font-weight:600;color:#737a89;padding:9px 0;border-radius:10px;text-align:center;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .lg .seg b svg{width:14px;height:14px;}
+  .lg .seg b.on{background:#fff;color:#141a27;box-shadow:0 4px 12px rgba(40,52,92,.12);}
+  .lg .field{border-radius:14px;padding:14px 15px;margin-top:11px;}
+  .lg .fl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#737a89;}
+  .lg .fv{font-size:15px;font-weight:600;margin-top:7px;color:#141a27;font-variant-numeric:tabular-nums;}
+  .lg .fv.ph{color:#aab0bd;font-weight:500;}
+  .lg .maxbtn{font-size:11px;font-weight:700;color:var(--orange);}
+  .lg .hr{height:1px;background:rgba(20,22,28,.1);}
+  .lg .sumrow{display:flex;justify-content:space-between;font-size:12px;color:#737a89;padding:13px 2px;}
+  .lg .sumrow b{color:#141a27;font-weight:600;font-variant-numeric:tabular-nums;}
+  .lg .nftname{font-weight:600;font-size:12px;margin-top:7px;}
+  .lg .nftsub{font-size:10px;color:#737a89;margin-top:2px;}
+  .lg .trait{border-radius:12px;padding:10px 12px;}
+  .lg .trait .k{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);}
+  .lg .trait .v{font-size:12px;font-weight:600;margin-top:3px;}
+  .lg .netrow{display:flex;align-items:center;gap:12px;padding:11px;border-radius:14px;margin-bottom:6px;}
+  .lg .netrow.on{background:rgba(255,255,255,.7);box-shadow:0 4px 12px rgba(40,52,92,.14);}
+  .lg .x{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#737a89;}
+  .lg .x svg{width:15px;height:15px;}
+  .lg .qr{background:#fff;box-shadow:0 8px 22px rgba(40,52,92,.18);}
+  .lg .addr{font-family:var(--mono);font-size:12px;color:#28304a;word-break:break-all;}
+  .lg .toggle{background:var(--orange);}
+  .lg .seclabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;color:#9aa0ad;margin:18px 2px 8px;}
+  .lg .ic{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(20,22,28,.05);color:#28304a;flex:0 0 auto;}
+  .lg .ic svg{width:16px;height:16px;}
+
+  /* ============================================================
+     THEME B — SWISS EDITORIAL (.sw)
+  ============================================================ */
+  .frame.sw{background:#fafafa;color:#111;font-family:var(--geist);}
+  .sw .app{padding:24px 18px 18px;}
+  .sw .glass,.sw .card,.sw .listcard{background:transparent;}
+  .sw .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;}
+  .sw .dot{width:8px;height:8px;border-radius:50%;background:var(--orange);}
+  .sw .menu{display:flex;align-items:center;justify-content:center;color:#111;}
+  .sw .menu svg{width:20px;height:20px;stroke-width:2.4;}
+  .sw .topline{height:1px;background:#111;margin-top:16px;}
+  .sw .uplabel{color:#9a9a9a;}
+  .sw .balnum{font-size:54px;color:#111;margin:9px 0 8px;}
+  .sw .balnum .cur{color:var(--orange);}
+  .sw .balsub{font-size:12px;color:#888;font-weight:500;}
+  .sw .balsub .up{color:#1f9d57;font-weight:600;}
+  .sw .actions{margin-top:24px;border-top:1px solid #111;border-bottom:1px solid #111;}
+  .sw .act{padding:14px 0;border-right:1px solid #e3e3e3;color:#111;font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+  .sw .act:last-child{border-right:none;}
+  .sw .act.prime{color:var(--orange);}
+  .sw .tabs{margin:24px 0 0;border-bottom:1px solid #e3e3e3;gap:20px;}
+  .sw .tab{font-size:13px;color:#aaa;padding-bottom:11px;letter-spacing:-.01em;}
+  .sw .tab.on{color:#111;box-shadow:inset 0 -2px 0 var(--orange);}
+  .sw .asset{padding:15px 0;border-bottom:1px solid #ededed;}
+  .sw .coin{width:32px;height:32px;border-radius:7px;background:#111;font-size:12px;font-family:var(--mono);}
+  .sw .nm{font-weight:600;font-size:13.5px;letter-spacing:-.01em;}
+  .sw .sub{font-size:11px;color:#9a9a9a;margin-top:2px;}
+  .sw .amt{font-weight:600;font-size:13.5px;font-family:var(--mono);}
+  .sw .amt .s{display:block;font-size:11px;color:#9a9a9a;font-weight:400;margin-top:2px;}
+  .sw .prime-btn{border:none;border-radius:0;padding:16px;font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:var(--orange);display:flex;align-items:center;justify-content:center;gap:9px;width:100%;text-transform:uppercase;letter-spacing:.05em;}
+  .sw .prime-btn svg{width:16px;height:16px;}
+  .sw .ghost-btn{border:1px solid #111;background:#fff;border-radius:0;padding:16px;font-family:inherit;font-size:13px;font-weight:600;color:#111;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;text-transform:uppercase;letter-spacing:.05em;}
+  .sw .ghost-btn svg{width:16px;height:16px;}
+  .sw .seg{display:flex;border:1px solid #111;margin-top:2px;}
+  .sw .seg b{flex:1;font-size:11px;font-weight:600;color:#888;padding:12px 0;text-align:center;display:flex;align-items:center;justify-content:center;gap:7px;text-transform:uppercase;letter-spacing:.04em;border-right:1px solid #111;}
+  .sw .seg b:last-child{border-right:none;}
+  .sw .seg b svg{width:14px;height:14px;}
+  .sw .seg b.on{background:#111;color:#fff;}
+  .sw .field{border-bottom:1px solid #111;padding:14px 0;margin-top:6px;}
+  .sw .fl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:#9a9a9a;}
+  .sw .fv{font-size:17px;font-weight:600;margin-top:9px;color:#111;font-family:var(--mono);}
+  .sw .fv.ph{color:#bbb;font-weight:400;}
+  .sw .maxbtn{font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.05em;}
+  .sw .hr{height:1px;background:#ededed;}
+  .sw .sumrow{display:flex;justify-content:space-between;font-size:12px;color:#888;padding:14px 0;border-bottom:1px solid #ededed;}
+  .sw .sumrow b{color:#111;font-weight:600;font-family:var(--mono);}
+  .sw .nftname{font-weight:600;font-size:12px;margin-top:8px;letter-spacing:-.01em;}
+  .sw .nftsub{font-size:10px;color:#9a9a9a;margin-top:2px;font-family:var(--mono);}
+  .sw .trait{border:1px solid #e3e3e3;padding:10px 12px;}
+  .sw .trait .k{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);}
+  .sw .trait .v{font-size:12px;font-weight:600;margin-top:3px;}
+  .sw .netrow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #ededed;}
+  .sw .netrow.on .nm{color:var(--orange);}
+  .sw .x{display:flex;align-items:center;justify-content:center;color:#111;}
+  .sw .x svg{width:18px;height:18px;stroke-width:2.4;}
+  .sw .qr{background:#fff;border:1px solid #111;}
+  .sw .addr{font-family:var(--mono);font-size:12px;color:#111;word-break:break-all;}
+  .sw .toggle{background:#111;}
+  .sw .seclabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#111;margin:22px 0 4px;padding-bottom:8px;border-bottom:1px solid #111;}
+  .sw .ic{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#111;flex:0 0 auto;}
+  .sw .ic svg{width:17px;height:17px;}
+  .sw .nftgrid .nftart{border-radius:0;}
+  .sw .coinwrap-radius{border-radius:0;}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="inner">
+    <div class="brand">
+      <span class="logo" id="toplogo"></span>
+      <span class="wm">Open<b>Burner</b></span>
+      <span class="sub">Design Explorer</span>
+    </div>
+    <div class="nav">
+      <button data-pane="lg" class="on">Liquid Glass</button>
+      <button data-pane="sw">Swiss Editorial</button>
+      <button data-pane="all">All 10 Directions</button>
+    </div>
+  </div>
+</div>
+
+<div class="pane on" id="pane-lg">
+  <div class="intro">
+    <h2>Liquid <span>Glass</span> — full app</h2>
+    <p>Frosted translucent surfaces floating over ambient color, soft depth, rounded geometry. Calm, premium, modern. Real Geist typography and the OpenBurner flame mark throughout.</p>
+    <div class="tags"><b>Geist</b><b>frosted glass · backdrop-blur</b><b>ambient color blooms</b><b>rounded geometry</b><b>orange gradient CTA</b></div>
+  </div>
+  <div class="grid" id="grid-lg"></div>
+</div>
+
+<div class="pane" id="pane-sw">
+  <div class="intro">
+    <h2>Swiss <span>Editorial</span> — full app</h2>
+    <p>Whitespace, a strict grid, hairline rules, and data-as-typography. Giant tabular numerals, uppercase tracked labels, a single orange accent. Serious, institutional, ultra-legible. Geist + Geist Mono.</p>
+    <div class="tags"><b>Geist + Geist Mono</b><b>hairline rules</b><b>tabular numerals</b><b>uppercase labels</b><b>single orange accent</b></div>
+  </div>
+  <div class="grid" id="grid-sw"></div>
+</div>
+
+<div class="pane" id="pane-all">
+  <div class="intro">
+    <h2>All 10 <span>Directions</span></h2>
+    <p>The original overview — one representative screen per direction.</p>
+  </div>
+  <div class="iframewrap"><iframe src="design-directions.html" title="10 directions"></iframe></div>
+</div>
+
+<script>
+const LOGO=(s,c='#FF5C00')=>`<svg width="${s}" height="${s*377/320}" viewBox="0 0 320 377" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M179.775 3.65085C154.817 18.2009 130.111 41.5079 117.065 62.8109C115.329 65.6449 113.133 68.2718 112.185 68.6488C111.237 69.0258 107.311 70.4669 103.461 71.8499C91.9383 75.9909 75.7943 84.8788 64.8023 93.1339C2.24225 140.113 -17.6688 223.177 16.9752 292.658C32.9152 324.628 59.7153 350.833 91.9963 366.017C101.461 370.468 113.479 374.77 121.461 376.565C123.111 376.935 120.411 375.229 115.461 372.772C104.673 367.417 97.6703 361.351 87.0843 348.189C69.7763 326.672 59.4462 304.763 54.2992 278.658C51.5982 264.957 51.8522 239.209 54.8362 224.158C59.4122 201.086 70.1873 174.931 84.4683 152.237C91.4033 141.216 100.984 127.848 101.546 128.41C101.73 128.593 100.987 131.615 99.8953 135.124C96.9473 144.596 95.8303 157.95 97.0593 169.034C100.107 196.518 112.943 220.891 137.808 246.412C143.571 252.327 148.441 257.011 148.63 256.822C148.82 256.633 145.544 249.318 141.351 240.568C127.582 211.832 119.878 188.472 116.935 166.533C115.147 153.202 116.179 123.341 118.841 111.388C124.581 85.6148 137.446 58.5119 154.787 35.6579C157.291 32.3579 163.408 25.3829 168.381 20.1579C173.354 14.9329 179.666 8.29585 182.408 5.40785C185.149 2.51985 186.958 0.197855 186.427 0.246855C185.896 0.296855 182.902 1.82785 179.775 3.65085ZM188.961 66.7159C188.961 71.3369 193.082 89.4489 196.683 100.658C205.453 127.951 220.623 156.243 237.97 177.658C256.756 200.85 264.91 215.056 269.685 232.917C271.93 241.316 272.301 244.793 272.375 258.158C272.469 275.128 271.265 282.39 265.745 298.158C262.332 307.905 255.034 322.909 249.451 331.658C239.184 347.747 224.677 364.472 217.166 368.88C211.141 372.416 212.572 372.767 220.103 369.601C270.956 348.215 306.674 304.727 316.897 251.751C332.97 168.462 280.911 87.0229 198.294 66.2149C193.803 65.0839 189.865 64.1579 189.544 64.1579C189.224 64.1579 188.961 65.3089 188.961 66.7159Z" fill="${c}"/></svg>`;
+document.getElementById('toplogo').innerHTML=LOGO(22);
+
+const I={
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
+  swap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+  recv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>',
+  menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M3 12h18M3 6h18M3 18h18"/></svg>',
+  usb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M12 2v14M9 9l3-3 3 3M7 16a5 5 0 0 0 10 0M5 22h14"/></svg>',
+  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>',
+  nfc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M6 8.8a8 8 0 0 1 0 6.4M9.5 6.5a13 13 0 0 1 0 11M13 4a18 18 0 0 1 0 16"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>',
+  key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="8" cy="15" r="5"/><path d="M11.5 11.5 21 2M17 6l3 3"/></svg>',
+  out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>'
+};
+const coins=[
+  {l:'Ξ',n:'Ethereum',s:'ETH',a:'5.6889',v:'$21,455',c:'linear-gradient(135deg,#627eea,#8aa0f5)'},
+  {l:'$',n:'USD Coin',s:'USDC',a:'1,240.00',v:'$1,240',c:'linear-gradient(135deg,#2775ca,#4f9bf0)'},
+  {l:'₮',n:'Tether',s:'USDT',a:'298.25',v:'$298',c:'linear-gradient(135deg,#26a17b,#4cd0a0)'},
+];
+const chains=[['Ethereum','Ξ','#627eea',1],['Base','B','#0052ff',0],['Arbitrum','A','#2d374b',0],['Optimism','O','#ff0420',0],['Polygon','P','#8247e5',0]];
+const nfts=[['Genesis #204','Burner Genesis','a'],['Flare #88','Solar Flare','b'],['Ember #12','Ember Club','c'],['Void #301','Night Void','d']];
+
+const qr=(t)=>{ // simple faux-QR
+  let cells='';const N=11;const seed=[0,2,3,5,8,10,1,4,6,7,9];
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const on=((x*7+y*13+ (seed[x]||0))%3===0);if(on)cells+=`<rect x="${x*12+4}" y="${y*12+4}" width="10" height="10" rx="2" fill="#111"/>`;}
+  const finder=(fx,fy)=>`<rect x="${fx}" y="${fy}" width="34" height="34" rx="7" fill="#111"/><rect x="${fx+7}" y="${fy+7}" width="20" height="20" rx="4" fill="#fff"/><rect x="${fx+12}" y="${fy+12}" width="10" height="10" rx="2" fill="${t==='sw'?'#111':'#E4572E'}"/>`;
+  return `<svg width="138" height="138" viewBox="0 0 138 138">${cells}${finder(4,4)}${finder(100,4)}${finder(4,100)}</svg>`;
+};
+
+function header(t){return `<div class="between">
+  <span class="pill glass"><span class="dot"></span>Ethereum</span>
+  <span class="menu glass">${I.menu}</span>
+</div>${t==='sw'?'<div class="topline"></div>':''}`;}
+
+function balance(t){
+  const cur=t==='sw'?'<span class="cur">$</span>':'$';
+  return `<div style="margin-top:${t==='sw'?'26px':'22px'}">
+    <div class="uplabel">Total Balance</div>
+    <div class="balnum">${cur}28,505</div>
+    <div class="balsub"><span class="up">▲ 4.2%</span> · 6.21 ETH today</div>
+  </div>`;}
+
+function actions(t){return `<div class="actions">
+  <div class="act prime">${I.send}Send</div>
+  <div class="act sec glass">${I.swap}Swap</div>
+  <div class="act sec glass">${I.recv}Receive</div>
+</div>`;}
+
+function tabs(active){return `<div class="tabs">
+  <span class="tab ${active==='t'?'on':''}">Tokens</span>
+  <span class="tab ${active==='c'?'on':''}">Collectibles</span>
+</div>`;}
+
+function assetList(t){
+  return `<div class="listcard glass" style="margin-top:14px">`+coins.map(c=>`
+    <div class="asset">
+      <div class="coin" style="${t==='sw'?'':'background:'+c.c}">${c.l}</div>
+      <div><div class="nm">${c.s}</div><div class="sub">${c.n}</div></div>
+      <div class="amt">${c.a}<span class="s">${c.v}</span></div>
+    </div>`).join('')+`</div>`;}
+
+/* ---- screens ---- */
+function scConnect(t){return `<div class="app">
+  <div style="display:flex;align-items:center;justify-content:center;gap:9px;margin:6px 0 20px">
+    ${LOGO(26)}<span style="font-weight:700;font-size:18px;letter-spacing:-.01em">Open<span style="color:var(--orange-br)">Burner</span></span>
+  </div>
+  <div class="card glass" style="border-radius:${t==='sw'?'0':'24px'};padding:24px 20px;${t==='sw'?'border-top:1px solid #111;border-bottom:1px solid #111':''}">
+    <div style="text-align:center">
+      <div class="uplabel">Hardware Wallet</div>
+      <div style="font-size:21px;font-weight:800;letter-spacing:-.02em;margin-top:8px">Connect your Burner</div>
+      <div style="font-size:12.5px;color:${t==='sw'?'#888':'#737a89'};margin-top:6px;line-height:1.5">Tap your card to a USB NFC reader to sign in.</div>
+    </div>
+    <div class="seg" style="margin:18px 0">
+      <b class="on">${I.usb}Bridge</b><b>${I.phone}Gateway</b>
+    </div>
+    <button class="prime-btn">${I.nfc}Connect with NFC Reader</button>
+  </div>
+  <div style="margin-top:18px;${t==='sw'?'':'border-radius:24px;padding:6px 18px'}" class="${t==='sw'?'':'glass card'}">
+    <div class="row-li" style="padding:13px ${t==='sw'?'0':'0'};${t==='sw'?'border-bottom:1px solid #ededed':''}">
+      <span class="ic" style="${t==='sw'?'':'background:rgba(31,157,87,.12);'}color:#1f9d57">${I.check}</span>
+      <div><div style="font-size:12.5px;font-weight:600">HaLo Bridge</div><div style="font-size:11px;color:#9a9a9a;margin-top:1px">Connected and ready</div></div>
+    </div>
+    <div class="row-li" style="padding:13px 0">
+      <span class="ic" style="${t==='sw'?'':'background:rgba(228,87,46,.12);'}color:var(--orange)">${I.nfc}</span>
+      <div><div style="font-size:12.5px;font-weight:600">NFC Reader &amp; Card</div><div style="font-size:11px;color:#9a9a9a;margin-top:1px">Place your Burner on the reader</div></div>
+    </div>
+  </div>
+</div>`;}
+
+function scTokens(t){return `<div class="app">${header(t)}${balance(t)}${actions(t)}${tabs('t')}${assetList(t)}</div>`;}
+
+function scNftGallery(t){return `<div class="app">${header(t)}${balance(t)}${actions(t)}${tabs('c')}
+  <div class="between" style="margin-top:${t==='sw'?'14px':'4px'}">
+    <span class="uplabel">${nfts.length} items</span>
+    <span style="display:flex;gap:6px;color:#9a9a9a"><span class="ic" style="width:26px;height:26px;${t==='sw'?'':'background:rgba(20,22,28,.05)'}">＋</span></span>
+  </div>
+  <div class="nftgrid">${nfts.map(n=>`
+    <div>
+      <div class="nftart ${n[2]}"></div>
+      <div class="nftname">${n[0]}</div>
+      <div class="nftsub">${n[1]}</div>
+    </div>`).join('')}</div>
+</div>`;}
+
+function scNftDetail(t){return `<div class="app">
+  <div class="between" style="margin-bottom:16px">
+    <div style="max-width:72%"><div class="uplabel">Collectible</div><div style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin-top:4px;line-height:1.1">Burner Genesis #204</div></div>
+    <span class="x glass">${I.x}</span>
+  </div>
+  <div class="nftart a" style="border-radius:${t==='sw'?'0':'20px'};box-shadow:${t==='sw'?'none':'0 22px 50px -24px rgba(40,52,92,.42)'}"></div>
+  <div class="between" style="margin-top:14px">
+    <div><div style="font-size:13px;font-weight:600">Burner Genesis</div><div class="nftsub">Token #204 · ERC-721</div></div>
+    <span class="pill glass" style="font-size:11px;padding:6px 11px"><span class="dot"></span>Ethereum</span>
+  </div>
+  <div class="nftgrid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+    <div class="trait glass"><div class="k">Background</div><div class="v">Ember</div></div>
+    <div class="trait glass"><div class="k">Material</div><div class="v">Brushed Steel</div></div>
+    <div class="trait glass"><div class="k">Edition</div><div class="v">Genesis</div></div>
+    <div class="trait glass"><div class="k">Rarity</div><div class="v">2.1%</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+    <button class="prime-btn" style="padding:13px">${I.send}Send</button>
+    <button class="ghost-btn" style="padding:13px">${I.link}OpenSea</button>
+  </div>
+</div>`;}
+
+function scSend(t){return `<div class="app">
+  <div class="between" style="margin-bottom:16px">
+    <div><div class="uplabel">Send</div><div style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:4px">Ethereum</div></div>
+    <span class="x glass">${I.x}</span>
+  </div>
+  <span class="pill glass" style="font-size:12px"><span class="coin" style="width:22px;height:22px;font-size:10px;${t==='sw'?'border-radius:5px':'background:linear-gradient(135deg,#627eea,#8aa0f5)'}">Ξ</span>Balance · 5.6889 ETH</span>
+  <div class="field glass"><div class="fl">Recipient</div><div class="fv ph">0x… or ENS name</div></div>
+  <div class="field glass"><div class="fl">Amount</div><div class="between" style="margin-top:0"><div class="fv">2.5000</div><span class="maxbtn">MAX</span></div></div>
+  <div style="margin-top:18px"></div>
+  <div class="sumrow"><span>Network fee</span><b>~$1.84</b></div>
+  <div class="sumrow" style="border-bottom:none"><span>You'll send</span><b>2.5000 ETH</b></div>
+  <div style="flex:1"></div>
+  <button class="prime-btn">${I.send}Tap Burner to Sign</button>
+</div>`;}
+
+function scReceive(t){return `<div class="app">
+  <div class="between" style="margin-bottom:18px">
+    <div><div class="uplabel">Receive</div><div style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:4px">Ethereum</div></div>
+    <span class="x glass">${I.x}</span>
+  </div>
+  <div style="font-size:12px;color:#9a9a9a;line-height:1.5;margin-bottom:18px">Send only <b style="color:${t==='sw'?'#111':'#28304a'}">Ethereum</b> assets to this address.</div>
+  <div class="qr">${qr(t)}</div>
+  <div class="field glass" style="margin-top:22px">
+    <div class="fl">Your Address</div>
+    <div class="between" style="margin-top:9px"><div class="addr" style="max-width:80%">0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045</div><span style="color:var(--orange)">${I.copy}</span></div>
+  </div>
+  <div style="flex:1"></div>
+  <button class="prime-btn">Done</button>
+</div>`;}
+
+function scSwap(t){return `<div class="app">
+  <div class="between" style="margin-bottom:18px">
+    <div><div class="uplabel">Swap</div><div style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:4px">Tokens</div></div>
+    <span class="x glass">${I.x}</span>
+  </div>
+  <div class="field glass" style="margin-top:0"><div class="between"><div class="fl">You pay</div><div style="font-size:10px;color:#9a9a9a">Bal 5.69</div></div>
+    <div class="between" style="margin-top:8px"><div class="fv" style="font-size:22px">1.0</div><span class="pill glass" style="font-size:12px;padding:6px 10px"><span class="coin" style="width:20px;height:20px;font-size:10px;${t==='sw'?'border-radius:5px':'background:linear-gradient(135deg,#627eea,#8aa0f5)'}">Ξ</span>ETH</span></div></div>
+  <div style="text-align:center;margin:-8px 0;position:relative;z-index:4"><span class="x glass" style="margin:0 auto;display:inline-flex">${I.down}</span></div>
+  <div class="field glass" style="margin-top:0"><div class="between"><div class="fl">You receive</div><div style="font-size:10px;color:#9a9a9a">Bal 1,240</div></div>
+    <div class="between" style="margin-top:8px"><div class="fv" style="font-size:22px">3,842.10</div><span class="pill glass" style="font-size:12px;padding:6px 10px"><span class="coin" style="width:20px;height:20px;font-size:10px;${t==='sw'?'border-radius:5px':'background:linear-gradient(135deg,#2775ca,#4f9bf0)'}">$</span>USDC</span></div></div>
+  <div class="sumrow" style="margin-top:14px"><span>Rate</span><b>1 ETH = 3,842 USDC</b></div>
+  <div class="sumrow" style="border-bottom:none"><span>Network</span><b>Ethereum</b></div>
+  <div style="flex:1"></div>
+  <button class="prime-btn">${I.swap}Review Swap</button>
+</div>`;}
+
+function scNetwork(t){return `<div class="app">
+  <div class="between" style="margin-bottom:18px">
+    <div><div class="uplabel">Select</div><div style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:4px">Network</div></div>
+    <span class="x glass">${I.x}</span>
+  </div>
+  ${chains.map(c=>`<div class="netrow ${c[3]?'on':''}">
+    <span class="coin" style="width:32px;height:32px;font-size:12px;${t==='sw'?'border-radius:7px;':'border-radius:50%;'}background:${c[2]}">${c[1]}</span>
+    <div class="nm" style="font-weight:600;font-size:13.5px">${c[0]}</div>
+    ${c[3]?`<span style="margin-left:auto;color:var(--orange)">${I.check}</span>`:''}
+  </div>`).join('')}
+  <div class="netrow" style="${t==='sw'?'':'background:transparent'}">
+    <span class="ic">＋</span><div class="nm" style="font-weight:600;font-size:13.5px;color:#9a9a9a">Add custom RPC</div>
+  </div>
+  <div style="flex:1"></div>
+</div>`;}
+
+function scMenu(t){
+  const item=(ic,label,extra='')=>`<div class="row-li" style="padding:15px 0;${t==='sw'?'border-bottom:1px solid #ededed':''}">
+    <span class="ic">${ic}</span><div style="font-weight:600;font-size:13.5px">${label}</div>${extra}</div>`;
+  return `<div class="app">
+  <div class="between" style="margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:9px">${LOGO(22)}<span style="font-weight:700;font-size:16px">Open<span style="color:var(--orange-br)">Burner</span></span></div>
+    <span class="x glass">${I.x}</span>
+  </div>
+  <div style="${t==='sw'?'':'margin-top:14px'}">
+    ${item(I.moon,'Dark Mode',`<span class="toggle on" style="margin-left:auto"></span>`)}
+    ${item(I.globe,'Default Network',`<span style="margin-left:auto;color:#9a9a9a;font-size:12px;display:flex;align-items:center;gap:4px">Ethereum ${I.chev}</span>`)}
+    ${item(I.key,'API Keys',`<span style="margin-left:auto;color:#9a9a9a">${I.chev}</span>`)}
+    ${item(I.shield,'Security & PIN',`<span style="margin-left:auto;color:#9a9a9a">${I.chev}</span>`)}
+    ${item(I.link,'OpenBurner.xyz',`<span style="margin-left:auto;color:#9a9a9a">${I.out}</span>`)}
+  </div>
+  <div style="flex:1"></div>
+  <button class="ghost-btn" style="color:var(--orange);border-color:var(--orange)">${I.out}Disconnect</button>
+</div>`;}
+
+function scSettings(t){
+  const row=(label,right,border=true)=>`<div class="row-li" style="padding:14px 0;${border&&t==='sw'?'border-bottom:1px solid #ededed':''}${!border?'':''}">
+    <div style="font-weight:500;font-size:13px">${label}</div><div style="margin-left:auto">${right}</div></div>`;
+  const keyrow=(label,ok)=>`<div class="row-li" style="padding:13px 0;${t==='sw'?'border-bottom:1px solid #ededed':''}">
+     <div style="font-weight:500;font-size:13px">${label}</div>
+     <span style="margin-left:auto;font-size:11px;font-weight:600;color:${ok?'#1f9d57':'#9a9a9a'};display:flex;align-items:center;gap:5px">
+       <span style="width:7px;height:7px;border-radius:50%;background:${ok?'#1f9d57':'#cfcfcf'}"></span>${ok?'Connected':'Not set'}</span></div>`;
+  return `<div class="app" style="overflow:hidden">
+  <div class="between" style="margin-bottom:6px">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">Settings</div>
+    <span class="x glass">${I.x}</span>
+  </div>
+  <div style="overflow:auto">
+    <div class="seclabel">Appearance</div>
+    ${row('Dark mode',`<span class="toggle on"></span>`)}
+    ${row('Theme',`<span style="color:#9a9a9a;font-size:12px;display:flex;align-items:center;gap:4px">Liquid Glass ${I.chev}</span>`,false)}
+    <div class="seclabel">Network</div>
+    ${row('Default network',`<span style="color:#9a9a9a;font-size:12px;display:flex;align-items:center;gap:4px">Ethereum ${I.chev}</span>`)}
+    ${row('Custom RPCs',`<span style="color:#9a9a9a;font-size:12px;display:flex;align-items:center;gap:4px">2 saved ${I.chev}</span>`,false)}
+    <div class="seclabel">API Keys</div>
+    ${keyrow('CoinGecko (pricing)',true)}
+    ${keyrow('0x (swaps)',true)}
+    ${keyrow('Alchemy (NFTs)',false)}
+    <div class="seclabel">About</div>
+    ${row('Version',`<span style="color:#9a9a9a;font-size:12px;font-family:var(--mono)">v1.2.0</span>`,false)}
+  </div>
+</div>`;}
+
+const screens=[
+  ['Sign in / Connect',scConnect],
+  ['Dashboard · Tokens',scTokens],
+  ['Dashboard · Collectibles',scNftGallery],
+  ['NFT detail',scNftDetail],
+  ['Send',scSend],
+  ['Receive',scReceive],
+  ['Swap',scSwap],
+  ['Network selector',scNetwork],
+  ['Menu',scMenu],
+  ['Settings',scSettings],
+];
+
+function build(t){
+  return screens.map((s,i)=>`<div class="cell">
+    <div class="clabel"><i>${String(i+1).padStart(2,'0')}</i>${s[0]}</div>
+    <div class="frame ${t}">${s[1](t)}</div>
+  </div>`).join('');
+}
+document.getElementById('grid-lg').innerHTML=build('lg');
+document.getElementById('grid-sw').innerHTML=build('sw');
+
+document.querySelectorAll('.nav button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+    document.getElementById('pane-'+b.dataset.pane).classList.add('on');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>

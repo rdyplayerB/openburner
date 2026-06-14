@@ -115,10 +115,10 @@ export function Tooltip({ children, content, className = '' }: TooltipProps) {
             onMouseEnter={handleTooltipMouseEnter}
             onMouseLeave={handleTooltipMouseLeave}
           >
-            <div className="bg-slate-900 dark:bg-slate-800 text-white text-sm px-3 py-2 rounded-lg shadow-lg border border-slate-700 max-w-xs pointer-events-auto">
+            <div className="bg-[#1a1a1d] text-white text-sm px-3 py-2 rounded-lg border border-white/10 max-w-xs pointer-events-auto">
               {content}
               {/* Arrow */}
-              <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-900 dark:bg-slate-800 border-l border-t border-slate-700 rotate-45"></div>
+              <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#1a1a1d] border-l border-t border-white/10 rotate-45"></div>
             </div>
           </motion.div>
         )}

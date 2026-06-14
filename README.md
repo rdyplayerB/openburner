@@ -22,6 +22,7 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. It supp
 - 💰 **Token Management** - View balances for ETH and ERC-20 tokens
 - 💸 **Send Transactions** - Native and ERC-20 transfers with hardware signing
 - 🔄 **Token Swaps** - Decentralized swaps using [0x Standard Swap API](https://0x.org/docs/category/swap-api) (local: requires API key, hosted: limited)
+- 🖼️ **NFT Management** - View, receive, and send ERC-721 & ERC-1155 collectibles with a gallery view, full detail pages, and OpenSea links. Auto-discovery via an optional [Alchemy NFT API](https://www.alchemy.com) key, plus manual add-by-contract on any chain
 - 📊 **Real-Time Prices** - CoinGecko integration (local version only)
 - 🚀 **Custom RPCs** - Connect to any EVM-compatible chain
 

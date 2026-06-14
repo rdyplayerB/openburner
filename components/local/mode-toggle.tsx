@@ -34,47 +34,39 @@ export function ModeToggle({ onModeChange }: ModeToggleProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-black/[0.04] dark:border-slate-700/60 shadow-card-sm p-6 mb-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-          Connection Mode
-        </h3>
-        
-        <div className="flex bg-slate-100 dark:bg-slate-700 rounded-xl p-1">
-          <button
-            onClick={() => handleModeChange('bridge')}
-            disabled={isChanging}
-            className={`flex-1 flex items-center justify-center gap-3 py-4 px-4 rounded-lg font-semibold transition-all duration-200 ${
-              connectionMode === 'bridge'
-                ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-lg'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-600/50'
-            } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <Usb className="w-5 h-5" strokeWidth={2.5} />
-            <span>Bridge</span>
-          </button>
-          
-          <button
-            onClick={() => handleModeChange('gateway')}
-            disabled={isChanging}
-            className={`flex-1 flex items-center justify-center gap-3 py-4 px-4 rounded-lg font-semibold transition-all duration-200 ${
-              connectionMode === 'gateway'
-                ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-lg'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-600/50'
-            } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <Smartphone className="w-5 h-5" strokeWidth={2.5} />
-            <span>Gateway</span>
-          </button>
-        </div>
-        
-        <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-          {connectionMode === 'bridge' 
-            ? 'Use USB NFC reader with HaLo Bridge software'
-            : 'Use smartphone as NFC reader via HaLo Gateway'
-          }
-        </div>
+    <div>
+      <div className="sw-uplabel mb-3">Connection mode</div>
+
+      <div className="flex gap-6 border-b border-[var(--sw-line)]">
+        <button
+          onClick={() => handleModeChange('bridge')}
+          disabled={isChanging}
+          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${
+            connectionMode === 'bridge' ? 'sw-tab-active' : ''
+          } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <Usb className="w-4 h-4" />
+          <span>Bridge</span>
+        </button>
+
+        <button
+          onClick={() => handleModeChange('gateway')}
+          disabled={isChanging}
+          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${
+            connectionMode === 'gateway' ? 'sw-tab-active' : ''
+          } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <Smartphone className="w-4 h-4" />
+          <span>Gateway</span>
+        </button>
       </div>
+
+      <p className="mt-3 text-sm text-[var(--sw-muted)]">
+        {connectionMode === 'bridge'
+          ? 'USB NFC reader with HaLo Bridge software'
+          : 'Smartphone as NFC reader via HaLo Gateway'
+        }
+      </p>
     </div>
   );
 }

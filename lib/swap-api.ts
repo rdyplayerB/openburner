@@ -10,6 +10,7 @@
 
 import { ethers } from 'ethers';
 import { rpcRateLimiter } from "./rpc-rate-limiter";
+import { getUserKey } from "./user-keys";
 
 // 0x Standard Swap API Configuration
 const ZEROX_API_BASE_URL = 'https://api.0x.org';
@@ -163,8 +164,11 @@ function getHeaders(): HeadersInit {
     'Content-Type': 'application/json',
   };
 
-  if (ZEROX_API_KEY) {
-    headers['0x-api-key'] = ZEROX_API_KEY;
+  // User-entered key (this browser) takes precedence over the build env var.
+  const key = getUserKey('zerox') || ZEROX_API_KEY;
+  if (key) {
+    headers['0x-api-key'] = key;
+    headers['x-0x-key'] = key; // forwarded to the /api/swap/quote proxy
   }
 
   return headers;

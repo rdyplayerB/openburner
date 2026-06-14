@@ -20,37 +20,36 @@ export default function Home() {
   // Show loading state until hydration is complete
   if (!isClient) {
     return (
-      <main className="min-h-screen p-4 transition-colors duration-700 bg-connected bg-bg-base dark:bg-slate-900">
-        <div className="max-w-2xl mx-auto pt-4 pb-8 relative z-10">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span>Loading...</span>
-            </div>
-          </div>
+      <main className="sw-screen min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-3 text-[var(--sw-muted)]">
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--sw-accent)]" />
+          <span className="text-sm">Loading…</span>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen p-4 transition-colors duration-700 bg-connected bg-bg-base dark:bg-slate-900">
-      <div className="max-w-2xl mx-auto pt-4 pb-8 relative z-10">
-        {!isConnected ? (
-          // Environment-aware rendering - only after hydration
-          isHosted && isMobile ? (
-            <HostedMobileConnect />
-          ) : isHosted && !isMobile ? (
-            <HostedDesktopConnect />
-          ) : (
-            <WalletConnect />
-          )
-        ) : (
-          <WalletDashboard />
-        )}
-      </div>
-      
-      {/* Removed OfflineIndicator and OnlineIndicator as requested */}
+    <main className="sw-screen min-h-screen">
+      {!isConnected ? (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            {isHosted && isMobile ? (
+              <HostedMobileConnect />
+            ) : isHosted && !isMobile ? (
+              <HostedDesktopConnect />
+            ) : (
+              <WalletConnect />
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="p-4">
+          <div className="max-w-2xl mx-auto pt-4 pb-8">
+            <WalletDashboard />
+          </div>
+        </div>
+      )}
     </main>
   );
 }

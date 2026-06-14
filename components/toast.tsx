@@ -37,11 +37,11 @@ export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastPro
   return (
     <div className="fixed top-4 right-4 z-[100] pointer-events-none">
       <div
-        className={`pointer-events-auto bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg dark:shadow-2xl dark:border dark:border-slate-700 flex items-center gap-3 min-w-[200px] ${
+        className={`pointer-events-auto sw-surface border border-[var(--sw-line)] text-[var(--sw-ink)] px-4 py-3 rounded-lg flex items-center gap-3 min-w-[200px] ${
           isExiting ? "toast-slide-out" : "toast-slide-in"
         }`}
       >
-        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" strokeWidth={2.5} />
+        <CheckCircle className="w-5 h-5 text-[var(--sw-up)] flex-shrink-0" strokeWidth={2.5} />
         <span className="text-sm font-medium flex-1">{message}</span>
         <button
           onClick={(e) => {
@@ -52,7 +52,7 @@ export function Toast({ message, isVisible, onClose, duration = 2000 }: ToastPro
             setIsExiting(true);
             setTimeout(onClose, 300);
           }}
-          className="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700/50 flex-shrink-0"
+          className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors p-1 rounded flex-shrink-0"
           aria-label="Close notification"
         >
           <X className="w-4 h-4" strokeWidth={2.5} />

@@ -67,83 +67,81 @@ export function TransactionCompletionModal({
   const chainName = getChainName(chainId);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 relative">
-        {/* Success Icon */}
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
+      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden relative">
+        <div className="px-5 py-5">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Success Icon */}
+          <div className="flex justify-center mb-4">
+            <svg className="w-12 h-12 text-[var(--sw-up)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-        </div>
 
-        {/* Title */}
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-2">
-          Swap Completed!
-        </h2>
+          {/* Title */}
+          <h2 className="text-lg font-bold text-[var(--sw-ink)] text-center mb-6">
+            Swap complete
+          </h2>
 
-        {/* Transaction Details */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-          <div className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
-            <div className="flex justify-between">
-              <span>From:</span>
-              <span className="font-medium">{fromAmount} {fromToken}</span>
+          {/* Transaction Details */}
+          <div className="sw-list mb-6">
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">From</span>
+              <span className="text-[var(--sw-ink)] font-medium sw-mono text-xs text-right break-all">{fromAmount} {fromToken}</span>
             </div>
-            <div className="flex justify-between">
-              <span>To:</span>
-              <span className="font-medium">{toAmount} {toToken}</span>
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">To</span>
+              <span className="text-[var(--sw-ink)] font-medium sw-mono text-xs text-right break-all">{toAmount} {toToken}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Network:</span>
-              <span className="font-medium">{chainName}</span>
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">Network</span>
+              <span className="text-[var(--sw-ink)] font-medium text-right">{chainName}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>Transaction:</span>
-              <span className="font-mono text-xs text-blue-600 dark:text-blue-400 break-all">
-                {txHash.slice(0, 10)}...{txHash.slice(-8)}
+            <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="text-[var(--sw-muted)]">Transaction</span>
+              <span className="sw-mono text-xs text-[var(--sw-ink)] break-all text-right">
+                {txHash.slice(0, 10)}…{txHash.slice(-8)}
               </span>
             </div>
           </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            {/* View on Scanner Button */}
+            <a
+              href={scannerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sw-btn-primary w-full py-3 px-4 text-sm flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span>View on {chainName} Scanner</span>
+            </a>
+
+            {/* Return to Wallet Button */}
+            <button
+              onClick={onReturnToWallet}
+              className="sw-btn-ghost w-full py-3 px-4 text-sm flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+              </svg>
+              <span>Return to Wallet</span>
+            </button>
+          </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          {/* View on Scanner Button */}
-          <a
-            href={scannerUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            <span>View on {chainName} Scanner</span>
-          </a>
-
-          {/* Return to Wallet Button */}
-          <button
-            onClick={onReturnToWallet}
-            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
-            </svg>
-            <span>Return to Wallet</span>
-          </button>
-        </div>
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
     </div>
   );

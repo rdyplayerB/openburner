@@ -1,14 +1,17 @@
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+    <div className="sw-screen min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-slate-900 dark:text-slate-100 mb-4">404</h1>
-        <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">Page not found</p>
-        <a 
-          href="/" 
-          className="inline-flex items-center px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
+        <p className="sw-uplabel mb-3">Error 404</p>
+        <h1 className="text-6xl sw-display text-[var(--sw-ink)] mb-3">
+          <span className="sw-accent">4</span>0<span className="sw-accent">4</span>
+        </h1>
+        <p className="text-base text-[var(--sw-muted)] mb-8">Page not found</p>
+        <a
+          href="/"
+          className="sw-btn-primary inline-flex items-center px-6 py-3 text-sm"
         >
-          Go Home
+          Go home
         </a>
       </div>
     </div>

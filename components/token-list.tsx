@@ -703,35 +703,34 @@ export function TokenList({
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100 dark:border-slate-700">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assets</h2>
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--sw-line)]">
+        <h2 className="sw-seclabel border-0 pb-0">Assets</h2>
+        <div className="flex items-center gap-4">
           <div className="relative group">
             <button
               onClick={handleManualRefresh}
               disabled={isLoading}
-              className="text-slate-600 dark:text-slate-400 hover:text-brand-orange p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+              className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${isActuallyRefreshing ? "animate-spin" : ""}`} strokeWidth={2.5} />
+              <RefreshCw className={`w-4 h-4 ${isActuallyRefreshing ? "animate-spin" : ""}`} />
             </button>
-            <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-50">
+            <div className="absolute top-full right-0 mt-2 px-3 py-2 sw-surface border border-[var(--sw-line)] text-[var(--sw-ink)] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
               Refresh balances & prices
-              <div className="absolute bottom-full right-4 mb-1 border-4 border-transparent border-b-slate-900 dark:border-b-slate-700"></div>
             </div>
           </div>
           <button
             onClick={() => setShowAddToken(!showAddToken)}
-            className="text-base text-slate-700 dark:text-slate-300 hover:text-brand-orange font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all group"
+            className="text-xs sw-accent hover:opacity-80 font-semibold flex items-center gap-1 transition-opacity group"
           >
             {showAddToken ? (
               <>
-                <X className="w-4 h-4" strokeWidth={2.5} />
+                <X className="w-3.5 h-3.5" />
                 Cancel
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
-                Add Token
+                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
+                Add token
               </>
             )}
           </button>
@@ -742,20 +741,20 @@ export function TokenList({
       <div className="flex items-center gap-3 mb-3">
         {/* Search Input */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--sw-muted)]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search assets by name, symbol, or address..."
-            className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400"
+            placeholder="Search name, symbol, or address"
+            className="sw-input w-full pl-6 pr-2 py-2 text-sm"
           />
         </div>
 
         {/* Sort Controls */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 font-medium">Sort:</span>
-          <div className="flex gap-1">
+        <div className="flex items-center gap-3">
+          <span className="sw-uplabel">Sort</span>
+          <div className="flex gap-3">
             <button
               onClick={() => {
                 if (sortBy === 'alphabetical') {
@@ -767,10 +766,10 @@ export function TokenList({
                   setSortDirection('asc');
                 }
               }}
-              className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors ${
-                sortBy === 'alphabetical' 
-                  ? 'bg-brand-orange text-white' 
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+              className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
+                sortBy === 'alphabetical'
+                  ? 'sw-accent'
+                  : 'text-[var(--sw-muted)] hover:text-[var(--sw-ink)]'
               }`}
             >
               {sortBy === 'alphabetical' && sortDirection === 'desc' ? (
@@ -791,10 +790,10 @@ export function TokenList({
                   setSortDirection('desc');
                 }
               }}
-              className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors ${
-                sortBy === 'value' 
-                  ? 'bg-brand-orange text-white' 
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+              className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
+                sortBy === 'value'
+                  ? 'sw-accent'
+                  : 'text-[var(--sw-muted)] hover:text-[var(--sw-ink)]'
               }`}
             >
               {sortBy === 'value' && sortDirection === 'asc' ? (
@@ -802,7 +801,7 @@ export function TokenList({
               ) : (
                 <SortAsc className="w-3 h-3" />
               )}
-              Value ($)
+              Value
             </button>
           </div>
         </div>
@@ -811,45 +810,53 @@ export function TokenList({
       {/* Legend for custom tokens */}
 
       {showAddToken && (
-        <div className="mb-3 p-3 sm:p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
-          <label className="block text-xs text-slate-600 dark:text-slate-400 font-semibold mb-2">
-            Token Contract Address
+        <div className="mb-3 p-4 sw-surface rounded-xl border border-[var(--sw-line)]">
+          <label className="block sw-uplabel mb-2">
+            Token contract address
           </label>
           <input
             type="text"
             value={newTokenAddress}
             onChange={(e) => setNewTokenAddress(e.target.value)}
             placeholder="0x..."
-            className="w-full px-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-brand-orange focus:border-transparent mb-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            className="sw-input sw-mono w-full px-0 py-2 text-sm mb-3"
           />
           {error && (
-            <p className="text-xs text-red-600 mb-3 px-1 font-medium">{error}</p>
+            <p className="text-xs text-[var(--sw-down)] mb-3 font-medium">{error}</p>
           )}
           <button
             onClick={handleAddToken}
             disabled={!newTokenAddress || isLoading}
-            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-semibold py-2.5 px-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-glow-orange"
+            className="sw-btn-primary w-full text-sm py-2.5 px-3"
           >
-            {isLoading ? "Adding..." : "Add Token"}
+            {isLoading ? "Adding..." : "Add token"}
           </button>
         </div>
       )}
 
       {isLoading && tokens.length === 0 ? (
-        <div className="text-center py-16">
-          <RefreshCw className="w-8 h-8 text-slate-400 animate-spin mx-auto mb-4" />
-          <p className="text-slate-500 text-sm font-medium">Loading assets...</p>
+        <div className="sw-list">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
+              <div className="w-8 h-8 rounded-lg bg-[var(--sw-line-soft)] flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-20 rounded bg-[var(--sw-line-soft)]" />
+                <div className="h-2.5 w-28 rounded bg-[var(--sw-line-soft)]" />
+              </div>
+              <div className="h-3 w-16 rounded bg-[var(--sw-line-soft)]" />
+            </div>
+          ))}
         </div>
       ) : tokens.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-            <Plus className="w-8 h-8 text-slate-600" />
+          <div className="w-12 h-12 mx-auto mb-4 rounded-lg border border-[var(--sw-line)] flex items-center justify-center">
+            <Plus className="w-6 h-6 text-[var(--sw-muted)]" />
           </div>
-          <p className="text-slate-700 text-sm font-semibold mb-1">No assets found</p>
-          <p className="text-slate-400 text-xs">Popular tokens are auto-detected</p>
+          <p className="text-[var(--sw-ink)] text-sm font-semibold mb-1">No assets found</p>
+          <p className="text-[var(--sw-muted)] text-xs">Popular tokens are auto-detected</p>
         </div>
       ) : (
-        <div className="space-y-1">
+        <div className="sw-list">
           {tokens
             .filter((token) => {
               // Apply search filter
@@ -898,71 +905,25 @@ export function TokenList({
             const isCustomToken = !isNative && getStoredTokenAddresses().includes(token.address.toLowerCase());
             const popularTokens = getTokenListForChain(chainId);
             const isPopularToken = popularTokens.some(t => t.address.toLowerCase() === token.address.toLowerCase());
-            
-            // Check if this is the last native token (to add separator after it)
-            const tokensArray = tokens.filter((token) => {
-              if (!searchQuery.trim()) return true;
-              
-              const query = searchQuery.toLowerCase().trim();
-              const matchesSymbol = token.symbol.toLowerCase().includes(query);
-              const matchesName = token.name.toLowerCase().includes(query);
-              const matchesAddress = token.address.toLowerCase().includes(query);
-              
-              return matchesSymbol || matchesName || matchesAddress;
-            }).sort((a, b) => {
-              // Always keep native token (ETH, BNB, etc.) at the top
-              const aIsNative = a.address === "native";
-              const bIsNative = b.address === "native";
-              
-              if (aIsNative && !bIsNative) return -1;
-              if (!aIsNative && bIsNative) return 1;
-              
-              // If both are native or both are not native, apply normal sorting
-              if (sortBy === 'alphabetical') {
-                const comparison = a.symbol.localeCompare(b.symbol);
-                return sortDirection === 'asc' ? comparison : -comparison;
-              } else if (sortBy === 'value') {
-                const aValue = parseFloat(a.balance) * (tokenPrices[a.symbol] || 0);
-                const bValue = parseFloat(b.balance) * (tokenPrices[b.symbol] || 0);
-                
-                // If both have value, sort by value (direction based on sortDirection)
-                if (aValue > 0 && bValue > 0) {
-                  return sortDirection === 'desc' ? bValue - aValue : aValue - bValue;
-                }
-                
-                // If both are zero, always sort alphabetically (A-Z) regardless of main sort direction
-                if (aValue === 0 && bValue === 0) {
-                  return a.symbol.localeCompare(b.symbol);
-                }
-                
-                // If one has value and one doesn't, value comes first
-                return bValue - aValue;
-              }
-              return 0; // No sorting
-            });
-            
-            const nativeTokens = tokensArray.filter(t => t.address === "native");
-            const isLastNativeToken = isNative && index === nativeTokens.length - 1;
-            const hasNonNativeTokens = tokensArray.some(t => t.address !== "native");
-            
+
             return (
               <React.Fragment key={token.address}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.3, 
+                  transition={{
+                    duration: 0.3,
                     delay: index * 0.05,
                     ease: "easeOut"
                   }}
-                  className="flex items-center justify-between pl-3 pr-0 py-2 sm:pl-4 sm:pr-0 sm:py-2.5 rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100/40 dark:border-slate-700/40 last:border-b-0 group hover:scale-[1.01] active:scale-[0.99]"
+                  className="flex items-center justify-between py-3 transition-colors hover:bg-[color-mix(in_srgb,var(--sw-ink)_4%,transparent)] border-t border-[var(--sw-line-soft)] first:border-t-0 group"
                 >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {/* Token Icon */}
                   <div className="flex-shrink-0">
                     {tokenImages[token.symbol.toUpperCase()] ? (
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-white shadow-sm ring-1 ring-slate-900/5">
-                        <img 
+                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-[var(--sw-line)]">
+                        <img
                           src={tokenImages[token.symbol.toUpperCase()]}
                           alt={token.symbol}
                           className="w-full h-full object-cover"
@@ -972,58 +933,58 @@ export function TokenList({
                             target.style.display = 'none';
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center';
-                              parent.innerHTML = `<span class="text-sm font-bold text-brand-orange">${token.symbol[0]}</span>`;
+                              parent.className = 'w-8 h-8 sw-mark rounded-lg flex items-center justify-center';
+                              parent.innerHTML = `<span class="text-sm font-bold">${token.symbol[0]}</span>`;
                             }
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-orange/10 to-brand-orange/5 flex items-center justify-center">
-                        <span className="text-sm font-bold text-brand-orange">{token.symbol[0]}</span>
+                      <div className="w-8 h-8 sw-mark rounded-lg flex items-center justify-center">
+                        <span className="text-sm font-bold">{token.symbol[0]}</span>
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Token Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="font-bold text-slate-900 dark:text-slate-100 token-opacity">{token.symbol}</p>
+                      <p className="font-semibold text-[var(--sw-ink)] token-opacity">{token.symbol}</p>
                       {/* Reserve space for custom token indicator to maintain consistent alignment */}
                       <div className="flex-shrink-0 flex items-center">
                         {isCustomToken && !isPopularToken && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400">
+                          <span className="sw-uplabel">
                             Custom
                           </span>
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate leading-tight">{token.name}</p>
+                    <p className="text-xs text-[var(--sw-muted)] truncate leading-tight">{token.name}</p>
                   </div>
-                  
+
                   {/* Balance - Right aligned */}
                   <div className="text-right flex-shrink-0">
                     {parseFloat(token.balance) > 0 && (
                       <>
-                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono balance-number">
+                        <p className="text-sm font-semibold text-[var(--sw-ink)] sw-num balance-number">
                           {formatTokenBalance(token.balance, token.symbol === 'USDC' || token.symbol === 'USDT')}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
+                        <p className="text-xs text-[var(--sw-muted)] sw-num leading-tight">
                           {pricingEnabled ? (
                             tokenPrices[token.symbol] !== undefined ? (
                               `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
                             ) : (
-                              <span className="text-slate-400">Refresh to see price</span>
+                              <span className="text-[var(--sw-muted)]">Refresh for price</span>
                             )
                           ) : (
-                            <span className="text-slate-400">-</span>
+                            <span className="text-[var(--sw-muted)]">-</span>
                           )}
                         </p>
                       </>
                     )}
                   </div>
                 </div>
-                
+
                 {/* Action buttons on hover */}
                 <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                   {/* Send button - only show if balance > 0 */}
@@ -1033,13 +994,13 @@ export function TokenList({
                         e.stopPropagation();
                         onSendToken(token);
                       }}
-                      className="p-2 bg-brand-orange/10 text-brand-orange rounded-lg hover:bg-brand-orange/20 transition-colors"
+                      className="p-2 sw-accent hover:bg-[color-mix(in_srgb,var(--sw-accent)_12%,transparent)] rounded-lg transition-colors"
                       title="Send"
                     >
-                      <Send className="w-4 h-4" strokeWidth={2.5} />
+                      <Send className="w-4 h-4" />
                     </button>
                   )}
-                  
+
                   {/* Remove button for custom tokens - always reserve space for consistent alignment */}
                   {isCustomToken && !isPopularToken ? (
                     <button
@@ -1047,23 +1008,16 @@ export function TokenList({
                         e.stopPropagation();
                         handleRemoveTokenClick(token.address);
                       }}
-                      className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                      className="p-2 text-[var(--sw-down)] hover:bg-[color-mix(in_srgb,var(--sw-down)_12%,transparent)] rounded-lg transition-colors"
                       title="Remove from wallet"
                     >
-                      <Trash2 className="w-4 h-4" strokeWidth={2.5} />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   ) : (
                     <div className="w-8 h-8" />
                   )}
                 </div>
               </motion.div>
-              
-              {/* Separator after native token */}
-              {isLastNativeToken && hasNonNativeTokens && (
-                <div className="px-3 sm:px-4 py-2">
-                  <div className="border-t border-slate-200 dark:border-slate-600"></div>
-                </div>
-              )}
               </React.Fragment>
             );
           })}
@@ -1072,18 +1026,18 @@ export function TokenList({
 
       {/* Remove Token Confirmation Modal */}
       {showRemoveConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm"
+            className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden p-6"
           >
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-              Remove Token
+            <h3 className="text-lg font-bold text-[var(--sw-ink)] mb-2">
+              Remove token
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              Are you sure you want to remove this token?
+            <p className="text-sm text-[var(--sw-ink-soft)] mb-4">
+              Remove this token from your wallet?
             </p>
             <div className="flex items-center gap-2 mb-6">
               <input
@@ -1091,22 +1045,22 @@ export function TokenList({
                 id="dontShowAgain"
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="w-4 h-4 text-red-500 bg-slate-100 border-slate-300 rounded focus:ring-red-500 focus:ring-2"
+                className="w-4 h-4 accent-[var(--sw-accent)] rounded"
               />
-              <label htmlFor="dontShowAgain" className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
-                Don't show this confirmation again
+              <label htmlFor="dontShowAgain" className="text-sm text-[var(--sw-muted)] cursor-pointer">
+                Don't show this again
               </label>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowRemoveConfirm(null)}
-                className="flex-1 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                className="sw-btn-ghost flex-1 text-sm py-2.5 px-4"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleRemoveToken(showRemoveConfirm)}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                className="flex-1 text-sm font-semibold py-2.5 px-4 rounded-[3px] uppercase tracking-[0.05em] text-white bg-[var(--sw-down)] hover:brightness-105 transition-all"
               >
                 Remove
               </button>

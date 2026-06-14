@@ -15,6 +15,13 @@
 
 import { coinGeckoLimiter } from "./coingecko-rate-limiter";
 import { getAppConfig } from "./config/environment";
+import { getUserKey } from "./user-keys";
+
+/** Header carrying the user's CoinGecko key (this browser) to the proxy, if set. */
+function cgKeyHeader(): Record<string, string> {
+  const k = getUserKey("coingecko");
+  return k ? { "x-coingecko-key": k } : {};
+}
 
 interface TokenPrice {
   usd: number;
@@ -161,8 +168,8 @@ export async function fetchTokenDataByContract(
     }
     
     console.log(`🔍 [Token Data] Unified contract lookup: ${url}`);
-    
-    const response = await coinGeckoLimiter.fetch(url);
+
+    const response = await coinGeckoLimiter.fetch(url, { headers: cgKeyHeader() });
     
     if (response.ok) {
       const data = await response.json();
@@ -360,7 +367,8 @@ async function fetchPricesFromCoinGecko(coinIds: string[]): Promise<CoinGeckoRes
   if (apiKey) {
     headers["x-cg-pro-api-key"] = apiKey;
   }
-  
+  Object.assign(headers, cgKeyHeader());
+
   try {
     const response = await coinGeckoLimiter.fetch(url, { headers });
     

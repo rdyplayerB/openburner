@@ -260,3 +260,27 @@ export async function signTransactionWithMobileNFC(
   }
 }
 
+/**
+ * Sign a raw 32-byte digest via direct mobile NFC (for message / typed-data signing).
+ */
+export async function signDigestWithMobileNFC(
+  digest: string,
+  keySlot: number = 1,
+  pin?: string
+): Promise<ethers.Signature> {
+  try {
+    const hex = digest.startsWith("0x") ? digest.slice(2) : digest;
+    const command: any = { name: "sign", keyNo: keySlot, digest: hex };
+    if (pin) command.password = pin;
+
+    const result = await execHaloCmdWeb(command, { method: "credential" });
+    const sig = result.signature.raw || result.signature;
+    let v = Number(sig.v);
+    if (v < 27) v += 27;
+    return ethers.Signature.from({ r: "0x" + sig.r, s: "0x" + sig.s, v });
+  } catch (error: any) {
+    console.error("❌ [Mobile NFC] Digest signing failed:", error);
+    throw new Error(error.message || "Failed to sign message via mobile NFC");
+  }
+}
+

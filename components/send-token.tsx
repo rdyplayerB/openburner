@@ -298,65 +298,63 @@ export function SendToken({
   // If transaction is confirmed, show confirmation screen
   if (isConfirmed && txHash) {
     return (
-      <div className="modal-overlay bg-black/60 flex items-center justify-center p-3 z-50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-card-lg p-4 sm:p-6 max-w-sm sm:max-w-md w-full mx-2">
-          {/* Success Icon */}
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-green-600" />
+      <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
+        <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+          <div className="px-5 py-6">
+            {/* Success Icon */}
+            <div className="flex justify-center mb-4">
+              <CheckCircle className="w-12 h-12 text-[var(--sw-up)]" strokeWidth={1.5} />
             </div>
-          </div>
 
-          {/* Success Message */}
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 text-center mb-2">
-            Transaction <span className="text-brand-orange">Confirmed!</span>
-          </h2>
-          <p className="text-sm sm:text-base text-slate-600 text-center mb-4 sm:mb-6">
-            Your <span className="font-semibold text-slate-900">{amount} {token.symbol}</span> has been sent successfully
-          </p>
+            {/* Success Message */}
+            <h2 className="text-lg font-bold text-[var(--sw-ink)] text-center mb-1">
+              Transaction <span className="text-[var(--sw-accent)]">confirmed</span>
+            </h2>
+            <p className="text-sm text-[var(--sw-ink-soft)] text-center mb-5">
+              Sent <span className="sw-mono text-[var(--sw-ink)]">{amount} {token.symbol}</span>
+            </p>
 
-          {/* Transaction Details */}
-          <div className="bg-slate-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
-            <div className="space-y-2 sm:space-y-3">
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Recipient</p>
-                <p className="text-xs sm:text-sm font-mono text-slate-900 break-all">
+            {/* Transaction Details */}
+            <div className="sw-list mb-5">
+              <div className="py-3">
+                <p className="sw-uplabel mb-1">Recipient</p>
+                <p className="sw-mono text-xs text-[var(--sw-ink)] break-all">
                   {recipient}
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Amount</p>
-                <p className="text-sm font-semibold text-slate-900">
+              <div className="py-3">
+                <p className="sw-uplabel mb-1">Amount</p>
+                <p className="sw-mono text-sm text-[var(--sw-ink)]">
                   {amount} {token.symbol}
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Network</p>
-                <p className="text-sm font-semibold text-slate-900">
+              <div className="py-3">
+                <p className="sw-uplabel mb-1">Network</p>
+                <p className="text-sm text-[var(--sw-ink)]">
                   {chainName}
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-2 sm:space-y-3">
-            <a
-              href={getExplorerTxUrl(chainId, txHash)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl transition-all duration-150 font-semibold shadow-md hover:shadow-glow-orange active:scale-95 text-sm sm:text-base"
-            >
-              View on Block Explorer
-              <ExternalLink className="w-4 h-4" strokeWidth={2.5} />
-            </a>
-            
-            <button
-              onClick={handleReturnToWallet}
-              className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-slate-200 text-slate-900 rounded-xl hover:bg-slate-50 hover:border-brand-orange/30 transition-all duration-150 font-semibold active:scale-95 text-sm sm:text-base"
-            >
-              Return to Wallet
-            </button>
+            {/* Action Buttons */}
+            <div className="space-y-2">
+              <a
+                href={getExplorerTxUrl(chainId, txHash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sw-btn-primary py-3 text-sm flex items-center justify-center gap-2"
+              >
+                View on explorer
+                <ExternalLink className="w-4 h-4" />
+              </a>
+
+              <button
+                onClick={handleReturnToWallet}
+                className="sw-btn-ghost py-3 text-sm"
+              >
+                Return
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -365,29 +363,30 @@ export function SendToken({
 
   return (
     <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-      <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md w-full shadow-card-lg mx-2">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-            Send <span className="text-brand-orange">{token.symbol}</span>
+      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
+          <h2 className="text-lg font-bold text-[var(--sw-ink)]">
+            Send <span className="text-[var(--sw-accent)]">{token.symbol}</span>
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
           >
-            <X className="w-5 h-5 text-slate-500" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <p className="text-xs text-slate-500 font-medium mb-2">Available Balance</p>
-          <p className="text-base sm:text-lg font-semibold text-slate-900">
+        <div className="px-5 py-5">
+        <div className="mb-5 p-3 rounded-lg border border-[var(--sw-line)]">
+          <p className="sw-uplabel mb-1">Available balance</p>
+          <p className="sw-mono text-base text-[var(--sw-ink)]">
             {formatTokenBalance(token.balance)} {token.symbol}
           </p>
         </div>
 
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-3">
           <div>
-            <label className="block text-xs text-slate-600 mb-1">
+            <label className="sw-uplabel block mb-1.5">
               Recipient
             </label>
             <input
@@ -395,21 +394,21 @@ export function SendToken({
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="0x..."
-              className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+              className="sw-input sw-mono w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm"
             />
             {lastUsedAddress && lastUsedAddress !== recipient && (
               <div className="mt-2 flex items-center justify-between">
                 <button
                   onClick={useLastAddress}
-                  className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
                 >
                   <Clock className="w-3 h-3" />
-                  <span className="hidden sm:inline">Last used: {lastUsedAddress.slice(0, 6)}...{lastUsedAddress.slice(-4)}</span>
-                  <span className="sm:hidden">Last: {lastUsedAddress.slice(0, 4)}...{lastUsedAddress.slice(-2)}</span>
+                  <span className="hidden sm:inline sw-mono">Last used: {lastUsedAddress.slice(0, 6)}...{lastUsedAddress.slice(-4)}</span>
+                  <span className="sm:hidden sw-mono">Last: {lastUsedAddress.slice(0, 4)}...{lastUsedAddress.slice(-2)}</span>
                 </button>
                 <button
                   onClick={clearLastUsedAddress}
-                  className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  className="p-1 text-[var(--sw-muted)] hover:text-[var(--sw-down)] rounded transition-colors"
                   title="Clear saved address"
                 >
                   <X className="w-3 h-3" />
@@ -419,13 +418,13 @@ export function SendToken({
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs text-slate-600">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="sw-uplabel block">
                 Amount
               </label>
               <button
                 onClick={() => setAmount(token.balance)}
-                className="text-xs text-slate-600 hover:text-slate-900"
+                className="sw-uplabel text-[var(--sw-accent)] hover:text-[var(--sw-accent-press)]"
               >
                 Max
               </button>
@@ -435,22 +434,22 @@ export function SendToken({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.0"
-              className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+              className="sw-input sw-mono w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm"
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-100 rounded-lg">
-              <p className="text-xs text-red-700">{error}</p>
+            <div className="p-3 rounded-lg border border-[var(--sw-line)]">
+              <p className="text-xs text-[var(--sw-down)]">{error}</p>
             </div>
           )}
 
           {txHash && !isConfirmed && (
-            <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-              <p className="text-xs text-blue-700 font-medium mb-1">
-                Transaction broadcasting...
+            <div className="p-3 rounded-lg border border-[var(--sw-line)]">
+              <p className="sw-uplabel mb-1">
+                Broadcasting
               </p>
-              <p className="text-xs text-blue-600 font-mono break-all">
+              <p className="sw-mono text-xs text-[var(--sw-ink-soft)] break-all">
                 {txHash}
               </p>
             </div>
@@ -459,7 +458,7 @@ export function SendToken({
           <button
             onClick={handleSend}
             disabled={!recipient || !amount || isSending}
-            className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-2.5 sm:py-3 px-4 rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-glow-orange active:scale-95 text-sm sm:text-base"
+            className="sw-btn-primary py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSending ? (
               <>
@@ -490,12 +489,13 @@ export function SendToken({
             )}
           </button>
 
-          <p className="text-xs text-slate-400 text-center">
-            {isSending 
-              ? "Signing with your Burner..." 
-              : "Tap your Burner to sign the transaction"
+          <p className="text-xs text-[var(--sw-muted)] text-center">
+            {isSending
+              ? "Signing with your Burner…"
+              : "Tap your Burner to sign"
             }
           </p>
+        </div>
         </div>
       </div>
 

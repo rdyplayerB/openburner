@@ -13,7 +13,14 @@ import { TransactionWaitingModal } from "../transaction-waiting-modal";
 import { TransactionCompletionModal } from "../transaction-completion-modal";
 import { Toast } from "../toast";
 import { rpcRateLimiter } from "@/lib/rpc-rate-limiter";
-import { Copy, LogOut, CheckCircle, ChevronDown, Plus, Network, Send, Download, Repeat2, QrCode, ExternalLink, X, Menu, Moon, Sun, Globe } from "lucide-react";
+import { Copy, LogOut, CheckCircle, ChevronDown, Plus, Network, Send, Download, Repeat2, QrCode, ExternalLink, X, Menu, Moon, Sun, Globe, Coins, Images, ScanLine, Settings } from "lucide-react";
+import { NftGallery } from "../nft/nft-gallery";
+import { SettingsModal } from "../settings-modal";
+import type { UserKeyName } from "@/lib/user-keys";
+import { WcProvider } from "../walletconnect/wc-provider";
+import { WcConnectModal } from "../walletconnect/wc-connect-modal";
+import { WcSessionsList } from "../walletconnect/wc-sessions-list";
+import { useWalletConnectStore } from "@/store/walletconnect-store";
 import { QRCodeSVG } from "qrcode.react";
 import { getTokenPrice } from "@/lib/price-oracle";
 import { getAppConfig } from "@/lib/config/environment";
@@ -137,6 +144,11 @@ export function WalletDashboard() {
   const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
   const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
   const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
+  const [showWcConnect, setShowWcConnect] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsFocus, setSettingsFocus] = useState<UserKeyName | undefined>(undefined);
+  const wcSessions = useWalletConnectStore((s) => s.sessions);
+  const [activeTab, setActiveTab] = useState<'tokens' | 'collectibles'>('tokens');
   const [totalUsdBalance, setTotalUsdBalance] = useState<number>(0);
   const [isBalanceCalculated, setIsBalanceCalculated] = useState<boolean>(false);
   
@@ -569,9 +581,9 @@ export function WalletDashboard() {
         <div className="relative network-dropdown">
           <button
             onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-card hover:shadow-card-hover hover:border-brand-orange/30 dark:hover:border-brand-orange/40 transition-all"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg sw-surface border border-[var(--sw-line)] hover:border-[var(--sw-accent)]/50 transition-all"
           >
-            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100">
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--sw-line-soft)] overflow-hidden">
               {(() => {
                 const chain = POPULAR_CHAINS.find(c => c.chainId === chainId);
                 return chain?.logo ? (
@@ -584,23 +596,23 @@ export function WalletDashboard() {
                       target.style.display = 'none';
                       const parent = target.parentElement;
                       if (parent) {
-                        parent.innerHTML = `<span class="text-[9px] font-bold text-slate-700">${chainName[0]}</span>`;
+                        parent.innerHTML = `<span class="text-[9px] font-bold text-[var(--sw-ink)]">${chainName[0]}</span>`;
                       }
                     }}
                   />
                 ) : (
-                  <span className="text-[9px] font-bold text-slate-700">{chainName[0]}</span>
+                  <span className="text-[9px] font-bold text-[var(--sw-ink)]">{chainName[0]}</span>
                 );
               })()}
             </div>
-            <span className="font-semibold text-base text-slate-900 dark:text-slate-100">{chainName}</span>
-            <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform ${showNetworkDropdown ? "rotate-180" : ""}`} />
+            <span className="font-semibold text-base text-[var(--sw-ink)]">{chainName}</span>
+            <ChevronDown className={`w-3 h-3 text-[var(--sw-muted)] transition-transform ${showNetworkDropdown ? "rotate-180" : ""}`} />
           </button>
         
         {showNetworkDropdown && (
-          <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-card-lg z-50 p-2 max-h-96 overflow-y-auto" data-network-dropdown>
+          <div className="absolute left-0 top-full mt-2 w-72 sw-surface rounded-xl border border-[var(--sw-line)] z-50 p-2 max-h-96 overflow-y-auto" data-network-dropdown>
                 <div className="mb-1 px-3 py-2">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Networks</p>
+                  <p className="text-[11px] font-semibold text-[var(--sw-muted)] uppercase tracking-wider">Networks</p>
                 </div>
                 <div className="space-y-0.5">
                   {POPULAR_CHAINS.map((chain) => (
@@ -609,12 +621,12 @@ export function WalletDashboard() {
                       onClick={() => handleChainSelect(chain)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg transition-all text-xs flex items-center gap-3 ${
                         chainId === chain.chainId
-                          ? "bg-brand-orange text-white shadow-sm"
-                          : "hover:bg-slate-50 text-slate-900"
+                          ? "bg-[var(--sw-accent)] text-white"
+                          : "hover:bg-[var(--sw-line-soft)] text-[var(--sw-ink)]"
                       }`}
                     >
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 overflow-hidden ${
-                        chainId === chain.chainId ? "bg-white/10" : "bg-slate-100"
+                        chainId === chain.chainId ? "bg-white/10" : "bg-[var(--sw-line-soft)]"
                       }`}>
                         <img 
                           src={chain.logo} 
@@ -625,7 +637,7 @@ export function WalletDashboard() {
                             target.style.display = 'none';
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.innerHTML = `<span class="text-xs font-semibold ${chainId === chain.chainId ? 'text-white' : 'text-slate-700'}">${chain.name[0]}</span>`;
+                              parent.innerHTML = `<span class="text-xs font-semibold ${chainId === chain.chainId ? 'text-white' : 'text-[var(--sw-ink)]'}">${chain.name[0]}</span>`;
                             }
                           }}
                         />
@@ -640,9 +652,9 @@ export function WalletDashboard() {
                 {/* Custom RPCs Section */}
                 {Object.keys(customRPCs).length > 0 && (
                   <>
-                    <div className="pt-2 mt-2 border-t border-slate-100">
+                    <div className="pt-2 mt-2 border-t border-[var(--sw-line)]">
                       <div className="mb-1 px-3 py-2">
-                        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Custom RPCs</p>
+                        <p className="text-[11px] font-semibold text-[var(--sw-muted)] uppercase tracking-wider">Custom RPCs</p>
                       </div>
                       <div className="space-y-0.5">
                         {Object.entries(customRPCs).map(([customChainId, rpcData]) => (
@@ -650,8 +662,8 @@ export function WalletDashboard() {
                             key={customChainId}
                             className={`w-full px-3 py-2.5 rounded-lg transition-all text-xs flex items-center gap-3 ${
                               parseInt(customChainId) === chainId
-                                ? "bg-brand-orange text-white shadow-sm"
-                                : "hover:bg-slate-50 text-slate-900"
+                                ? "bg-[var(--sw-accent)] text-white"
+                                : "hover:bg-[var(--sw-line-soft)] text-[var(--sw-ink)]"
                             }`}
                           >
                             <button
@@ -662,9 +674,9 @@ export function WalletDashboard() {
                               className="flex items-center gap-3 flex-1 text-left"
                             >
                               <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 overflow-hidden ${
-                                parseInt(customChainId) === chainId ? "bg-white/10" : "bg-slate-100"
+                                parseInt(customChainId) === chainId ? "bg-white/10" : "bg-[var(--sw-line-soft)]"
                               }`}>
-                                <span className={`text-xs font-semibold ${parseInt(customChainId) === chainId ? 'text-white' : 'text-slate-700'}`}>
+                                <span className={`text-xs font-semibold ${parseInt(customChainId) === chainId ? 'text-white' : 'text-[var(--sw-ink)]'}`}>
                                   {rpcData.name[0]}
                                 </span>
                               </div>
@@ -678,7 +690,7 @@ export function WalletDashboard() {
                                 e.stopPropagation();
                                 removeCustomRPC(customChainId);
                               }}
-                              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded text-red-500 hover:text-red-700 transition-colors"
+                              className="p-1 rounded text-[var(--sw-muted)] hover:text-[var(--sw-down)] transition-colors"
                               title="Remove custom RPC"
                             >
                               <X className="w-3 h-3" />
@@ -690,7 +702,7 @@ export function WalletDashboard() {
                   </>
                 )}
 
-                <div className="pt-2 mt-2 border-t border-slate-100">
+                <div className="pt-2 mt-2 border-t border-[var(--sw-line)]">
                   <button
                     onClick={() => {
                       setShowCustomForm(!showCustomForm);
@@ -708,7 +720,7 @@ export function WalletDashboard() {
                         }, 150); // Slightly longer delay to ensure form is rendered
                       }
                     }}
-                    className="w-full text-xs text-slate-500 hover:text-slate-900 flex items-center justify-center gap-1.5 py-2 hover:bg-slate-50 rounded-lg transition-colors"
+                    className="w-full text-xs text-[var(--sw-muted)] hover:text-[var(--sw-ink)] flex items-center justify-center gap-1.5 py-2 hover:bg-[var(--sw-line-soft)] rounded-lg transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     {showCustomForm ? "Cancel" : "Custom RPC"}
@@ -721,26 +733,26 @@ export function WalletDashboard() {
                         value={customName}
                         onChange={(e) => setCustomName(e.target.value)}
                         placeholder="Network Name"
-                        className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                        className="sw-input w-full px-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg sw-mono"
                       />
                       <input
                         type="text"
                         value={customRpc}
                         onChange={(e) => setCustomRpc(e.target.value)}
                         placeholder="RPC URL"
-                        className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                        className="sw-input w-full px-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg sw-mono"
                       />
                       <input
                         type="number"
                         value={customChainId}
                         onChange={(e) => setCustomChainId(e.target.value)}
                         placeholder="Chain ID"
-                        className="w-full px-3 py-2 text-base border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                        className="sw-input w-full px-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg sw-mono"
                       />
                       <button
                         onClick={handleCustomChain}
                         disabled={!customRpc || !customChainId || !customName}
-                        className="w-full bg-brand-orange text-white text-base font-semibold py-2 px-3 rounded-lg hover:bg-brand-orange-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        className="sw-btn-primary w-full py-2.5 px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Add Network
                       </button>
@@ -751,31 +763,44 @@ export function WalletDashboard() {
         )}
         </div>
 
-        {/* Hamburger Menu */}
-        <div className="relative hamburger-menu">
+        {/* dApp connect + Hamburger Menu */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowWcConnect(true)}
+            className="relative p-2 rounded-lg sw-surface border border-[var(--sw-line)] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-all"
+            title="Connect to dApp"
+          >
+            <ScanLine className="w-5 h-5" strokeWidth={2.5} />
+            {wcSessions.length > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-brand-orange text-white text-[10px] font-bold flex items-center justify-center">
+                {wcSessions.length}
+              </span>
+            )}
+          </button>
+          <div className="relative hamburger-menu">
           <button
             onClick={() => setShowHamburgerMenu(!showHamburgerMenu)}
-            className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 shadow-card hover:shadow-card-hover transition-all"
+            className="p-2 rounded-lg sw-surface border border-[var(--sw-line)] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-all"
             title="Menu"
           >
             <Menu className="w-5 h-5" strokeWidth={2.5} />
           </button>
 
           {showHamburgerMenu && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-card-lg z-50 py-2">
+            <div className="absolute right-0 top-full mt-2 w-48 sw-surface rounded-xl border border-[var(--sw-line)] z-50 py-2">
               <button
                 onClick={() => {
                   toggleTheme();
                   setShowHamburgerMenu(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
               >
                 {!isDarkMode ? (
-                  <Moon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  <Moon className="w-4 h-4 text-[var(--sw-muted)]" />
                 ) : (
-                  <Sun className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                  <Sun className="w-4 h-4 text-[var(--sw-muted)]" />
                 )}
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                <span className="text-sm font-medium text-[var(--sw-ink)]">
                   {!isDarkMode ? 'Dark Mode' : 'Light Mode'}
                 </span>
               </button>
@@ -784,19 +809,48 @@ export function WalletDashboard() {
                 href="https://openburner.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
               >
-                <ExternalLink className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">OpenBurner.xyz</span>
+                <ExternalLink className="w-4 h-4 text-[var(--sw-muted)]" />
+                <span className="text-sm font-medium text-[var(--sw-ink)]">OpenBurner.xyz</span>
               </a>
 
-              <div className="border-t border-slate-100 dark:border-slate-700 mt-2 pt-2">
+              <button
+                onClick={() => {
+                  setShowWcConnect(true);
+                  setShowHamburgerMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
+              >
+                <ScanLine className="w-4 h-4 text-[var(--sw-muted)]" />
+                <span className="text-sm font-medium text-[var(--sw-ink)]">Connect to dApp</span>
+              </button>
+              {wcSessions.length > 0 && (
+                <div className="border-t border-[var(--sw-line)] mt-2 pt-2 px-4">
+                  <p className="sw-uplabel mb-1">Connected dApps</p>
+                  <WcSessionsList compact />
+                </div>
+              )}
+
+              <button
+                onClick={() => {
+                  setSettingsFocus(undefined);
+                  setShowSettings(true);
+                  setShowHamburgerMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
+              >
+                <Settings className="w-4 h-4 text-[var(--sw-muted)]" />
+                <span className="text-sm font-medium text-[var(--sw-ink)]">Settings</span>
+              </button>
+
+              <div className="border-t border-[var(--sw-line)] mt-2 pt-2">
                 <button
                   onClick={() => {
                     disconnect();
                     setShowHamburgerMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] text-[var(--sw-down)] transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium">Disconnect</span>
@@ -804,36 +858,37 @@ export function WalletDashboard() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
       {/* Main Balance Card */}
-      <div className="bg-gradient-to-b from-white to-bg-base dark:from-slate-800 dark:to-slate-800 rounded-2xl border border-black/[0.04] dark:border-slate-700 shadow-card-lg hover:shadow-card-hover transition-shadow p-4">
+      <div className="sw-surface rounded-xl border border-[var(--sw-line)] p-5">
           {/* Address Bar */}
-          <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-[var(--sw-line)]">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="flex items-center justify-center flex-shrink-0 -mt-2">
-                <Image 
-                  src="/images/openburnerlogo.svg" 
-                  alt="OpenBurner" 
-                  width={28} 
-                  height={28}
-                  className="w-7 h-7 -mt-0.5"
+              <div className="flex items-center justify-center flex-shrink-0">
+                <Image
+                  src="/images/openburnerlogo.svg"
+                  alt="OpenBurner"
+                  width={26}
+                  height={26}
+                  className="w-6 h-6"
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">Wallet Address</p>
+                <p className="sw-uplabel mb-1">Wallet address</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-mono font-semibold text-slate-900 dark:text-slate-100 token-opacity truncate">
+                  <p className="text-sm sw-mono font-medium text-[var(--sw-ink)] truncate">
                     {address ? formatAddress(address) : ""}
                   </p>
                   <button
                     onClick={handleCopyAddress}
-                    className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 transition-colors flex-shrink-0"
-                    title={copied ? "Copied!" : "Copy address"}
+                    className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors flex-shrink-0"
+                    title={copied ? "Copied" : "Copy address"}
                   >
                     {copied ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <CheckCircle className="w-4 h-4 text-[var(--sw-up)]" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
@@ -845,57 +900,57 @@ export function WalletDashboard() {
               href={getExplorerUrl(chainId, address || "")}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              title="View on Explorer"
+              className="p-1.5 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
+              title="View on explorer"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
           </div>
 
           {/* Balance Display */}
-          <div className="mb-3">
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold mb-1.5 uppercase tracking-wide text-xs opacity-60">Total Balance</p>
-            <div className="flex items-baseline gap-2.5 mb-1">
-              <p className="text-4xl font-bold text-slate-900 dark:text-slate-100 balance-number">
+          <div className="mb-5">
+            <p className="sw-uplabel mb-2">Total balance</p>
+            <div className="flex items-baseline gap-2 mb-1.5">
+              <p className="text-5xl sw-display text-[var(--sw-ink)]">
                 {isLoadingBalance || (pricingEnabled && !isBalanceCalculated) ? (
-                  <span className="text-slate-300 dark:text-slate-600">$0.00</span>
+                  <span className="text-[var(--sw-muted)]"><span className="sw-accent">$</span>0.00</span>
                 ) : pricingEnabled && isBalanceCalculated ? (
-                  `$${totalUsdBalance.toFixed(2)}`
+                  <><span className="sw-accent">$</span>{totalUsdBalance.toFixed(2)}</>
                 ) : (
-                  <span className="text-slate-300 dark:text-slate-600">$0.00</span>
+                  <span className="text-[var(--sw-muted)]"><span className="sw-accent">$</span>0.00</span>
                 )}
               </p>
-              <p className="text-xl font-semibold text-slate-600 dark:text-slate-400 token-opacity">USD</p>
+              <p className="text-base font-semibold text-[var(--sw-muted)]">USD</p>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[var(--sw-muted)]">
               {isLoadingBalance ? (
-                "Loading assets..."
+                "Loading assets…"
               ) : pricingEnabled && isBalanceCalculated ? (
                 (() => {
                   // Check if there are other tokens with balances
-                  const hasOtherTokens = availableTokens.some(token => 
+                  const hasOtherTokens = availableTokens.some(token =>
                     token.address !== "native" && parseFloat(token.balance) > 0
                   );
                   const nativeSymbol = getNativeTokenSymbol(chainId);
-                  return hasOtherTokens 
-                    ? `${formatBalance(balance)} ${nativeSymbol} + other tokens`
-                    : `${formatBalance(balance)} ${nativeSymbol}`;
+                  return hasOtherTokens
+                    ? <><span className="sw-num">{formatBalance(balance)}</span> {nativeSymbol} + other tokens</>
+                    : <><span className="sw-num">{formatBalance(balance)}</span> {nativeSymbol}</>;
                 })()
               ) : (
-                <span className="text-slate-400 dark:text-slate-500">
-                  {pricingEnabled ? "Calculating..." : (
+                <span className="text-[var(--sw-muted)]">
+                  {pricingEnabled ? "Calculating…" : (
                     <Tooltip
                       content={
                         <div className="space-y-2">
-                          <p className="font-medium">Pricing Disabled</p>
-                          <p className="text-xs text-slate-300">
+                          <p className="font-medium">Pricing disabled</p>
+                          <p className="text-xs text-white/70">
                             To enable real-time prices, run OpenBurner locally with your own CoinGecko API key.
                           </p>
                           <a
                             href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 text-xs underline inline-flex items-center gap-1"
+                            className="text-[var(--sw-accent)] hover:opacity-80 text-xs underline inline-flex items-center gap-1"
                             onClick={(e) => e.stopPropagation()}
                           >
                             View docs <ExternalLink className="w-3 h-3" />
@@ -914,10 +969,10 @@ export function WalletDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <button
               onClick={() => setShowTokenSelector(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white transition-all duration-150 font-semibold text-base shadow-md hover:shadow-glow-orange active:scale-95"
+              className="sw-btn-primary flex-1 flex items-center justify-center gap-2 py-3 text-sm"
             >
               <Send className="w-4 h-4" strokeWidth={2.5} />
               Send
@@ -939,11 +994,7 @@ export function WalletDashboard() {
                   }
                 }}
                 disabled={!isSwapSupported(chainId)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-150 font-semibold text-base shadow-md active:scale-95 ${
-                  isSwapSupported(chainId) 
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg' 
-                    : 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
-                }`}
+                className="sw-btn-ghost flex-1 flex items-center justify-center gap-2 py-3 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Repeat2 className="w-4 h-4" strokeWidth={2.5} />
                 Swap
@@ -952,7 +1003,7 @@ export function WalletDashboard() {
 
             <button
               onClick={() => setShowReceiveModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-600 hover:bg-slate-700 dark:hover:bg-slate-500 text-white transition-all duration-150 font-semibold text-base shadow-md hover:shadow-lg active:scale-95"
+              className="sw-btn-ghost flex-1 flex items-center justify-center gap-2 py-3 text-sm"
             >
               <Download className="w-4 h-4" strokeWidth={2.5} />
               Receive
@@ -963,25 +1014,25 @@ export function WalletDashboard() {
       {/* Receive Modal */}
       {showReceiveModal && (
         <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={() => setShowReceiveModal(false)}>
-          <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md w-full shadow-card-lg mx-2" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Receive <span className="text-brand-orange">Tokens</span></h2>
+          <div className="sw-surface rounded-xl border border-[var(--sw-line)] w-full max-w-sm mx-2 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
+              <span className="sw-uplabel">Receive {activeTab === 'collectibles' ? 'NFTs' : 'tokens'}</span>
               <button
                 onClick={() => setShowReceiveModal(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="mb-4 sm:mb-6">
-              <p className="text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
-                Send only <span className="font-semibold">{chainName}</span> assets to this address. Sending assets from other networks will result in permanent loss.
+            <div className="px-5 py-5">
+              <p className="text-xs text-[var(--sw-ink-soft)] mb-4 leading-relaxed">
+                Send only <span className="font-semibold text-[var(--sw-ink)]">{chainName}</span> assets to this address. Other networks will be lost.
               </p>
-              
+
               {/* QR Code */}
-              <div className="bg-white rounded-xl p-4 sm:p-6 mb-3 sm:mb-4 flex items-center justify-center border-2 border-slate-200">
-                <QRCodeSVG 
+              <div className="bg-white rounded-lg p-5 mb-4 flex items-center justify-center border border-[var(--sw-line)]">
+                <QRCodeSVG
                   value={address || ""}
                   size={160}
                   level="H"
@@ -990,56 +1041,82 @@ export function WalletDashboard() {
               </div>
 
               {/* Address Display */}
-              <div className="bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-200">
-                <p className="text-xs text-slate-500 font-medium mb-2">Your {chainName} Address</p>
+              <div className="rounded-lg p-3 border border-[var(--sw-line)]">
+                <p className="sw-uplabel mb-2">Your {chainName} address</p>
                 <div className="flex items-center gap-2">
-                  <p className="flex-1 text-xs sm:text-sm font-mono font-semibold text-slate-900 break-all">
+                  <p className="flex-1 text-xs sw-mono text-[var(--sw-ink)] break-all">
                     {address}
                   </p>
                   <button
                     onClick={handleCopyReceiveAddress}
-                    className="flex-shrink-0 p-1.5 sm:p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                    title={receiveAddressCopied ? "Copied!" : "Copy address"}
+                    className="flex-shrink-0 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
+                    title={receiveAddressCopied ? "Copied" : "Copy address"}
                   >
                     {receiveAddressCopied ? (
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-[var(--sw-up)]" />
                     ) : (
-                      <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+                      <Copy className="w-5 h-5" />
                     )}
                   </button>
                 </div>
               </div>
-            </div>
 
-            <button
-              onClick={() => setShowReceiveModal(false)}
-              className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-2.5 sm:py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-glow-orange text-sm sm:text-base"
-            >
-              Done
-            </button>
+              <button
+                onClick={() => setShowReceiveModal(false)}
+                className="sw-btn-primary w-full py-3 mt-5 text-sm"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Token List */}
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700 shadow-card hover:shadow-card-hover transition-shadow overflow-hidden">
-        <TokenList 
-          key={tokenRefreshKey}
-          onSendToken={setSelectedToken} 
-          onSwapToken={handleSwapToken}
-          onRefresh={loadBalance}
-          onTokensLoaded={(tokens, images, prices) => {
-            setAvailableTokens(tokens);
-            setTokenImages(images);
-            setTokenPrices(prices);
-            
-            // Calculate total USD balance
-            const totalUsd = calculateTotalUsdBalance(tokens, prices);
-            setTotalUsdBalance(totalUsd);
-          }}
-          onTokenRemoved={handleTokenRemoved}
-        />
+      {/* Tabs: Tokens | Collectibles */}
+      <div className="flex gap-6 border-b border-[var(--sw-line)] px-1">
+        <button
+          onClick={() => setActiveTab('tokens')}
+          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${activeTab === 'tokens' ? 'sw-tab-active' : ''}`}
+        >
+          <Coins className="w-4 h-4" strokeWidth={2.5} />
+          Tokens
+        </button>
+        <button
+          onClick={() => setActiveTab('collectibles')}
+          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${activeTab === 'collectibles' ? 'sw-tab-active' : ''}`}
+        >
+          <Images className="w-4 h-4" strokeWidth={2.5} />
+          Collectibles
+        </button>
       </div>
+
+      {/* Tab content */}
+      {activeTab === 'tokens' ? (
+        /* Token List */
+        <div className="border border-[var(--sw-line)] rounded-xl overflow-hidden">
+          <TokenList
+            key={tokenRefreshKey}
+            onSendToken={setSelectedToken}
+            onSwapToken={handleSwapToken}
+            onRefresh={loadBalance}
+            onTokensLoaded={(tokens, images, prices) => {
+              setAvailableTokens(tokens);
+              setTokenImages(images);
+              setTokenPrices(prices);
+
+              // Calculate total USD balance
+              const totalUsd = calculateTotalUsdBalance(tokens, prices);
+              setTotalUsdBalance(totalUsd);
+            }}
+            onTokenRemoved={handleTokenRemoved}
+          />
+        </div>
+      ) : (
+        /* NFT Gallery */
+        <div className="border border-[var(--sw-line)] rounded-xl overflow-hidden">
+          <NftGallery onReceive={() => setShowReceiveModal(true)} />
+        </div>
+      )}
 
       {/* Token Selector Modal */}
       {showTokenSelector && (
@@ -1117,6 +1194,30 @@ export function WalletDashboard() {
           toToken={transactionData.toToken}
           fromAmount={transactionData.fromAmount}
           toAmount={transactionData.toAmount}
+        />
+      )}
+
+      {/* WalletConnect: global proposal/request handling + connect modal */}
+      <WcProvider />
+      {showWcConnect && (
+        <WcConnectModal
+          onClose={() => setShowWcConnect(false)}
+          onOpenSettings={() => {
+            setShowWcConnect(false);
+            setSettingsFocus('walletconnect');
+            setShowSettings(true);
+          }}
+        />
+      )}
+
+      {/* Settings */}
+      {showSettings && (
+        <SettingsModal
+          initialEdit={settingsFocus}
+          onClose={() => {
+            setShowSettings(false);
+            setSettingsFocus(undefined);
+          }}
         />
       )}
 

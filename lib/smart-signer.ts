@@ -1,8 +1,8 @@
 import { ethers } from 'ethers';
 import { getAppConfig, AppConfig } from './config/environment';
-import { signTransactionWithBurner } from './burner';
-import { signTransactionWithMobileNFC } from './mobile/nfc';
-import { signTransactionWithGateway } from './burner-gateway';
+import { signTransactionWithBurner, signDigestWithBurner } from './burner';
+import { signTransactionWithMobileNFC, signDigestWithMobileNFC } from './mobile/nfc';
+import { signTransactionWithGateway, signDigestWithGateway } from './burner-gateway';
 import { useWalletStore } from '../store/wallet-store';
 
 // Track ongoing signing operations to prevent parallel calls
@@ -92,6 +92,85 @@ export async function signTransactionSmart(
     ongoingSigning.delete(operationKey);
     console.log("🔓 [Smart Signer] Cleared ongoing operation:", operationKey);
   }
+}
+
+/**
+ * Smart digest signing — routes a raw 32-byte digest to the active connection mode.
+ * Used by message (personal_sign) and typed-data (eth_signTypedData) signing.
+ */
+export async function signDigestSmart(
+  digest: string,
+  keySlot: number = 1,
+  pin?: string,
+  config?: AppConfig
+): Promise<ethers.Signature> {
+  const operationKey = `digest-${digest.slice(0, 18)}-${pin ? "p" : "n"}`;
+  if (ongoingSigning.size > 0) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    if (ongoingSigning.size > 0) {
+      throw new Error("Another signing operation is in progress. Please wait and try again.");
+    }
+  }
+  ongoingSigning.add(operationKey);
+
+  try {
+    const environmentConfig = config || getAppConfig();
+    const { connectionMode } = useWalletStore.getState();
+
+    if (environmentConfig.isHosted && environmentConfig.isMobile) {
+      return await signDigestWithMobileNFC(digest, keySlot, pin);
+    } else if (environmentConfig.isHosted && environmentConfig.isDesktop) {
+      return await signDigestWithGateway(await getGatewayInstance(), digest, keySlot, pin);
+    } else if (!environmentConfig.isHosted && connectionMode === 'gateway') {
+      return await signDigestWithGateway(await getGatewayInstance(), digest, keySlot, pin);
+    } else {
+      return await signDigestWithBurner(digest, keySlot, pin);
+    }
+  } catch (error: any) {
+    let errorMessage = error.message || "Failed to sign message";
+    if (error.message?.includes('No Burner card detected')) {
+      errorMessage = 'No Burner card detected. Please place your Burner card on the reader and try again.';
+    } else if (error.message?.includes('WRONG_PWD') || error.message?.includes('password')) {
+      errorMessage = 'Incorrect PIN. Please try again.';
+    }
+    throw new Error(errorMessage);
+  } finally {
+    ongoingSigning.delete(operationKey);
+  }
+}
+
+/**
+ * Sign an EIP-191 personal message. `message` may be a UTF-8 string or raw bytes.
+ * Returns a 65-byte 0x-prefixed signature.
+ */
+export async function signMessageSmart(
+  message: string | Uint8Array,
+  keySlot: number = 1,
+  pin?: string,
+  config?: AppConfig
+): Promise<string> {
+  const digest = ethers.hashMessage(message);
+  const sig = await signDigestSmart(digest, keySlot, pin, config);
+  return sig.serialized;
+}
+
+/**
+ * Sign EIP-712 typed data. `types` may include EIP712Domain (it is stripped before hashing).
+ * Returns a 65-byte 0x-prefixed signature.
+ */
+export async function signTypedDataSmart(
+  domain: ethers.TypedDataDomain,
+  types: Record<string, Array<ethers.TypedDataField>>,
+  message: Record<string, any>,
+  keySlot: number = 1,
+  pin?: string,
+  config?: AppConfig
+): Promise<string> {
+  const cleanTypes = { ...types };
+  delete (cleanTypes as any).EIP712Domain;
+  const digest = ethers.TypedDataEncoder.hash(domain, cleanTypes, message);
+  const sig = await signDigestSmart(digest, keySlot, pin, config);
+  return sig.serialized;
 }
 
 /**

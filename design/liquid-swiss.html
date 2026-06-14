@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenBurner — Liquid Swiss</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --paper:#F4F3EF; --ink:#15171C; --muted:#80848D; --faint:#A9adb5;
+    --line:rgba(20,22,28,.09); --line2:rgba(20,22,28,.14);
+    --orange:#E4572E; --orange-br:#FF6B35;
+    --glass:rgba(255,255,255,.58); --glassBrd:rgba(255,255,255,.92);
+    --shadow:0 22px 55px -26px rgba(40,52,92,.42);
+  }
+  body{background:#0b0b0e;color:#e8e8ea;font-family:'Inter',system-ui,sans-serif;padding:48px 40px 80px;-webkit-font-smoothing:antialiased;}
+  .head{max-width:1240px;margin:0 auto 40px;}
+  .head h1{font-family:'Space Grotesk';font-size:32px;font-weight:700;letter-spacing:-.02em;}
+  .head h1 span{color:var(--orange-br);}
+  .head p{color:#8a8a92;margin-top:8px;font-size:15px;max-width:680px;line-height:1.55;}
+  .head .tags{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;}
+  .head .tags b{font-size:11px;font-weight:600;color:#cfcfd6;background:#1a1a20;border:1px solid #2a2a32;border-radius:999px;padding:5px 11px;}
+  .gallery{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:34px;}
+  .cell{display:flex;flex-direction:column;}
+  .label{font-family:'Space Grotesk';font-size:13px;font-weight:600;color:#b9b9c2;margin-bottom:12px;display:flex;gap:8px;align-items:center;}
+  .label i{font-style:normal;color:#5a5a64;border:1px solid #26262e;border-radius:6px;padding:2px 7px;font-size:11px;}
+
+  .frame{width:100%;aspect-ratio:320/650;border-radius:36px;overflow:hidden;position:relative;background:var(--paper);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);}
+  /* ambient liquid blooms */
+  .frame::before{content:"";position:absolute;width:240px;height:240px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,140,90,.55),transparent 68%);top:-70px;right:-60px;filter:blur(26px);}
+  .frame::after{content:"";position:absolute;width:230px;height:230px;border-radius:50%;
+    background:radial-gradient(circle,rgba(122,150,214,.5),transparent 68%);bottom:-40px;left:-70px;filter:blur(30px);}
+  .app{position:absolute;inset:0;display:flex;flex-direction:column;padding:22px 18px 18px;z-index:3;color:var(--ink);}
+
+  /* shared atoms */
+  .uplabel{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);}
+  .glass{background:var(--glass);border:1px solid var(--glassBrd);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow);}
+  .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;}
+  .between{display:flex;align-items:center;justify-content:space-between;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--orange);}
+  .menu{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink);}
+  .menu svg{width:18px;height:18px;}
+  svg{stroke-linecap:round;stroke-linejoin:round;}
+
+  .balwrap{margin-top:26px;}
+  .balnum{font-weight:800;letter-spacing:-.045em;font-size:52px;line-height:.95;margin:10px 0 8px;font-variant-numeric:tabular-nums;}
+  .balnum .cur{color:var(--orange);}
+  .balsub{font-size:12.5px;color:var(--muted);font-weight:500;}
+  .balsub .up{color:#1f9d57;font-weight:600;}
+
+  .rule{height:1px;background:var(--line);}
+  .rule.dark{background:var(--line2);}
+
+  .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px;}
+  .act{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:13px 0;border-radius:16px;font-size:11px;font-weight:600;letter-spacing:.02em;}
+  .act svg{width:17px;height:17px;}
+  .act.sec{color:#2b3040;}
+  .act.prime{background:linear-gradient(135deg,var(--orange-br),var(--orange));color:#fff;border:none;box-shadow:0 12px 26px -10px rgba(255,107,53,.65);}
+
+  .tabs{display:flex;gap:22px;margin:26px 0 2px;}
+  .tab{font-size:13px;font-weight:600;color:var(--faint);padding-bottom:11px;letter-spacing:-.01em;}
+  .tab.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--orange);}
+
+  .asset{display:flex;align-items:center;gap:12px;padding:14px 2px;}
+  .coin{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex:0 0 auto;}
+  .asset .nm{font-weight:600;font-size:13.5px;letter-spacing:-.01em;}
+  .asset .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+  .asset .amt{margin-left:auto;text-align:right;font-weight:600;font-size:13.5px;font-variant-numeric:tabular-nums;}
+  .asset .amt .s{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px;}
+
+  /* connect screen */
+  .brand{display:flex;align-items:center;justify-content:center;gap:9px;margin:6px 0 22px;}
+  .brand .fl{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--orange-br),var(--orange));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;box-shadow:0 6px 16px -6px rgba(255,107,53,.7);}
+  .brand .wm{font-family:'Space Grotesk';font-weight:700;font-size:18px;letter-spacing:-.01em;}
+  .brand .wm b{color:var(--orange);font-weight:700;}
+  .hero{border-radius:26px;padding:24px 20px;}
+  .seg{display:flex;background:rgba(20,22,28,.05);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;margin:18px 0;}
+  .seg button{flex:1;border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);padding:9px 0;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .seg button svg{width:14px;height:14px;}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 4px 12px rgba(40,52,92,.12);}
+  .cbtn{width:100%;border:none;border-radius:15px;padding:15px;font-family:inherit;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--orange-br),var(--orange));box-shadow:0 14px 30px -10px rgba(255,107,53,.6);display:flex;align-items:center;justify-content:center;gap:9px;}
+  .cbtn svg{width:17px;height:17px;}
+  .req{margin-top:20px;}
+  .reqrow{display:flex;align-items:center;gap:12px;padding:13px 0;}
+  .reqrow .ic{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .reqrow .ic.ok{background:rgba(31,157,87,.12);color:#1f9d57;}
+  .reqrow .ic.wait{background:rgba(228,87,46,.12);color:var(--orange);}
+  .reqrow .t{font-size:12.5px;font-weight:600;}
+  .reqrow .d{font-size:11px;color:var(--muted);margin-top:1px;}
+
+  /* send sheet */
+  .sheet-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .sheet-top .x{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+  .sheet-top .x svg{width:15px;height:15px;}
+  .field{border-radius:14px;padding:14px 15px;margin-top:12px;}
+  .field .fl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);}
+  .field .fv{font-size:15px;font-weight:600;margin-top:7px;color:var(--ink);}
+  .field .fv.ph{color:var(--faint);font-weight:500;}
+  .field .frow{display:flex;align-items:center;justify-content:space-between;}
+  .maxbtn{font-size:11px;font-weight:700;color:var(--orange);}
+  .balpill{display:inline-flex;gap:8px;align-items:center;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:600;}
+
+  /* nft detail */
+  .nftimg{width:100%;aspect-ratio:1;border-radius:20px;background:
+    radial-gradient(120% 90% at 20% 10%,#ffd28a,transparent 55%),
+    radial-gradient(120% 100% at 90% 30%,#ff6b9d,transparent 55%),
+    linear-gradient(150deg,#7b5aff,#22d3ee);
+    box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  .nftimg::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.4);filter:blur(8px);top:55%;left:50%;transform:translate(-50%,-50%);}
+  .traits{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px;}
+  .trait{border-radius:12px;padding:10px 12px;}
+  .trait .k{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);}
+  .trait .v{font-size:12.5px;font-weight:600;margin-top:3px;letter-spacing:-.01em;}
+  .twobtn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+</style>
+</head>
+<body>
+<div class="head">
+  <h1>Open<span>Burner</span> — “Liquid Swiss”</h1>
+  <p>Liquid Glass (frosted depth, ambient color, soft shadows) governed by Swiss Editorial discipline (grid, hairline rules, giant tabular numerals, one orange accent). Light, airy, premium — and legible. Shown across four screens to demonstrate the system.</p>
+  <div class="tags"><b>Inter · tabular numerals</b><b>frosted glass cards</b><b>hairline dividers</b><b>single orange accent</b><b>generous whitespace</b><b>ambient color blooms</b></div>
+</div>
+<div class="gallery" id="g"></div>
+
+<script>
+const I={
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
+  swap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+  recv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>',
+  menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>',
+  usb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v14M9 9l3-3 3 3M7 16a5 5 0 0 0 10 0M5 22h14"/></svg>',
+  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>',
+  nfc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 8.8a8 8 0 0 1 0 6.4M9.5 6.5a13 13 0 0 1 0 11M13 4a18 18 0 0 1 0 16"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
+};
+const coins=[
+  {l:'Ξ',n:'Ethereum',s:'ETH',a:'5.6889',v:'$21,455',c:'linear-gradient(135deg,#627eea,#8aa0f5)'},
+  {l:'$',n:'USD Coin',s:'USDC',a:'1,240.00',v:'$1,240',c:'linear-gradient(135deg,#2775ca,#4f9bf0)'},
+  {l:'₮',n:'Tether',s:'USDT',a:'298.25',v:'$298',c:'linear-gradient(135deg,#26a17b,#4cd0a0)'},
+];
+const assetRows = coins.map((c,i)=>`
+  <div class="asset">
+    <div class="coin" style="background:${c.c}">${c.l}</div>
+    <div><div class="nm">${c.s}</div><div class="sub">${c.n}</div></div>
+    <div class="amt">${c.a}<span class="s">${c.v}</span></div>
+  </div>${i<coins.length-1?'<div class="rule"></div>':''}`).join('');
+
+const connect=`
+  <div class="app">
+    <div class="brand"><span class="fl">B</span><span class="wm">Open<b>Burner</b></span></div>
+    <div class="hero glass">
+      <div style="text-align:center">
+        <div class="uplabel">Hardware Wallet</div>
+        <div style="font-size:21px;font-weight:800;letter-spacing:-.02em;margin-top:8px">Connect your Burner</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5">Tap your card to a USB NFC reader to sign in securely.</div>
+      </div>
+      <div class="seg">
+        <button class="on">${I.usb}Bridge</button>
+        <button>${I.phone}Gateway</button>
+      </div>
+      <button class="cbtn">${I.nfc}Connect with NFC Reader</button>
+    </div>
+    <div class="hero glass req" style="padding:6px 18px">
+      <div class="reqrow"><span class="ic ok">${I.check}</span><div><div class="t">HaLo Bridge</div><div class="d">Connected and ready</div></div></div>
+      <div class="rule"></div>
+      <div class="reqrow"><span class="ic wait">${I.nfc}</span><div><div class="t">NFC Reader &amp; Card</div><div class="d">Place your Burner on the reader</div></div></div>
+    </div>
+  </div>`;
+
+const dashboard=`
+  <div class="app">
+    <div class="between">
+      <span class="pill glass"><span class="dot"></span>Ethereum</span>
+      <span class="menu glass">${I.menu}</span>
+    </div>
+    <div class="balwrap">
+      <div class="uplabel">Total Balance</div>
+      <div class="balnum"><span class="cur">$</span>28,505</div>
+      <div class="balsub"><span class="up">▲ 4.2%</span> · 6.21 ETH today</div>
+    </div>
+    <div class="actions">
+      <div class="act prime">${I.send}Send</div>
+      <div class="act sec glass">${I.swap}Swap</div>
+      <div class="act sec glass">${I.recv}Receive</div>
+    </div>
+    <div class="tabs"><span class="tab on">Tokens</span><span class="tab">Collectibles</span></div>
+    <div class="rule dark"></div>
+    <div class="glass" style="border-radius:20px;padding:4px 14px;margin-top:14px">${assetRows}</div>
+  </div>`;
+
+const send=`
+  <div class="app">
+    <div class="sheet-top">
+      <div><div class="uplabel">Send</div><div style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:4px">Ethereum</div></div>
+      <span class="x glass">${I.x}</span>
+    </div>
+    <span class="balpill glass"><span class="coin" style="width:22px;height:22px;font-size:11px;background:linear-gradient(135deg,#627eea,#8aa0f5)">Ξ</span>Balance · 5.6889 ETH</span>
+    <div class="field glass"><div class="fl">Recipient</div><div class="fv ph">0x… or ENS name</div></div>
+    <div class="field glass">
+      <div class="fl">Amount</div>
+      <div class="frow"><div class="fv">2.5000</div><span class="maxbtn">MAX</span></div>
+    </div>
+    <div class="rule" style="margin:20px 0 0"></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:14px 2px"><span>Network fee</span><span style="color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums">~$1.84</span></div>
+    <div class="rule"></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:14px 2px"><span>You'll send</span><span style="color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums">2.5000 ETH</span></div>
+    <div style="flex:1"></div>
+    <button class="cbtn">${I.send}Tap Burner to Sign</button>
+  </div>`;
+
+const nft=`
+  <div class="app">
+    <div class="sheet-top">
+      <div style="max-width:70%"><div class="uplabel">Collectible</div><div style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin-top:4px;line-height:1.1">Burner Genesis #204</div></div>
+      <span class="x glass">${I.x}</span>
+    </div>
+    <div class="nftimg"></div>
+    <div class="between" style="margin-top:14px">
+      <div><div style="font-size:13px;font-weight:600">Burner Genesis</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Token #204 · ERC-721</div></div>
+      <span class="pill glass" style="font-size:11px;padding:6px 11px">Ethereum</span>
+    </div>
+    <div class="traits">
+      <div class="trait glass"><div class="k">Background</div><div class="v">Ember</div></div>
+      <div class="trait glass"><div class="k">Material</div><div class="v">Brushed Steel</div></div>
+      <div class="trait glass"><div class="k">Edition</div><div class="v">Genesis</div></div>
+      <div class="trait glass"><div class="k">Rarity</div><div class="v">2.1%</div></div>
+    </div>
+    <div class="twobtn">
+      <button class="cbtn" style="padding:13px">${I.send}Send</button>
+      <button class="cbtn" style="padding:13px;background:rgba(20,22,28,.86);box-shadow:none">${I.link}OpenSea</button>
+    </div>
+  </div>`;
+
+const screens=[
+  {l:'Sign in / Connect',h:connect},
+  {l:'Wallet dashboard',h:dashboard},
+  {l:'Send (sheet)',h:send},
+  {l:'NFT detail',h:nft},
+];
+document.getElementById('g').innerHTML=screens.map((s,i)=>`
+  <div class="cell">
+    <div class="label"><i>${String(i+1).padStart(2,'0')}</i>${s.l}</div>
+    <div class="frame">${s.h}</div>
+  </div>`).join('');
+</script>
+</body>
+</html>

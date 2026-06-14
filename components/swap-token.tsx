@@ -673,54 +673,54 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-slate-800 rounded-3xl border border-black/[0.04] dark:border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
+        className="sw-surface w-full max-w-md max-h-[90vh] rounded-xl border border-[var(--sw-line)] overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200/60 dark:border-slate-700/60">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Swap {chainName} Tokens</h2>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
+          <span className="sw-uplabel">Swap {chainName}</span>
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
             >
-              <Settings className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              <Settings className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
             >
-              <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Swap Interface */}
-        <div className="p-4 space-y-3">
+        <div className="px-5 py-5 space-y-3">
           {/* From Token */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Sell</label>
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-3 border border-slate-200/60 dark:border-slate-600/60">
+            <label className="sw-uplabel">You pay</label>
+            <div className="rounded-xl p-3 border border-[var(--sw-line)]">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowTokenSelector('from')}
-                  className="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors min-w-0 flex-shrink-0"
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-[var(--sw-line)] text-[var(--sw-ink)] hover:bg-[color-mix(in_srgb,var(--sw-ink)_6%,transparent)] transition-colors min-w-0 flex-shrink-0"
                 >
                   {fromToken ? (
                     <>
-                      <div className="w-5 h-5 bg-slate-300 dark:bg-slate-500 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-bold text-slate-600 dark:text-slate-200">
+                      <div className="w-5 h-5 sw-mark rounded flex items-center justify-center">
+                        <span className="text-xs font-bold">
                           {fromToken.symbol.charAt(0)}
                         </span>
                       </div>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">
+                      <span className="font-medium">
                         {fromToken.symbol}
                       </span>
-                      <ArrowUpDown className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <ArrowUpDown className="w-4 h-4 text-[var(--sw-muted)]" />
                     </>
                   ) : (
                     <>
-                      <span className="text-slate-500 dark:text-slate-400">Select Token</span>
-                      <ArrowUpDown className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <span className="text-[var(--sw-muted)]">Select token</span>
+                      <ArrowUpDown className="w-4 h-4 text-[var(--sw-muted)]" />
                     </>
                   )}
                 </button>
@@ -730,23 +730,23 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
                     value={fromAmount}
                     onChange={(e) => handleAmountChange(e.target.value, 'from')}
                     placeholder="0.0"
-                    className="text-xl font-bold bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 w-full outline-none"
+                    className="sw-mono text-xl font-bold bg-transparent text-[var(--sw-ink)] placeholder-[var(--sw-muted)] w-full outline-none"
                   />
                   <div className="text-right ml-2">
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                    <div className="sw-mono text-sm text-[var(--sw-muted)]">
                       $0.00
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={handleMaxAmount}
-                  className="px-3 py-1 text-xs font-medium text-brand-orange bg-brand-orange/10 rounded-lg hover:bg-brand-orange/20 transition-colors flex-shrink-0"
+                  className="sw-uplabel px-2 py-1 text-[var(--sw-accent)] hover:text-[var(--sw-accent-press)] transition-colors flex-shrink-0"
                 >
                   Max
                 </button>
               </div>
-              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                {fromToken ? `Balance: ${formatSwapBalance(fromToken.balance)}` : ''}
+              <div className="mt-2 sw-mono text-xs text-[var(--sw-muted)]">
+                {fromToken ? `Balance ${formatSwapBalance(fromToken.balance)}` : ''}
               </div>
             </div>
           </div>
@@ -755,37 +755,37 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
           <div className="flex justify-center -my-1">
             <button
               onClick={handleSwapTokens}
-              className="p-2 bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+              className="p-2 rounded-lg border border-[var(--sw-line)] bg-[var(--sw-surface)] text-[var(--sw-ink)] hover:bg-[color-mix(in_srgb,var(--sw-ink)_6%,transparent)] transition-colors"
             >
-              <ArrowUpDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <ArrowUpDown className="w-4 h-4" />
             </button>
           </div>
 
           {/* To Token */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Buy</label>
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-3 border border-slate-200/60 dark:border-slate-600/60">
+            <label className="sw-uplabel">You receive</label>
+            <div className="rounded-xl p-3 border border-[var(--sw-line)]">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowTokenSelector('to')}
-                  className="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors min-w-0 flex-shrink-0"
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-[var(--sw-line)] text-[var(--sw-ink)] hover:bg-[color-mix(in_srgb,var(--sw-ink)_6%,transparent)] transition-colors min-w-0 flex-shrink-0"
                 >
                   {toToken ? (
                     <>
-                      <div className="w-5 h-5 bg-slate-300 dark:bg-slate-500 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-bold text-slate-600 dark:text-slate-200">
+                      <div className="w-5 h-5 sw-mark rounded flex items-center justify-center">
+                        <span className="text-xs font-bold">
                           {toToken.symbol.charAt(0)}
                         </span>
                       </div>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">
+                      <span className="font-medium">
                         {toToken.symbol}
                       </span>
-                      <ArrowUpDown className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <ArrowUpDown className="w-4 h-4 text-[var(--sw-muted)]" />
                     </>
                   ) : (
                     <>
-                      <span className="text-slate-500 dark:text-slate-400">Select Token</span>
-                      <ArrowUpDown className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <span className="text-[var(--sw-muted)]">Select token</span>
+                      <ArrowUpDown className="w-4 h-4 text-[var(--sw-muted)]" />
                     </>
                   )}
                 </button>
@@ -795,51 +795,51 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
                     value={toAmount ? formatSwapBalance(toAmount) : ''}
                     onChange={(e) => handleAmountChange(e.target.value, 'to')}
                     placeholder="0.0"
-                    className="text-xl font-bold bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 w-full outline-none"
+                    className="sw-mono text-xl font-bold bg-transparent text-[var(--sw-ink)] placeholder-[var(--sw-muted)] w-full outline-none"
                   />
                   <div className="text-right ml-2">
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                    <div className="sw-mono text-sm text-[var(--sw-muted)]">
                       $0.00
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                {toToken ? `Balance: ${formatSwapBalance(toToken.balance)}` : ''}
+              <div className="mt-2 sw-mono text-xs text-[var(--sw-muted)]">
+                {toToken ? `Balance ${formatSwapBalance(toToken.balance)}` : ''}
               </div>
             </div>
           </div>
 
           {/* Quote Information */}
           {quote && (
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-3 space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400">Exchange Rate</span>
-                <span className="font-medium text-slate-900 dark:text-slate-100">
+            <div className="pt-1">
+              <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
+                <span className="text-[var(--sw-muted)]">Rate</span>
+                <span className="sw-mono text-[var(--sw-ink)]">
                   {formatExchangeRate(quote, fromToken?.symbol, toToken?.symbol, fromToken?.decimals, toToken?.decimals)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400">Price Impact</span>
-                <span className={`font-medium ${
-                  priceImpactWarning === 'high' ? 'text-red-500' :
-                  priceImpactWarning === 'medium' ? 'text-yellow-500' :
-                  'text-slate-900 dark:text-slate-100'
+              <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
+                <span className="text-[var(--sw-muted)]">Price impact</span>
+                <span className={`sw-mono ${
+                  priceImpactWarning === 'high' ? 'text-[var(--sw-down)]' :
+                  priceImpactWarning === 'medium' ? 'text-[var(--sw-accent)]' :
+                  'text-[var(--sw-ink)]'
                 }`}>
                   {formatPriceImpact(quote.priceImpact)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400">Minimum Received</span>
-                <span className="font-medium text-slate-900 dark:text-slate-100">
+              <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
+                <span className="text-[var(--sw-muted)]">Minimum received</span>
+                <span className="sw-mono text-[var(--sw-ink)]">
                   {formatSwapBalance(ethers.formatEther(quote.buyAmount))} {toToken?.symbol}
                 </span>
               </div>
               {/* Affiliate Fee Display */}
               {quote.fees?.integratorFee && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Platform Fee</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
+                  <span className="text-[var(--sw-muted)]">Platform fee</span>
+                  <span className="sw-mono text-[var(--sw-ink)]">
                     {formatSwapBalance(ethers.formatUnits(quote.fees.integratorFee.amount, fromToken?.decimals || 18))} {fromToken?.symbol} (0.88%)
                   </span>
                 </div>
@@ -849,20 +849,18 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
 
           {/* Error Display */}
           {quoteError && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-3">
-              <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
-                <AlertTriangle className="w-4 h-4" />
-                <span className="text-sm font-medium">{quoteError}</span>
-              </div>
+            <div className="flex items-center gap-2 text-[var(--sw-down)]">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm font-medium">{quoteError}</span>
             </div>
           )}
 
           {/* Approval Required Message */}
           {needsApproval && (
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-2">
-              <AlertTriangle className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-[var(--sw-accent)] mb-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm font-medium">
-                You need to approve {fromToken?.symbol} before swapping
+                Approve {fromToken?.symbol} before swapping
               </span>
             </div>
           )}
@@ -884,24 +882,20 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
               <button
                 onClick={isLoadingQuote ? undefined : (quote ? (needsApproval ? handleApproval : handleSwap) : fetchQuote)}
                 disabled={!fromToken || !toToken || !fromAmount || isLoadingQuote || isApproving}
-                className={`w-full font-semibold py-3 px-4 rounded-xl transition-colors disabled:cursor-not-allowed ${
-                  quote 
-                    ? 'bg-brand-orange hover:bg-brand-orange-dark text-white disabled:bg-slate-300 dark:disabled:bg-slate-600' 
-                    : 'bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-300'
-                }`}
+                className={quote ? 'sw-btn-primary w-full py-3 text-sm' : 'sw-btn-ghost w-full py-3 text-sm'}
                 title={`Debug: fromToken=${!!fromToken}, toToken=${!!toToken}, fromAmount=${!!fromAmount}, quote=${!!quote}, isLoadingQuote=${isLoadingQuote}, isApproving=${isApproving}, needsApproval=${needsApproval}`}
               >
                 {isLoadingQuote ? (
                   <div className="flex items-center justify-center gap-2">
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Getting Quote...</span>
+                    <span>Getting quote…</span>
                   </div>
                 ) : quote ? (
-                  needsApproval ? 'Approve Token' : 'Swap Tokens'
+                  needsApproval ? 'Approve token' : 'Swap'
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <RefreshCw className="w-4 h-4" />
-                    <span>Get Quote</span>
+                    <span>Get quote</span>
                   </div>
                 )}
               </button>
@@ -952,23 +946,23 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm"
+                className="sw-surface rounded-xl border border-[var(--sw-line)] p-6 w-full max-w-sm"
               >
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-                  Add Custom Token
+                <h3 className="text-lg font-bold text-[var(--sw-ink)] mb-2">
+                  Add custom token
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  Enter the token contract address to add it to your wallet
+                <p className="text-sm text-[var(--sw-ink-soft)] mb-4">
+                  Enter the token contract address.
                 </p>
                 <input
                   type="text"
                   value={newTokenAddress}
                   onChange={(e) => setNewTokenAddress(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-orange mb-4"
+                  placeholder="0x…"
+                  className="sw-input sw-mono w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm mb-4"
                 />
                 {addTokenError && (
-                  <p className="text-red-500 text-sm mb-4 px-1 font-medium">{addTokenError}</p>
+                  <p className="text-[var(--sw-down)] text-sm mb-4 px-1 font-medium">{addTokenError}</p>
                 )}
                 <div className="flex gap-3">
                   <button
@@ -982,16 +976,16 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
                       }
                       setAddTokenContext(null);
                     }}
-                    className="flex-1 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                    className="sw-btn-ghost flex-1 py-3 text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleAddToken}
                     disabled={!newTokenAddress || isAddingToken}
-                    className="flex-1 bg-brand-orange hover:bg-brand-orange-dark disabled:bg-slate-300 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors disabled:cursor-not-allowed"
+                    className="sw-btn-primary flex-1 py-3 text-sm"
                   >
-                    {isAddingToken ? 'Adding...' : 'Add Token'}
+                    {isAddingToken ? 'Adding…' : 'Add token'}
                   </button>
                 </div>
               </motion.div>
@@ -1007,15 +1001,15 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm"
+                className="sw-surface rounded-xl border border-[var(--sw-line)] p-6 w-full max-w-sm"
               >
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-                  Swap Settings
+                <h3 className="text-lg font-bold text-[var(--sw-ink)] mb-4">
+                  Swap settings
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Slippage Tolerance
+                    <label className="sw-uplabel block mb-2">
+                      Slippage tolerance
                     </label>
                     <input
                       type="number"
@@ -1024,29 +1018,29 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
                       min="0.1"
                       max="50"
                       step="0.1"
-                      className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                      className="sw-input sw-mono w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm"
                     />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Your transaction will revert if the price changes unfavorably by more than this percentage.
+                    <p className="text-xs text-[var(--sw-muted)] mt-1">
+                      The swap reverts if the price moves against you by more than this.
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="sw-uplabel">
                       Auto-approve tokens
                     </label>
                     <input
                       type="checkbox"
                       checked={settings.autoApprove}
                       onChange={(e) => updateSettings({ autoApprove: e.target.checked })}
-                      className="w-4 h-4 text-brand-orange bg-slate-100 border-slate-300 rounded focus:ring-brand-orange"
+                      className="w-4 h-4 accent-[var(--sw-accent)]"
                     />
                   </div>
                 </div>
                 <button
                   onClick={() => setShowSettings(false)}
-                  className="w-full mt-6 bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                  className="sw-btn-primary w-full mt-6 py-3 text-sm"
                 >
-                  Save Settings
+                  Save
                 </button>
               </motion.div>
             </div>

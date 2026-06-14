@@ -75,70 +75,74 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
-        <div className="text-center mb-6">
-          <h3 className="text-2xl font-bold text-slate-900 mb-2">Enter PIN</h3>
-          <p className="text-slate-600 text-sm">
-            Enter your 6-digit Burner PIN to authorize this transaction
+    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-[10001]">
+      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+        <div className="px-5 pt-5 pb-3 border-b border-[var(--sw-line)] text-center">
+          <h3 className="text-lg font-bold text-[var(--sw-ink)]">Enter PIN</h3>
+          <p className="text-sm text-[var(--sw-ink-soft)] mt-1">
+            6-digit Burner PIN to authorize
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <p className="text-sm text-blue-600">{loadingMessage}</p>
+        <div className="px-5 py-5">
+          {error && (
+            <div className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]">
+              <p className="text-sm text-[var(--sw-down)]">{error}</p>
             </div>
+          )}
+
+          {isLoading && (
+            <div className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]">
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--sw-accent)]"></div>
+                <p className="text-sm text-[var(--sw-ink-soft)]">{loadingMessage}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-center gap-2 mb-6">
+            {digits.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                onPaste={index === 0 ? handlePaste : undefined}
+                disabled={isLoading}
+                className={`w-11 h-14 text-center text-2xl font-bold sw-mono bg-transparent text-[var(--sw-ink)] rounded-lg border focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  digit ? "border-[var(--sw-accent)]" : "border-[var(--sw-line)]"
+                } focus:border-[var(--sw-accent)]`}
+              />
+            ))}
           </div>
-        )}
 
-        <div className="flex justify-center gap-3 mb-6">
-          {digits.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              onPaste={index === 0 ? handlePaste : undefined}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={onCancel}
               disabled={isLoading}
-              className="w-12 h-14 text-center text-2xl font-bold border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          ))}
-        </div>
+              className="sw-btn-ghost py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!isComplete || isLoading}
+              className="sw-btn-primary py-3 text-sm"
+            >
+              Submit
+            </button>
+          </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!isComplete || isLoading}
-            className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Submit
-          </button>
+          <p className="text-xs text-center text-[var(--sw-muted)] mt-4">
+            Sent directly to your Burner, never stored
+          </p>
         </div>
-
-        <p className="text-xs text-center text-slate-400 mt-4">
-          🔒 Sent directly to your Burner, never stored
-        </p>
       </div>
     </div>
   );

@@ -333,3 +333,36 @@ export async function signTransactionWithBurner(
   }
 }
 
+/**
+ * Sign a raw 32-byte digest with the Burner card (for message / typed-data signing).
+ * Returns an ethers.Signature with v normalized to 27/28.
+ */
+export async function signDigestWithBurner(
+  digest: string,
+  keySlot: number = 1,
+  pin?: string
+): Promise<ethers.Signature> {
+  try {
+    const bridgeRunning = await isBridgeRunning();
+    if (!bridgeRunning) {
+      throw new Error("No Burner card detected. Please place your Burner card on the reader and try again.");
+    }
+    await connectToBridge();
+
+    const hex = digest.startsWith("0x") ? digest.slice(2) : digest;
+    const command: any = { name: "sign", keyNo: keySlot, digest: hex };
+    if (pin) command.password = pin;
+
+    const result = await execBridgeCommand(command);
+    const sig = result.signature.raw || result.signature;
+    let v = Number(sig.v);
+    if (v < 27) v += 27;
+    return ethers.Signature.from({ r: "0x" + sig.r, s: "0x" + sig.s, v });
+  } catch (error: any) {
+    console.error("Error signing digest with Burner card:", error);
+    throw new Error(error.message || "Failed to sign message");
+  } finally {
+    disconnectBridge();
+  }
+}
+
