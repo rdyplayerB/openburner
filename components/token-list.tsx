@@ -704,7 +704,7 @@ export function TokenList({
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--sw-line)]">
-        <h2 className="sw-seclabel border-0 pb-0">Assets</h2>
+        <h2 className="sw-seclabel !border-b-0 !pb-0">Assets</h2>
         <div className="flex items-center gap-4">
           <div className="relative group">
             <button
