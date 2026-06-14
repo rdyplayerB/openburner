@@ -18,37 +18,43 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. It supp
 
 ### Core Functionality
 - 🔐 **Hardware-Secured Keys** - Private keys never leave the secure element chip
+- 📱 **Flexible Connectivity** - Use a desktop USB NFC reader (HaLo Bridge) locally, or turn your phone into the reader via the HaLo Gateway when hosted — scan a QR, tap your card. Hosted sessions stay alive through brief phone sleeps so you keep working without re-pairing
 - 🌐 **Multi-Chain Support** - Extends Burner use across Ethereum, Base, Arbitrum, Optimism, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM chain
 - 💰 **Token Management** - View balances for ETH and ERC-20 tokens
 - 💸 **Send Transactions** - Native and ERC-20 transfers with hardware signing
-- 🔄 **Token Swaps** - Decentralized swaps using [0x Standard Swap API](https://0x.org/docs/category/swap-api) (local: requires API key, hosted: limited)
+- 🔄 **Token Swaps** - Decentralized swaps using [0x Standard Swap API](https://0x.org/docs/category/swap-api) (requires a 0x API key — your own locally, or one configured by the deployer when hosted)
 - 🖼️ **NFT Management** - View, receive, and send ERC-721 & ERC-1155 collectibles with a gallery view, full detail pages, and OpenSea links. Auto-discovery via an optional [Alchemy NFT API](https://www.alchemy.com) key, plus manual add-by-contract on any chain
-- 📊 **Real-Time Prices** - CoinGecko integration (local version only)
+- 🔗 **WalletConnect** - Connect to dApps by scanning a WalletConnect QR (powered by [Reown](https://reown.com)). A header chip shows connected dApps with a live indicator and lets you manage or disconnect them
+- 📊 **Real-Time Prices** - CoinGecko price feeds, available in both local and hosted modes (hosted needs a CoinGecko API key — the free Demo tier works)
 - 🚀 **Custom RPCs** - Connect to any EVM-compatible chain
 
 ### Technical Highlights
 - **Multicall3 Integration** - Batch RPC calls for efficient balance queries
-- **Advanced Caching** - Multi-tier price caching (local version only)
-- **Burner Card Integration** - NFC-based hardware wallet support
+- **Advanced Caching** - Multi-tier price caching with a rate-limited server-side proxy
+- **Resilient Gateway Sessions** - Hosted phone-as-reader connections survive brief phone sleeps and resume in place, no constant QR re-scanning
+- **Burner Card Integration** - NFC-based hardware wallet support (local bridge or hosted gateway)
 - **Modern Stack** - Next.js 14, TypeScript, Tailwind CSS, ethers.js v6
 - **State Persistence** - localStorage-backed state management with Zustand
 
 ## Local vs Hosted
 
-**Local Version (Full Features)**
-- Real-time pricing with your CoinGecko API key
-- Token swaps with your 0x Standard Swap API key
-- Complete wallet functionality
-- Development and debugging features
+OpenBurner runs in two modes, selected by `NEXT_PUBLIC_APP_MODE`:
 
-**Hosted Version (Pricing Disabled)**
-- Limited token swaps (basic functionality)
-- Core wallet features (send, receive, manage)
-- Shows "-" instead of USD prices (with helpful tooltip)
-- No API costs or setup required
-- Deploy with limited functionality (API keys required for full features)
+**Local (`local`)** — desktop + USB NFC reader via HaLo Bridge
+- Connects to your Burner through a local NFC reader
+- Full functionality (pricing, swaps, NFTs, sends) using your own API keys
+- Best for development and power users
 
-*Note: Real-time prices and token swaps require running locally with your own CoinGecko and 0x API keys. Hosted version has limited functionality to avoid API costs. OpenBurner uses 0x's standard swap API (not gasless) - users must pay their own gas fees.*
+**Hosted (`hosted`)** — phone as the NFC reader via HaLo Gateway
+- Pair by scanning a QR with your phone, then tap your Burner to sign — no reader or bridge install needed
+- Optional integrations are enabled per deployment with server-side keys:
+  - **Pricing** — `COINGECKO_API_KEY` (free Demo tier works) + `NEXT_PUBLIC_PRICING_ENABLED=true`
+  - **NFTs** — `ALCHEMY_API_KEY`
+  - **Swaps** — `ZEROX_API_KEY`
+  - **dApp connections** — `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
+- Users can also bring their own keys in **Settings** (stored only in their browser, used for read-only data)
+
+*Any integration without a configured key is simply hidden — the wallet's core send/receive/manage functions always work. OpenBurner uses 0x's standard swap API (not gasless), so users pay their own gas fees.*
 
 ## 🚀 Quick Start
 
@@ -106,7 +112,7 @@ Complete guide covering:
 │  • Wallet UI                            │
 │  • Transaction Building                 │
 │  • Token Management                     │
-│  • Price Oracle (local only)           │
+│  • Price Oracle                         │
 └─────────────┬───────────────────────────┘
               │
               │ WebSocket (127.0.0.1:32868)
@@ -127,6 +133,8 @@ Complete guide covering:
 │  • ECDSA Operations                     │
 └─────────────────────────────────────────┘
 ```
+
+*Hosted mode replaces the local HaLo Bridge + USB reader with the HaLo Gateway, using your phone's NFC as the reader (pair via QR, tap to sign). Keys still never leave the card's secure element either way.*
 
 ## 🔒 Security
 
