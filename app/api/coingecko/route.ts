@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, checkOrigin, cacheGet, cacheSet } from '@/lib/rate-limit';
 
-const COINGECKO_API_BASE_URL = 'https://api.coingecko.com/api/v3';
+// Free "Demo" keys use the public endpoint + the x-cg-demo-api-key header.
+// Paid "Pro" keys use the pro endpoint + the x-cg-pro-api-key header. Defaults
+// to the free Demo tier; deployers with a paid key set COINGECKO_API_PLAN=pro.
+const COINGECKO_IS_PRO = process.env.COINGECKO_API_PLAN === 'pro';
+const COINGECKO_API_BASE_URL = COINGECKO_IS_PRO
+  ? 'https://pro-api.coingecko.com/api/v3'
+  : 'https://api.coingecko.com/api/v3';
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
 
 /**
@@ -52,7 +58,8 @@ export async function GET(request: NextRequest) {
     // User-provided key (forwarded by the client) takes precedence over the env var.
     const coingeckoKey = request.headers.get('x-coingecko-key') || COINGECKO_API_KEY;
     if (coingeckoKey) {
-      headers['x-cg-pro-api-key'] = coingeckoKey;
+      // Demo (free) and Pro (paid) keys authenticate with different header names.
+      headers[COINGECKO_IS_PRO ? 'x-cg-pro-api-key' : 'x-cg-demo-api-key'] = coingeckoKey;
     }
 
     console.log('🔄 [CoinGecko Proxy] Fetching from:', coingeckoUrl.toString());

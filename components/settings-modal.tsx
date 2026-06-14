@@ -50,6 +50,7 @@ export function SettingsModal({
   initialEdit?: UserKeyName;
 }) {
   const { isDarkMode, toggleTheme } = useThemeStore();
+  const isHosted = process.env.NEXT_PUBLIC_APP_MODE === "hosted";
   const [server, setServer] = useState<ServerStatus | null>(null);
   const [saved, setSaved] = useState<Partial<Record<UserKeyName, string>>>({});
   const [editing, setEditing] = useState<UserKeyName | null>(initialEdit ?? null);
@@ -201,6 +202,29 @@ export function SettingsModal({
             Keys are stored in this browser and override server settings. Used only for
             read-only data — never to move funds. Saving reloads the app.
           </p>
+
+          {isHosted && (
+            <div className="mt-4 rounded-lg border border-[var(--sw-line)] bg-[var(--sw-line-soft)] px-3.5 py-3">
+              <p className="text-[11px] font-semibold text-[var(--sw-ink)] mb-1">
+                Shared free-tier instance
+              </p>
+              <p className="text-[11px] text-[var(--sw-muted)] leading-relaxed">
+                Pricing (CoinGecko) and collectibles (Alchemy) here run on free API tiers
+                shared by everyone on openburner.xyz. If prices or NFTs stop loading, a rate
+                or daily limit was likely hit. Wait a few minutes for it to reset, add your
+                own free key above to skip the shared pool, or{" "}
+                <a
+                  href="https://github.com/rdyplayerB/openburner"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-[var(--sw-accent)] hover:opacity-80 transition-opacity"
+                >
+                  run your own instance
+                </a>
+                .
+              </p>
+            </div>
+          )}
 
           {/* About */}
           <p className="sw-seclabel mt-5 mb-1">About</p>
