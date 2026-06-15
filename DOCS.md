@@ -6,12 +6,17 @@
 
 ## What is OpenBurner?
 
-OpenBurner is a wallet application for Burner Ethereum hardware wallets. It runs locally on your machine. Private keys remain in the card's secure element.
+OpenBurner is a wallet application for Burner Ethereum hardware wallets. Run it locally or use the hosted app at [app.openburner.xyz](https://app.openburner.xyz). Private keys remain in the card's secure element.
 
 **Features:**
 - Works with Burner Ethereum cards (EAL6+ secure element)
-- Supports any EVM-compatible network
-- Local execution only
+- Supports any EVM-compatible network (14+ chains + custom RPC)
+- Send & receive tokens, with on-chip signing
+- Token swaps via the 0x Swap API
+- NFT gallery — view, send & receive ERC-721 / ERC-1155 collectibles
+- WalletConnect — connect your Burner to any dApp
+- Real-time pricing via CoinGecko (local and hosted)
+- Local (USB reader) or hosted (phone as NFC reader) modes
 - MIT licensed
 
 ### How is this different from BurnerOS?
@@ -30,24 +35,25 @@ Both work with the same Burner Ethereum card - your addresses and keys remain th
 
 OpenBurner supports two deployment modes with different capabilities:
 
-### Local Version (Full Features)
-- **Real-time pricing**: Requires your own CoinGecko API key
-- **Token swaps**: Requires your own 0x API key
-- **All features**: Complete wallet functionality
-- **Development mode**: Full debugging and customization
-- **API costs**: You pay for your own API usage
-- **Fee customization**: Can modify swap fee recipient address in code
+The mode is set with `NEXT_PUBLIC_APP_MODE` (`local` or `hosted`).
 
-### Hosted Version (Pricing Disabled)
-- **No pricing**: Real-time prices are disabled to avoid API costs
-- **Clean UI**: Shows "-" instead of prices with helpful tooltips
-- **Token swaps**: Full swap functionality with 0.875% platform fee
-- **Core features**: Send, receive, and manage tokens
-- **Public deployment**: Can be deployed without API keys
-- **Cost-free**: No ongoing API expenses
-- **Supports development**: Swap fees automatically support the project
+### Local Version — desktop + USB NFC reader (HaLo Bridge)
+- **Connection**: a local NFC reader via the HaLo Bridge
+- **All features** with your own API keys: pricing (CoinGecko), swaps (0x), NFTs (Alchemy), WalletConnect
+- **Development mode**: full debugging and customization
+- **API costs**: you pay for your own API usage
+- **Fee customization**: can modify the swap fee recipient address in code
 
-**Important**: If you want to see real-time token prices and use token swaps, you must run OpenBurner locally with your own CoinGecko and 0x API keys. The hosted version shows token balances but displays "-" instead of USD values to avoid API costs. Hover over "Pricing disabled" for setup instructions.
+### Hosted Version — phone as the NFC reader (HaLo Gateway)
+- **Connection**: pair by scanning a QR with your phone, then tap your Burner to sign — no reader or bridge install required. Sessions survive brief phone drops, so you reconnect without re-scanning.
+- **Optional integrations are enabled per deployment** with server-side keys:
+  - **Pricing** — `COINGECKO_API_KEY` (the free Demo tier works) + `NEXT_PUBLIC_PRICING_ENABLED=true`
+  - **NFTs** — `ALCHEMY_API_KEY`
+  - **Swaps** — `ZEROX_API_KEY` (0.875% platform fee)
+  - **dApp connections** — `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
+- **Bring your own keys**: users can also add their own keys in Settings (stored only in their browser, used for read-only data)
+
+**Note**: Any integration without a configured key is simply hidden — the core send/receive/manage functions always work. Pricing was previously disabled on hosted; it now works once a deployer sets `COINGECKO_API_KEY` + `NEXT_PUBLIC_PRICING_ENABLED`.
 
 ## Quick Start
 
@@ -246,30 +252,51 @@ OpenBurner supports token swaps on both local and hosted versions using the [0x 
 - Automatic network detection and routing
 - Real-time quote fetching and execution
 
-## Environment Variables (Local Version)
+## Environment Variables
 
 ```bash
-# Required for real-time pricing (local version only)
-NEXT_PUBLIC_COINGECKO_API_KEY=your_key_here
+# Mode: 'local' (USB reader via HaLo Bridge) or 'hosted' (phone as NFC reader)
+NEXT_PUBLIC_APP_MODE=local
+
+# --- Local development ---
+NEXT_PUBLIC_COINGECKO_API_KEY=your_key_here          # real-time pricing
 NEXT_PUBLIC_COINGECKO_API_URL=https://api.coingecko.com/api/v3
+NEXT_PUBLIC_0X_API_KEY=your_0x_api_key_here          # token swaps
 
-# Required for token swaps (local version only)
-NEXT_PUBLIC_0X_API_KEY=your_0x_api_key_here
-
-# Note: Hosted version doesn't use these variables to avoid API costs
+# --- Hosted deployment (server-side keys; kept secret, proxied) ---
+NEXT_PUBLIC_PRICING_ENABLED=true                     # turns pricing on in hosted mode
+COINGECKO_API_KEY=your_key_here                      # pricing (free Demo tier works)
+ALCHEMY_API_KEY=your_alchemy_key                     # NFT auto-discovery
+ZEROX_API_KEY=your_0x_api_key                        # token swaps
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id # WalletConnect / dApp connections
 ```
+
+Notes:
+- Hosted server-side keys (`COINGECKO_API_KEY`, `ALCHEMY_API_KEY`, `ZEROX_API_KEY`) are read only on the server and proxied, so they never reach the browser. Mark them as **Sensitive** in your host (e.g. Vercel).
+- `NEXT_PUBLIC_PRICING_ENABLED=true` is required alongside `COINGECKO_API_KEY` to enable pricing in hosted mode — the key alone isn't enough, since the client needs a public flag to start fetching.
+- For a free CoinGecko **Demo** key the proxy uses the `x-cg-demo-api-key` header automatically; set `COINGECKO_API_PLAN=pro` only if you have a paid Pro key.
 
 ### Getting API Keys
 
 **CoinGecko API Key:**
 1. Sign up at [CoinGecko API](https://www.coingecko.com/en/api)
-2. Get your free API key from the dashboard
-3. Add it to your `.env.local` file
+2. Get your free Demo API key from the dashboard
+3. Add it to your environment (`.env.local` locally, or your host's env vars when hosted)
 
 **0x API Key:**
 1. Sign up at [0x.org](https://0x.org)
 2. Get your free API key from the dashboard
-3. Add it to your `.env.local` file
+3. Add it to your environment
+
+**Alchemy API Key (NFTs):**
+1. Sign up at [alchemy.com](https://www.alchemy.com)
+2. Create an app and copy its API key
+3. Add it as `ALCHEMY_API_KEY`
+
+**WalletConnect Project ID (dApp connections):**
+1. Create a project at [cloud.reown.com](https://cloud.reown.com) (formerly WalletConnect Cloud)
+2. Copy the ~32-char Project ID
+3. Add it as `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (optionally restrict allowed domains)
 
 **Note**: The 0x API key is used for the standard swap API endpoints (`/swap/allowance-holder/price` and `/swap/allowance-holder/quote`), not the gasless API endpoints.
 
