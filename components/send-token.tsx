@@ -458,7 +458,7 @@ export function SendToken({
           <button
             onClick={handleSend}
             disabled={!recipient || !amount || isSending}
-            className="sw-btn-primary py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="sw-btn-primary w-full py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSending ? (
               <>

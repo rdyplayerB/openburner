@@ -24,6 +24,19 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)",
 ];
 
+/**
+ * Truncate a decimal string to a token's precision so it is safe to pass to
+ * ethers.parseUnits. Switching the active token (e.g. from an 18-decimal token
+ * to a 6-decimal one) can leave an amount with more decimal places than the new
+ * token supports, which makes parseUnits throw a NUMERIC_FAULT "underflow".
+ */
+function truncateToDecimals(amount: string, decimals: number): string {
+  const [whole, fraction] = amount.split('.');
+  if (fraction === undefined) return amount;
+  if (decimals === 0) return whole;
+  return `${whole}.${fraction.slice(0, decimals)}`;
+}
+
 interface SwapTokenProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -173,20 +186,20 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
       if (sellAmount) {
         // For native tokens (ETH), use 18 decimals
         if (fromToken.address === 'native') {
-          sellAmountWei = ethers.parseEther(sellAmount).toString();
+          sellAmountWei = ethers.parseEther(truncateToDecimals(sellAmount, 18)).toString();
         } else {
           // For ERC20 tokens, use their specific decimals
-          sellAmountWei = ethers.parseUnits(sellAmount, fromToken.decimals).toString();
+          sellAmountWei = ethers.parseUnits(truncateToDecimals(sellAmount, fromToken.decimals), fromToken.decimals).toString();
         }
       }
 
       if (buyAmount) {
         // For native tokens (ETH), use 18 decimals
         if (toToken.address === 'native') {
-          buyAmountWei = ethers.parseEther(buyAmount).toString();
+          buyAmountWei = ethers.parseEther(truncateToDecimals(buyAmount, 18)).toString();
         } else {
           // For ERC20 tokens, use their specific decimals
-          buyAmountWei = ethers.parseUnits(buyAmount, toToken.decimals).toString();
+          buyAmountWei = ethers.parseUnits(truncateToDecimals(buyAmount, toToken.decimals), toToken.decimals).toString();
         }
       }
 
@@ -571,20 +584,20 @@ export function SwapToken({ onClose, onSuccess, onRefreshAssets, onTransactionSu
         if (fromAmount) {
           // For native tokens (ETH), use 18 decimals
           if (fromToken!.address === 'native') {
-            sellAmountWei = ethers.parseEther(fromAmount).toString();
+            sellAmountWei = ethers.parseEther(truncateToDecimals(fromAmount, 18)).toString();
           } else {
             // For ERC20 tokens, use their specific decimals
-            sellAmountWei = ethers.parseUnits(fromAmount, fromToken!.decimals).toString();
+            sellAmountWei = ethers.parseUnits(truncateToDecimals(fromAmount, fromToken!.decimals), fromToken!.decimals).toString();
           }
         }
 
         if (toAmount) {
           // For native tokens (ETH), use 18 decimals
           if (toToken!.address === 'native') {
-            buyAmountWei = ethers.parseEther(toAmount).toString();
+            buyAmountWei = ethers.parseEther(truncateToDecimals(toAmount, 18)).toString();
           } else {
             // For ERC20 tokens, use their specific decimals
-            buyAmountWei = ethers.parseUnits(toAmount, toToken!.decimals).toString();
+            buyAmountWei = ethers.parseUnits(truncateToDecimals(toAmount, toToken!.decimals), toToken!.decimals).toString();
           }
         }
 
