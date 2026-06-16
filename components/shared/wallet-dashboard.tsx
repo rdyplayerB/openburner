@@ -45,12 +45,11 @@ interface Chain {
   name: string;
   rpcUrl: string;
   logo: string;
-  square?: boolean;
 }
 
 const POPULAR_CHAINS: Chain[] = [
   { chainId: 1, name: "Ethereum", rpcUrl: "https://ethereum.publicnode.com", logo: "/images/chains/ethereum.png" },
-  { chainId: 8453, name: "Base", rpcUrl: "https://mainnet.base.org", logo: "/images/chains/base.svg", square: true },
+  { chainId: 8453, name: "Base", rpcUrl: "https://mainnet.base.org", logo: "/images/chains/base.svg" },
   { chainId: 56, name: "BNB Chain", rpcUrl: "https://bsc-dataseed1.binance.org", logo: "/images/chains/binance.png" },
   { chainId: 42161, name: "Arbitrum One", rpcUrl: "https://arb1.arbitrum.io/rpc", logo: "/images/chains/arbitrum.png" },
   { chainId: 43114, name: "Avalanche", rpcUrl: "https://api.avax.network/ext/bc/C/rpc", logo: "/images/chains/avalanche.png" },
@@ -605,14 +604,14 @@ export function WalletDashboard() {
             onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg sw-surface border border-[var(--sw-line)] hover:border-[var(--sw-accent)]/50 transition-all"
           >
-            <div className={`flex items-center justify-center w-5 h-5 ${POPULAR_CHAINS.find(c => c.chainId === chainId)?.square ? 'rounded-[5px]' : 'rounded-full'} bg-[var(--sw-line-soft)] overflow-hidden`}>
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--sw-line-soft)] overflow-hidden">
               {(() => {
                 const chain = POPULAR_CHAINS.find(c => c.chainId === chainId);
                 return chain?.logo ? (
                   <img
                     src={chain.logo}
                     alt={chainName}
-                    className={chain.square ? "w-full h-full object-cover rounded-[5px]" : "w-4 h-4 object-cover rounded-full"}
+                    className="w-4 h-4 object-cover rounded-full"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
@@ -647,13 +646,13 @@ export function WalletDashboard() {
                           : "hover:bg-[var(--sw-line-soft)] text-[var(--sw-ink)]"
                       }`}
                     >
-                      <div className={`flex items-center justify-center w-8 h-8 ${chain.square ? 'rounded-[7px]' : 'rounded-full'} flex-shrink-0 overflow-hidden ${
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 overflow-hidden ${
                         chainId === chain.chainId ? "bg-white/10" : "bg-[var(--sw-line-soft)]"
                       }`}>
                         <img
                           src={chain.logo}
                           alt={chain.name}
-                          className={chain.square ? "w-full h-full object-cover rounded-[7px]" : "w-6 h-6 object-cover rounded-full"}
+                          className="w-6 h-6 object-cover rounded-full"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
