@@ -45,11 +45,12 @@ interface Chain {
   name: string;
   rpcUrl: string;
   logo: string;
+  square?: boolean;
 }
 
 const POPULAR_CHAINS: Chain[] = [
   { chainId: 1, name: "Ethereum", rpcUrl: "https://ethereum.publicnode.com", logo: "/images/chains/ethereum.png" },
-  { chainId: 8453, name: "Base", rpcUrl: "https://mainnet.base.org", logo: "/images/chains/base.svg" },
+  { chainId: 8453, name: "Base", rpcUrl: "https://mainnet.base.org", logo: "/images/chains/base.svg", square: true },
   { chainId: 56, name: "BNB Chain", rpcUrl: "https://bsc-dataseed1.binance.org", logo: "/images/chains/binance.png" },
   { chainId: 42161, name: "Arbitrum One", rpcUrl: "https://arb1.arbitrum.io/rpc", logo: "/images/chains/arbitrum.png" },
   { chainId: 43114, name: "Avalanche", rpcUrl: "https://api.avax.network/ext/bc/C/rpc", logo: "/images/chains/avalanche.png" },
@@ -611,7 +612,7 @@ export function WalletDashboard() {
                   <img
                     src={chain.logo}
                     alt={chainName}
-                    className="w-4 h-4 object-cover rounded-full"
+                    className={chain.square ? "w-3.5 h-3.5 object-cover rounded-[4px]" : "w-4 h-4 object-cover rounded-full"}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
@@ -652,7 +653,7 @@ export function WalletDashboard() {
                         <img
                           src={chain.logo}
                           alt={chain.name}
-                          className="w-6 h-6 object-cover rounded-full"
+                          className={chain.square ? "w-5 h-5 object-cover rounded-[5px]" : "w-6 h-6 object-cover rounded-full"}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
