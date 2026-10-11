@@ -3,29 +3,15 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { useWalletStore } from "@/store/wallet-store";
-import { rpcRateLimiter } from "@/lib/rpc-rate-limiter";
-import { signTransactionSmart } from "@/lib/smart-signer";
 import { PinInput } from "../pin-input";
 import { CheckCircle, ExternalLink, Clock, X } from "lucide-react";
 import { useEnvironment } from "@/hooks/use-environment";
 import { NftMedia } from "./nft-media";
 import { encodeNftTransfer, type NftItem } from "@/lib/nft";
-
-const BLOCK_EXPLORERS: Record<number, string> = {
-  1: "https://etherscan.io",
-  8453: "https://basescan.org",
-  56: "https://bscscan.com",
-  42161: "https://arbiscan.io",
-  43114: "https://snowtrace.io",
-  81457: "https://blastscan.io",
-  59144: "https://lineascan.build",
-  5000: "https://explorer.mantle.xyz",
-  34443: "https://explorer.mode.network",
-  10: "https://optimistic.etherscan.io",
-  137: "https://polygonscan.com",
-  534352: "https://scrollscan.com",
-  1301: "https://unichain-sepolia.blockscout.com",
-};
+import { Modal } from "@/components/common/modal";
+import { getProvider } from "@/lib/provider";
+import { getExplorerTxUrl, getNativeSymbol } from "@/lib/supported-chains";
+import { friendlyTxError, isRetryablePinError } from "@/lib/tx-errors";
 
 export function SendNft({
   nft,
@@ -37,7 +23,11 @@ export function SendNft({
   onSuccess: () => void;
 }) {
   const environment = useEnvironment();
-  const { address, rpcUrl, chainId, keySlot, chainName } = useWalletStore();
+  const address = useWalletStore((s) => s.address);
+  const rpcUrl = useWalletStore((s) => s.rpcUrl);
+  const chainId = useWalletStore((s) => s.chainId);
+  const keySlot = useWalletStore((s) => s.keySlot);
+  const chainName = useWalletStore((s) => s.chainName);
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("1");
   const [isSending, setIsSending] = useState(false);
@@ -62,8 +52,8 @@ export function SendNft({
     try {
       localStorage.setItem("lastRecipientAddress", addr);
       setLastUsedAddress(addr);
-    } catch (err) {
-      console.warn("Failed to save last used address:", err);
+    } catch {
+      /* storage unavailable */
     }
   }
 
@@ -95,7 +85,7 @@ export function SendNft({
     setTxHash(null);
 
     try {
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const provider = getProvider(chainId, rpcUrl);
 
       const data = encodeNftTransfer(
         nft,
@@ -104,16 +94,13 @@ export function SendNft({
         isMultiEdition ? amount : "1"
       );
 
-      const [nonce, feeData, gasEstimate] = await rpcRateLimiter.makeRequest(
-        async () =>
-          Promise.all([
-            provider.getTransactionCount(address),
-            provider.getFeeData(),
-            provider
-              .estimateGas({ to: nft.contractAddress, data, value: 0n, from: address })
-              .catch(() => 150000n),
-          ])
-      );
+      const [nonce, feeData, gasEstimate] = await Promise.all([
+        provider.getTransactionCount(address, "pending"),
+        provider.getFeeData(),
+        provider
+          .estimateGas({ to: nft.contractAddress, data, value: 0n, from: address })
+          .catch(() => 150000n),
+      ]);
 
       const gasLimit = (gasEstimate * 120n) / 100n;
       const isBaseNetwork = chainId === 8453;
@@ -145,6 +132,7 @@ export function SendNft({
       }
 
       setCurrentOperation("Signing transaction");
+      const { signTransactionSmart } = await import("@/lib/smart-signer");
       const signedTx = await signTransactionSmart(
         transaction,
         keySlot || 1,
@@ -155,28 +143,31 @@ export function SendNft({
       setShowPinInput(false);
 
       setCurrentOperation("Broadcasting transaction");
-      const txResponse = await rpcRateLimiter.makeRequest(async () =>
-        provider.broadcastTransaction(signedTx)
-      );
+      const txResponse = await provider.broadcastTransaction(signedTx);
       setTxHash(txResponse.hash);
 
-      await txResponse.wait();
+      setCurrentOperation("Waiting for confirmation");
+      const receipt = await txResponse.wait().catch((e: any) => {
+        // ethers throws CALL_EXCEPTION for a mined-but-reverted tx.
+        if (e?.code === "CALL_EXCEPTION") return { status: 0 };
+        throw e;
+      });
+      if (receipt && receipt.status === 0) {
+        throw new Error("The transfer was reverted on-chain, so the NFT was not sent. A network fee may still have been charged.");
+      }
 
       saveLastUsedAddress(recipient);
       setIsConfirmed(true);
     } catch (err: any) {
-      console.error("Error sending NFT:", err);
-      const operationContext = currentOperation ? ` (${currentOperation})` : "";
-
-      if (err.message?.includes("WRONG_PWD") || err.message?.includes("password")) {
-        setPinError(`Incorrect PIN${operationContext}. Please try again.`);
-      } else if (err.message?.includes("No Burner card detected")) {
-        setPinError(
-          `No Burner card detected${operationContext}. Please place your Burner card on the reader and try again.`
-        );
+      if (isRetryablePinError(err)) {
+        setPinError(friendlyTxError(err, getNativeSymbol(chainId)));
       } else {
-        setError(`${err.message || "Failed to send NFT"}${operationContext}`);
         setShowPinInput(false);
+        setError(
+          String(err?.message || "").startsWith("The transfer was reverted")
+            ? err.message
+            : friendlyTxError(err, getNativeSymbol(chainId))
+        );
       }
     } finally {
       setIsSending(false);
@@ -185,10 +176,7 @@ export function SendNft({
     }
   }
 
-  function getExplorerTxUrl(txHash: string): string {
-    const baseUrl = BLOCK_EXPLORERS[chainId] || "https://etherscan.io";
-    return `${baseUrl}/tx/${txHash}`;
-  }
+  const explorerUrl = txHash ? getExplorerTxUrl(chainId, txHash) : null;
 
   function handleReturnToWallet() {
     onSuccess();
@@ -197,12 +185,15 @@ export function SendNft({
 
   if (isConfirmed && txHash) {
     return (
-      <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-        <div className="sw-surface rounded-xl border border-[var(--sw-line)] p-5 sm:p-6 max-w-sm sm:max-w-md w-full mx-2">
-          <div className="flex justify-center mb-4">
+      <Modal
+        onClose={handleReturnToWallet}
+        labelledBy="nft-sent-title"
+        className="sw-surface rounded-xl border border-[var(--sw-line)] p-5 sm:p-6 max-w-sm sm:max-w-md w-full mx-2"
+      >
+          <div className="flex justify-center mb-4" role="status">
             <CheckCircle className="w-12 h-12 text-[var(--sw-up)]" />
           </div>
-          <h2 className="text-xl font-bold text-[var(--sw-ink)] text-center mb-1">
+          <h2 id="nft-sent-title" className="text-xl font-bold text-[var(--sw-ink)] text-center mb-1">
             NFT sent
           </h2>
           <p className="text-sm text-[var(--sw-ink-soft)] text-center mb-5">
@@ -221,15 +212,17 @@ export function SendNft({
           </div>
 
           <div className="space-y-3">
-            <a
-              href={getExplorerTxUrl(txHash)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sw-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2"
-            >
-              View on block explorer
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            {explorerUrl && (
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sw-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2"
+              >
+                View on block explorer
+                <ExternalLink className="w-4 h-4" aria-hidden="true" />
+              </a>
+            )}
             <button
               onClick={handleReturnToWallet}
               className="sw-btn-ghost w-full py-3 text-sm"
@@ -237,19 +230,24 @@ export function SendNft({
               Return to wallet
             </button>
           </div>
-        </div>
-      </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-      <div className="sw-surface rounded-xl border border-[var(--sw-line)] max-w-sm sm:max-w-md w-full mx-2 overflow-hidden">
+    <Modal
+      onClose={() => !isSending && onClose()}
+      labelledBy="send-nft-title"
+      closeOnBackdrop={!isSending}
+      className="sw-surface rounded-xl border border-[var(--sw-line)] max-w-sm sm:max-w-md w-full mx-2 overflow-hidden"
+    >
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <span className="sw-uplabel">Send NFT</span>
+          <h2 id="send-nft-title" className="sw-uplabel">Send NFT</h2>
           <button
             onClick={onClose}
+            disabled={isSending}
             className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -273,8 +271,9 @@ export function SendNft({
 
         <div className="space-y-4">
           <div>
-            <label className="sw-uplabel block mb-1.5">Recipient</label>
+            <label htmlFor="send-nft-recipient" className="sw-uplabel block mb-1.5">Recipient</label>
             <input
+              id="send-nft-recipient"
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
@@ -295,7 +294,7 @@ export function SendNft({
           {isMultiEdition && (
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="sw-uplabel block">Quantity</label>
+                <label htmlFor="send-nft-qty" className="sw-uplabel block">Quantity</label>
                 <button
                   onClick={() => setAmount(String(ownedQty))}
                   className="text-xs text-[var(--sw-accent)] hover:underline"
@@ -304,6 +303,7 @@ export function SendNft({
                 </button>
               </div>
               <input
+                id="send-nft-qty"
                 type="number"
                 min={1}
                 max={ownedQty}
@@ -315,7 +315,7 @@ export function SendNft({
           )}
 
           {error && (
-            <div className="p-3 rounded-lg border border-[var(--sw-line)]">
+            <div role="alert" className="p-3 rounded-lg border border-[var(--sw-line)]">
               <p className="text-xs text-[var(--sw-down)]">{error}</p>
             </div>
           )}
@@ -350,7 +350,6 @@ export function SendNft({
           </p>
         </div>
         </div>
-      </div>
 
       <PinInput
         isVisible={showPinInput}
@@ -363,6 +362,6 @@ export function SendNft({
         isLoading={isSending || isSigning}
         loadingMessage={currentOperation || "Processing..."}
       />
-    </div>
+    </Modal>
   );
 }
