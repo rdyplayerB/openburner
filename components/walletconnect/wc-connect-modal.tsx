@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { X, ScanLine, ClipboardPaste, Loader2, Globe } from "lucide-react";
 import { useWalletConnectStore } from "@/store/walletconnect-store";
 import { useEnvironment } from "@/hooks/use-environment";
+import { Modal } from "@/components/common/modal";
 
 type Tab = "scan" | "paste";
 
@@ -14,7 +15,17 @@ export function WcConnectModal({
   onClose: () => void;
   onOpenSettings?: () => void;
 }) {
-  const { pair, pairing, error, clearError, configured } = useWalletConnectStore();
+  const pair = useWalletConnectStore((s) => s.pair);
+  const pairing = useWalletConnectStore((s) => s.pairing);
+  const error = useWalletConnectStore((s) => s.error);
+  const clearError = useWalletConnectStore((s) => s.clearError);
+  const configured = useWalletConnectStore((s) => s.configured);
+  const init = useWalletConnectStore((s) => s.init);
+
+  // Opening this modal is the signal to load the WalletConnect SDK.
+  useEffect(() => {
+    if (configured) init();
+  }, [configured, init]);
   const { isMobile } = useEnvironment();
   const [tab, setTab] = useState<Tab>(isMobile ? "scan" : "paste");
   const [uri, setUri] = useState("");
@@ -121,8 +132,9 @@ export function WcConnectModal({
         </div>
       ) : (
         <div>
-          <label className="sw-uplabel">WalletConnect URI</label>
+          <label htmlFor="wc-uri" className="sw-uplabel">WalletConnect URI</label>
           <textarea
+            id="wc-uri"
             value={uri}
             onChange={(e) => setUri(e.target.value)}
             placeholder="wc:…"
@@ -145,29 +157,29 @@ export function WcConnectModal({
         </div>
       )}
 
-      {error && <p className="text-xs text-[var(--sw-down)] mt-3 text-center">{error}</p>}
+      {error && (
+        <p role="alert" className="text-xs text-[var(--sw-down)] mt-3 text-center">
+          {error}
+        </p>
+      )}
     </Shell>
   );
 }
 
 function Shell({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div
-      className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-[10000]"
-      onClick={onClose}
-    >
-      <div
-        className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <span className="sw-uplabel">Connect to dApp</span>
-          <button onClick={onClose} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="px-5 pb-5">{children}</div>
+    <Modal onClose={onClose} labelledBy="wc-connect-title">
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <h2 id="wc-connect-title" className="sw-uplabel">Connect to dApp</h2>
+        <button
+          onClick={onClose}
+          className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
-    </div>
+      <div className="px-5 pb-5">{children}</div>
+    </Modal>
   );
 }

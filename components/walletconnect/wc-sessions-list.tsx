@@ -8,7 +8,8 @@ import { useWalletConnectStore } from "@/store/walletconnect-store";
  * Rendered inside the menu / settings.
  */
 export function WcSessionsList({ compact = false }: { compact?: boolean }) {
-  const { sessions, disconnect } = useWalletConnectStore();
+  const sessions = useWalletConnectStore((s) => s.sessions);
+  const disconnect = useWalletConnectStore((s) => s.disconnect);
 
   if (sessions.length === 0) {
     return (
@@ -38,6 +39,7 @@ export function WcSessionsList({ compact = false }: { compact?: boolean }) {
               onClick={() => disconnect(s.topic)}
               className="text-[var(--sw-muted)] hover:text-[var(--sw-down)] transition-colors p-1.5"
               title="Disconnect"
+              aria-label={`Disconnect ${meta.name || "dApp"}`}
             >
               <Unplug className="w-4 h-4" />
             </button>

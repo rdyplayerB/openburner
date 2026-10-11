@@ -4,14 +4,15 @@
  * Holds the WalletKit instance, handles init/pairing/session lifecycle, and exposes thin
  * helpers used by the store. The Burner only ever signs after the user confirms a request
  * (PIN + tap), so this module never signs on its own.
+ *
+ * The WalletConnect SDK (~400 kB) is loaded with dynamic import() the first time it is
+ * needed — i.e. when the user opens "Connect to dApp" or already has saved sessions.
  */
-import { Core } from "@walletconnect/core";
-import { WalletKit } from "@reown/walletkit";
-import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
 import { buildSupportedNamespaces } from "./chains";
 import { getUserKey } from "../user-keys";
 
-type WalletKitInstance = Awaited<ReturnType<typeof WalletKit.init>>;
+type WalletKitModule = typeof import("@reown/walletkit");
+type WalletKitInstance = Awaited<ReturnType<WalletKitModule["WalletKit"]["init"]>>;
 
 // User-entered project id (this browser) takes precedence over the build env var.
 function projectId(): string {
@@ -25,6 +26,26 @@ const METADATA = {
   icons: ["https://openburner.xyz/openburnerlogo.svg"],
 };
 
+/** localStorage flag: set while at least one dApp session exists, so we only boot the SDK when useful. */
+const HAS_SESSIONS_KEY = "openburner:wc-has-sessions";
+
+export function hasSavedSessionsFlag(): boolean {
+  try {
+    return localStorage.getItem(HAS_SESSIONS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setSavedSessionsFlag(has: boolean): void {
+  try {
+    if (has) localStorage.setItem(HAS_SESSIONS_KEY, "1");
+    else localStorage.removeItem(HAS_SESSIONS_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 let walletKit: WalletKitInstance | null = null;
 let initPromise: Promise<WalletKitInstance> | null = null;
 
@@ -32,22 +53,35 @@ export function isWalletConnectConfigured(): boolean {
   return projectId().length > 0;
 }
 
+export function isWalletKitLoaded(): boolean {
+  return walletKit !== null;
+}
+
+function loadUtils() {
+  return import("@walletconnect/utils");
+}
+
 /** Initialize (once) and return the WalletKit instance. Throws if no project id is set. */
 export async function getWalletKit(): Promise<WalletKitInstance> {
   if (walletKit) return walletKit;
   const id = projectId();
   if (!id) {
-    throw new Error(
-      "WalletConnect is not configured. Set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID."
-    );
+    throw new Error("WalletConnect is not configured. Set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID.");
   }
   if (!initPromise) {
     initPromise = (async () => {
+      const [{ Core }, { WalletKit }] = await Promise.all([
+        import("@walletconnect/core"),
+        import("@reown/walletkit"),
+      ]);
       const core = new Core({ projectId: id });
       const kit = await WalletKit.init({ core, metadata: METADATA });
       walletKit = kit;
       return kit;
-    })();
+    })().catch((err) => {
+      initPromise = null; // allow a retry after a failed init
+      throw err;
+    });
   }
   return initPromise;
 }
@@ -60,7 +94,7 @@ export async function pairWithUri(uri: string): Promise<void> {
 
 /** Approve a session proposal, scoped to the chains we can serve. */
 export async function approveProposal(proposal: any, address: string) {
-  const kit = await getWalletKit();
+  const [kit, { buildApprovedNamespaces }] = await Promise.all([getWalletKit(), loadUtils()]);
   const approvedNamespaces = buildApprovedNamespaces({
     proposal: proposal.params,
     supportedNamespaces: buildSupportedNamespaces(address),
@@ -69,7 +103,7 @@ export async function approveProposal(proposal: any, address: string) {
 }
 
 export async function rejectProposal(proposalId: number) {
-  const kit = await getWalletKit();
+  const [kit, { getSdkError }] = await Promise.all([getWalletKit(), loadUtils()]);
   await kit.rejectSession({ id: proposalId, reason: getSdkError("USER_REJECTED") });
 }
 
@@ -80,12 +114,7 @@ export async function respondResult(topic: string, id: number, result: any) {
 }
 
 /** Send a JSON-RPC error back to the dApp. */
-export async function respondError(
-  topic: string,
-  id: number,
-  code = 5000,
-  message = "User rejected"
-) {
+export async function respondError(topic: string, id: number, code = 5000, message = "User rejected") {
   const kit = await getWalletKit();
   await kit.respondSessionRequest({
     topic,
@@ -94,7 +123,7 @@ export async function respondError(
 }
 
 export async function disconnectSession(topic: string) {
-  const kit = await getWalletKit();
+  const [kit, { getSdkError }] = await Promise.all([getWalletKit(), loadUtils()]);
   await kit.disconnectSession({ topic, reason: getSdkError("USER_DISCONNECTED") });
 }
 
@@ -102,5 +131,3 @@ export async function getActiveSessions() {
   const kit = await getWalletKit();
   return Object.values(kit.getActiveSessions());
 }
-
-export { getSdkError };
