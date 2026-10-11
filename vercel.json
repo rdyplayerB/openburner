@@ -2,20 +2,16 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "devCommand": "npm run dev",
-  "regions": ["iad1"],
+  "regions": [
+    "iad1"
+  ],
   "functions": {
     "app/**": {
       "maxDuration": 30
     }
   },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ],
   "build": {
     "env": {
       "NEXT_PUBLIC_APP_MODE": "hosted",

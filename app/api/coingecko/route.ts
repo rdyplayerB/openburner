@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { rateLimit, checkOrigin, cacheGet, cacheSet } from '@/lib/rate-limit';
+import { log, errMsg } from '@/lib/log';
+import { rateLimit, cacheGet, cacheSet } from '@/lib/rate-limit';
 
 // Free "Demo" keys use the public endpoint + the x-cg-demo-api-key header.
 // Paid "Pro" keys use the pro endpoint + the x-cg-pro-api-key header. Defaults
@@ -32,21 +33,28 @@ function edgeJson(body: any, status: number, sMaxAgeSec: number): NextResponse {
   return NextResponse.json(body, {
     status,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Cache-Control': `public, s-maxage=${sMaxAgeSec}, stale-while-revalidate=${sMaxAgeSec * 4}`,
     },
   });
 }
 
+// Only the endpoint shapes the app uses. Anything else is refused, so this
+// route can't be used as an open proxy to the rest of CoinGecko on our key.
+const ALLOWED_ENDPOINTS = [
+  /^simple\/price$/,
+  /^simple\/token_price\/[a-z0-9-]+$/,
+  /^coins\/[a-z0-9-]+$/,
+  /^coins\/[a-z0-9-]+\/contract\/0x[0-9a-fA-F]{40}$/,
+  /^search$/,
+];
+const MAX_PARAM_LENGTH = 2000;
+
 /**
- * Proxy API route for CoinGecko requests to solve CORS issues
- * This allows the frontend to make requests to CoinGecko through our server
+ * Proxy for CoinGecko so the API key stays server-side.
  */
 export async function GET(request: NextRequest) {
   try {
-    const blocked = checkOrigin(request) || rateLimit(request, 'coingecko', 90, 60_000);
+    const blocked = await rateLimit(request, 'coingecko', 90, 60_000);
     if (blocked) return blocked;
 
     const { searchParams } = new URL(request.url);
@@ -58,6 +66,15 @@ export async function GET(request: NextRequest) {
         { error: 'Missing required parameter: endpoint' },
         { status: 400 }
       );
+    }
+
+    if (!ALLOWED_ENDPOINTS.some((re) => re.test(endpoint))) {
+      return NextResponse.json({ error: 'Unsupported endpoint' }, { status: 400 });
+    }
+    for (const value of searchParams.values()) {
+      if (value.length > MAX_PARAM_LENGTH) {
+        return NextResponse.json({ error: 'Parameter too long' }, { status: 400 });
+      }
     }
 
     const ttl = ttlForEndpoint(endpoint);
@@ -96,8 +113,6 @@ export async function GET(request: NextRequest) {
       headers[COINGECKO_IS_PRO ? 'x-cg-pro-api-key' : 'x-cg-demo-api-key'] = coingeckoKey;
     }
 
-    console.log('🔄 [CoinGecko Proxy] Fetching from:', coingeckoUrl.toString());
-    console.log('🔑 [CoinGecko Proxy] API Key status:', COINGECKO_API_KEY ? 'Present' : 'Missing');
 
     // Make request to CoinGecko API
     const response = await fetch(coingeckoUrl.toString(), {
@@ -106,8 +121,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ [CoinGecko Proxy] API request failed:', response.status, errorText);
+      log.warn(`[CoinGecko Proxy] upstream ${response.status}`);
 
       // Token not on CoinGecko — remember it so we never re-fetch this dead lookup.
       if (response.status === 404) {
@@ -125,30 +139,17 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('✅ [CoinGecko Proxy] Data received successfully');
 
     cacheSet(cacheKey, data, ttl * 1000);
 
     // Return cacheable at the edge so all users share one upstream call.
     return edgeJson(data, 200, ttl);
 
-  } catch (error: any) {
-    console.error('❌ [CoinGecko Proxy] Error:', error);
+  } catch (error) {
+    log.error(`[CoinGecko Proxy] ${errMsg(error)}`);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
-
-// Handle preflight requests
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
 }

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { rateLimit, checkOrigin, cacheGet, cacheSet } from "@/lib/rate-limit";
+import { ethers } from "ethers";
+import { rateLimit, cacheGet, cacheSet } from "@/lib/rate-limit";
+import { log, errMsg } from "@/lib/log";
 
 /**
  * Proxy route for the Alchemy NFT API.
@@ -39,12 +41,17 @@ function resolveMedia(url?: string): string | undefined {
 
 export async function GET(request: NextRequest) {
   try {
-    const blocked = checkOrigin(request) || rateLimit(request, "nft", 60, 60_000);
+    const blocked = await rateLimit(request, "alchemy", 60, 60_000);
     if (blocked) return blocked;
 
     // User-provided key (header) takes precedence over the server env var.
     const ALCHEMY_API_KEY =
       request.headers.get("x-alchemy-key") || process.env.ALCHEMY_API_KEY;
+
+    // The key is placed in the upstream URL path, so it must be a plain token.
+    if (ALCHEMY_API_KEY && !/^[A-Za-z0-9_-]{8,128}$/.test(ALCHEMY_API_KEY)) {
+      return NextResponse.json({ error: "Invalid Alchemy API key" }, { status: 400 });
+    }
 
     if (!ALCHEMY_API_KEY) {
       return NextResponse.json(
@@ -62,6 +69,9 @@ export async function GET(request: NextRequest) {
         { error: "Missing required parameters: chainId, owner" },
         { status: 400 }
       );
+    }
+    if (!ethers.isAddress(owner)) {
+      return NextResponse.json({ error: "Invalid owner address" }, { status: 400 });
     }
 
     // Serve a recent cached result if available (owner+chain → same NFTs).
@@ -102,8 +112,7 @@ export async function GET(request: NextRequest) {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ [NFT Proxy] Alchemy request failed:", response.status, errorText);
+        log.warn(`[NFT Proxy] upstream ${response.status}`);
         const message =
           response.status === 429
             ? "Rate limit exceeded. Please try again later."
@@ -159,33 +168,11 @@ export async function GET(request: NextRequest) {
     // Drop entries with no contract address (malformed) and obvious dust.
     const cleaned = nfts.filter((n) => n.contractAddress);
 
-    console.log(`✅ [NFT Proxy] Returning ${cleaned.length} NFTs for ${owner} on chain ${chainId}`);
-
     cacheSet(cacheKey, cleaned, 60_000); // 60s
 
-    return NextResponse.json(
-      { configured: true, nfts: cleaned },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error("❌ [NFT Proxy] Error:", error);
+    return NextResponse.json({ configured: true, nfts: cleaned });
+  } catch (error) {
+    log.error(`[NFT Proxy] ${errMsg(error)}`);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
 }
