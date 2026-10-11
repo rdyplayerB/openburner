@@ -23,7 +23,9 @@ There are two ways to provide them, and they compose:
 | `ZEROX_API_KEY` | server-only | token swaps |
 | `ALCHEMY_API_KEY` | server-only | NFT gallery auto-discovery |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | public (by design) | connecting to dApps |
-| `ALLOWED_ORIGINS` | server-only | abuse protection (see below) |
+| `ALLOWED_ORIGINS` | server-only | extra origins allowed to call the API (see below) |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | server-only | rate limits shared across instances |
+| `DAILY_CAP_COINGECKO` / `DAILY_CAP_ZEROX` / `DAILY_CAP_ALCHEMY` | server-only | a global daily request cap per upstream |
 
 Notes:
 - The three **server-only** keys are read inside API routes and **never shipped to the
@@ -35,22 +37,32 @@ Notes:
 ## Abuse protection (shared keys on a public URL)
 
 Because deployer keys are shared by all visitors, the proxy routes (`/api/coingecko`,
-`/api/nft`, `/api/swap/quote`) include:
+`/api/nft`, `/api/swap/quote`) are locked down:
 
-- **Per-IP rate limiting** — coingecko 90/min, nft 60/min, swap 40/min (returns `429`).
-- **Short response caching** — prices ~30s, NFT lists ~60s — to cut repeat upstream calls.
-- **Optional origin allowlist** — set `ALLOWED_ORIGINS=https://yourapp.com` (comma-separated)
-  to reject requests from other origins. Leave unset to allow any origin.
+- **Same-origin only** — `middleware.ts` refuses requests from other websites (it checks
+  `Sec-Fetch-Site`, `Origin`, and a same-origin `Referer` for older Safari). No CORS headers
+  are sent, so another site's JavaScript can't read the responses. In hosted mode, requests
+  with no browser headers at all (scripts, servers) are refused too.
+- **`ALLOWED_ORIGINS`** — only needed if a *different* origin should be allowed to call the
+  API (comma-separated, e.g. `https://staging.yourapp.com`). Your own deployment's origin is
+  always allowed; leave this unset otherwise.
+- **Input validation** — the CoinGecko route only proxies the endpoints the app uses; swap and
+  NFT parameters must be valid addresses and amounts.
+- **Per-IP rate limiting** — coingecko 90/min, alchemy 60/min, 0x 40/min (returns `429`).
+- **Daily caps** — set `DAILY_CAP_COINGECKO`, `DAILY_CAP_ZEROX` or `DAILY_CAP_ALCHEMY` to cap
+  total requests per upstream per day, so one abuser can't exhaust your plan.
+- **Short response caching** — prices ~60s at the edge, NFT lists ~60s — to cut repeat upstream calls.
 
-Caveat: the rate limiter and cache are **in-memory per server instance**. On serverless
-(e.g. Vercel) state resets on cold starts and isn't shared across instances — it's a
-speed-bump against casual abuse, not a hard global quota. For strict limits, back
-`lib/rate-limit.ts` with Redis/Upstash.
+Header checks stop other websites in a browser; a script can still forge headers. That's
+what the rate limits and daily caps are for — and for those to hold across serverless
+instances, connect Upstash Redis (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`,
+free tier is fine). Without it, counters are in-memory per instance: a speed bump, not a
+hard quota.
 
 ## Cost control tips
 
 - Use each provider's free tier; CoinGecko/Alchemy free tiers are generous for read traffic.
-- Keep `ALLOWED_ORIGINS` set so only your own frontend can use your keys.
+- Connect Upstash and set a `DAILY_CAP_*` for each key you pay for.
 - Tighten the per-route limits in `lib/rate-limit.ts` if you see abuse.
 - Or skip deployer keys entirely and rely on the user-provided keys in Settings — then the
   hosted instance costs you nothing and each user brings their own.

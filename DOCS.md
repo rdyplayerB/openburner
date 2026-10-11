@@ -62,7 +62,7 @@ The mode is set with `NEXT_PUBLIC_APP_MODE` (`local` or `hosted`).
 - **Desktop NFC Reader** - ACR1252U (recommended) or ACR122U (budget option) USB reader
   - Recommended: [ACR1252U on Amazon](https://amzn.to/3ISNwd7)
   - Budget option: [ACR122U on Amazon](https://amzn.to/3WQxGms)
-- **Node.js 18+**
+- **Node.js 20+**
 
 ### Installation
 
@@ -84,7 +84,7 @@ npm run dev
 ## Tech Stack
 
 **Frontend:**
-- Next.js 14+ (React framework)
+- Next.js 15 + React 19
 - TypeScript
 - Tailwind CSS
 - Zustand (state management)
@@ -161,10 +161,23 @@ const { address, publicKey, keySlot } = await getBurnerAddress();
 ### Sign Transaction
 
 ```typescript
-import { signTransactionWithBurner } from '@/lib/burner';
+import { signTransactionSmart } from '@/lib/smart-signer';
 
-const signedTx = await signTransactionWithBurner(unsignedTx, keySlot, pin);
+// Routes to the active connection (USB bridge, phone gateway or mobile NFC),
+// signs with the connected card's key slot, and throws unless the signature
+// recovers to the connected address.
+const signedTx = await signTransactionSmart(unsignedTx, undefined, pin);
 await provider.broadcastTransaction(signedTx);
+```
+
+### Parse a Card Key
+
+```typescript
+import { parseCardPublicKey } from '@/lib/card/keys';
+
+// Accepts only a valid 33-byte compressed or 65-byte uncompressed secp256k1 key.
+// Anything else throws MalformedCardKeyError — keys are never padded or truncated.
+const { address, publicKey } = parseCardPublicKey(rawKeyFromCard);
 ```
 
 ### Get Token Balances
@@ -269,11 +282,18 @@ COINGECKO_API_KEY=your_key_here                      # pricing (free Demo tier w
 ALCHEMY_API_KEY=your_alchemy_key                     # NFT auto-discovery
 ZEROX_API_KEY=your_0x_api_key                        # token swaps
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id # WalletConnect / dApp connections
+
+# --- Hosted abuse protection (optional) ---
+ALLOWED_ORIGINS=https://staging.yourapp.com          # extra origins allowed to call /api (own origin is always allowed)
+UPSTASH_REDIS_REST_URL=https://...upstash.io         # rate limits shared across instances
+UPSTASH_REDIS_REST_TOKEN=your_token
+DAILY_CAP_COINGECKO=20000                            # global daily cap per upstream key
 ```
 
 Notes:
 - Hosted server-side keys (`COINGECKO_API_KEY`, `ALCHEMY_API_KEY`, `ZEROX_API_KEY`) are read only on the server and proxied, so they never reach the browser. Mark them as **Sensitive** in your host (e.g. Vercel).
 - `NEXT_PUBLIC_PRICING_ENABLED=true` is required alongside `COINGECKO_API_KEY` to enable pricing in hosted mode — the key alone isn't enough, since the client needs a public flag to start fetching.
+- The API routes only answer your own deployment's origin and send no CORS headers. See [docs/HOSTING.md](docs/HOSTING.md) for the full abuse-protection setup.
 - For a free CoinGecko **Demo** key the proxy uses the `x-cg-demo-api-key` header automatically; set `COINGECKO_API_PLAN=pro` only if you have a paid Pro key.
 
 ### Getting API Keys
@@ -406,22 +426,24 @@ See [BRIDGE_SECURITY.md](./docs/BRIDGE_SECURITY.md) for detailed security inform
 
 ```
 openburner/
-├── app/                    # Next.js pages
-│   ├── page.tsx           # Main entry
-│   └── wallet/page.tsx    # Wallet UI
-├── components/             # React components
-│   ├── wallet-connect.tsx
-│   ├── wallet-dashboard.tsx
-│   ├── token-list.tsx
-│   └── send-token.tsx
+├── app/                    # Next.js app
+│   ├── page.tsx           # Main entry (connect screen or dashboard)
+│   └── api/               # Proxies: coingecko, swap/quote, nft, config-status
+├── middleware.ts           # Origin guard for every /api route
+├── components/             # React components (dashboard, send, swap, NFTs, WalletConnect)
 ├── lib/                    # Core libraries
-│   ├── burner.ts          # Burner card integration
-│   ├── burner-bridge.ts   # Bridge WebSocket client
+│   ├── card/              # Card key parsing, tx building, signature checks
+│   ├── burner.ts          # USB bridge connect + commands
+│   ├── burner-gateway.ts  # Phone gateway pairing + commands
+│   ├── mobile/nfc.ts      # Mobile Web NFC connect + commands
+│   ├── smart-signer.ts    # Routes signing to the active connection
+│   ├── log.ts             # The only logger (never prints card data)
+│   ├── rate-limit.ts      # Per-IP limits + daily caps for the proxies
 │   ├── multicall.ts       # Batch RPC calls
 │   ├── price-oracle.ts    # Price fetching
 │   └── token-lists.ts     # Token metadata
-└── store/
-    └── wallet-store.ts    # Zustand state management
+├── store/                  # Zustand state
+└── tests/                  # Vitest suite
 ```
 
 ## Security Notes
@@ -430,13 +452,17 @@ openburner/
 ✅ **Private keys** - Never leave the secure element chip  
 ✅ **Signing operations** - Happen inside hardware  
 ✅ **Key generation** - Done on-chip, not extractable
+✅ **Card keys** - Validated as real secp256k1 keys; malformed keys end the connection
+✅ **Signatures** - Each one must recover to your connected address before it's sent
+✅ **Proxy API keys** - Server-side only, and the routes refuse other websites
+✅ **Logs** - No keys, signatures, pairing links or PINs are logged
 
 ### What's Your Responsibility
 ⚠️ **Transaction verification** - Always verify recipient address and amount  
 ⚠️ **RPC endpoint trust** - Use trusted RPC providers  
 ⚠️ **Physical security** - Keep your Burner Ethereum card secure  
 ⚠️ **Bridge security** - Only run bridge on trusted local machine  
-⚠️ **Local execution** - OpenBurner runs locally, not hosted anywhere
+⚠️ **Hosted vs local** - The hosted app at app.openburner.xyz is convenient; run it locally if you'd rather trust your own build
 
 ### Attack Surface
 - **Web app** - Standard web vulnerabilities apply
@@ -457,6 +483,14 @@ openburner/
 - Check bridge logs for errors
 - Verify you have a Burner Ethereum card (not Bitcoin or other variants)
 
+### "This card returned an unreadable key"
+- The card answered with a key that isn't a valid public key, so OpenBurner stopped instead of guessing
+- Re-tap and hold the card still; if it repeats, contact support
+
+### "This isn't the card you connected"
+- The signature came from a different card or key than the one you connected with
+- Tap the same card you signed in with, or disconnect and reconnect
+
 ### Transaction fails
 - Verify you have enough ETH for gas
 - Check network is selected correctly
@@ -468,8 +502,11 @@ openburner/
 # Run dev server
 npm run dev
 
-# Type checking
+# Lint (ESLint 9, no-console enforced)
 npm run lint
+
+# Tests
+npm test
 
 # Build for production
 npm run build
