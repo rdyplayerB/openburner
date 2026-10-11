@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useEnvironment } from './use-environment';
+import { log } from '@/lib/log';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -22,56 +23,33 @@ export function usePWA() {
   // Only enable PWA features for mobile hosted mode
   const shouldEnablePWA = isHosted && isMobile;
 
-  // Always register service worker (for caching), regardless of PWA mode
+  // Always register service worker (for caching), regardless of PWA mode.
+  // The build id in the URL versions the SW's caches per deployment.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // Register service worker for caching functionality
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('[SW] Service worker registered:', registration);
-          
-          // Wait for the service worker to be ready and check if it's controlling the page
-          return navigator.serviceWorker.ready;
-        })
-        .then((registration) => {
-          console.log('[SW] Service worker ready:', registration);
-          
-          // Check if the page is controlled by the service worker
-          if (navigator.serviceWorker.controller) {
-            console.log('[SW] ✅ Page is controlled by service worker');
-          } else {
-            console.log('[SW] ⚠️ Page is NOT controlled by service worker - reload required');
-            // Send a message to the service worker to skip waiting and take control
-            if (registration.waiting) {
-              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-            }
-            if (registration.active) {
-              registration.active.postMessage({ type: 'SKIP_WAITING' });
-            }
-          }
-        })
-        .catch((error) => {
-          console.error('[SW] Service worker registration failed:', error);
-        });
-      
-      // Listen for the service worker taking control
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('[SW] 🎉 Service worker now controlling the page!');
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    const build =
+      process.env.NEXT_PUBLIC_BUILD_ID ||
+      process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ||
+      'dev';
+    navigator.serviceWorker
+      .register(`/sw.js?v=${encodeURIComponent(build)}`)
+      .then(() => navigator.serviceWorker.ready)
+      .then((registration) => {
+        if (!navigator.serviceWorker.controller) {
+          registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+          registration.active?.postMessage({ type: 'SKIP_WAITING' });
+        }
+      })
+      .catch((error) => {
+        log.warn('[SW] registration failed:', error?.message);
       });
-    }
   }, []);
 
   // PWA install features only for mobile hosted mode
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    console.log('🔍 [PWA Hook] useEffect running, shouldEnablePWA:', shouldEnablePWA);
-    if (!shouldEnablePWA) {
-      console.log('❌ [PWA Hook] PWA install features not enabled');
-      return;
-    }
+    if (!shouldEnablePWA) return;
 
     // Check if app is already installed
     const checkInstalled = () => {
@@ -82,7 +60,6 @@ export function usePWA() {
 
     // Handle install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('🎉 [PWA] beforeinstallprompt event fired!', e);
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
@@ -122,18 +99,11 @@ export function usePWA() {
 
     try {
       await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('[PWA] User accepted the install prompt');
-      } else {
-        console.log('[PWA] User dismissed the install prompt');
-      }
-      
+      await deferredPrompt.userChoice;
       setDeferredPrompt(null);
       setIsInstallable(false);
     } catch (error) {
-      console.error('[PWA] Error during installation:', error);
+      log.warn('[PWA] install prompt failed:', (error as Error)?.message);
     }
   };
 
