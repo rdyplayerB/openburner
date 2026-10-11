@@ -5,6 +5,7 @@
  * user has saved. We only ever approve WalletConnect sessions for chains in this set, so a
  * signing request can never arrive for a chain we have no RPC for.
  */
+import { CHAINS } from "../supported-chains";
 
 export interface ChainInfo {
   chainId: number;
@@ -14,21 +15,13 @@ export interface ChainInfo {
   currency: string;
 }
 
-// Built-in chains (RPCs kept in sync with store/wallet-store.ts).
-export const BUILTIN_CHAINS: Record<number, ChainInfo> = {
-  1: { chainId: 1, name: "Ethereum", rpcUrl: "https://ethereum.publicnode.com", explorer: "https://etherscan.io", currency: "ETH" },
-  10: { chainId: 10, name: "OP Mainnet", rpcUrl: "https://mainnet.optimism.io", explorer: "https://optimistic.etherscan.io", currency: "ETH" },
-  56: { chainId: 56, name: "BNB Chain", rpcUrl: "https://bsc-dataseed1.binance.org", explorer: "https://bscscan.com", currency: "BNB" },
-  137: { chainId: 137, name: "Polygon", rpcUrl: "https://polygon-rpc.com", explorer: "https://polygonscan.com", currency: "POL" },
-  5000: { chainId: 5000, name: "Mantle", rpcUrl: "https://rpc.mantle.xyz", explorer: "https://explorer.mantle.xyz", currency: "MNT" },
-  8453: { chainId: 8453, name: "Base", rpcUrl: "https://mainnet.base.org", explorer: "https://basescan.org", currency: "ETH" },
-  34443: { chainId: 34443, name: "Mode", rpcUrl: "https://mainnet.mode.network", explorer: "https://explorer.mode.network", currency: "ETH" },
-  42161: { chainId: 42161, name: "Arbitrum One", rpcUrl: "https://arb1.arbitrum.io/rpc", explorer: "https://arbiscan.io", currency: "ETH" },
-  43114: { chainId: 43114, name: "Avalanche", rpcUrl: "https://api.avax.network/ext/bc/C/rpc", explorer: "https://snowtrace.io", currency: "AVAX" },
-  59144: { chainId: 59144, name: "Linea", rpcUrl: "https://rpc.linea.build", explorer: "https://lineascan.build", currency: "ETH" },
-  81457: { chainId: 81457, name: "Blast", rpcUrl: "https://rpc.blast.io", explorer: "https://blastscan.io", currency: "ETH" },
-  534352: { chainId: 534352, name: "Scroll", rpcUrl: "https://rpc.scroll.io", explorer: "https://scrollscan.com", currency: "ETH" },
-};
+// Built-in chains come from the shared registry in lib/supported-chains.ts.
+export const BUILTIN_CHAINS: Record<number, ChainInfo> = Object.fromEntries(
+  CHAINS.map((c) => [
+    c.chainId,
+    { chainId: c.chainId, name: c.name, rpcUrl: c.rpcUrl, explorer: c.explorer, currency: c.nativeSymbol },
+  ])
+);
 
 export const WC_METHODS = [
   "eth_sendTransaction",
@@ -40,6 +33,19 @@ export const WC_METHODS = [
   "wallet_switchEthereumChain",
   "wallet_addEthereumChain",
 ];
+
+/** Signing methods require a PIN + Burner tap; switch/add only need confirmation. */
+export function requiresSigning(method: string): boolean {
+  return [
+    "eth_sendTransaction",
+    "eth_signTransaction",
+    "personal_sign",
+    "eth_sign",
+    "eth_signTypedData",
+    "eth_signTypedData_v3",
+    "eth_signTypedData_v4",
+  ].includes(method);
+}
 
 export const WC_EVENTS = ["chainChanged", "accountsChanged"];
 
