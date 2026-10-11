@@ -9,7 +9,8 @@
     "build:hosted": "NEXT_PUBLIC_APP_MODE=hosted next build",
     "start": "next start",
     "start:hosted": "NEXT_PUBLIC_APP_MODE=hosted next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run"
   },
   "dependencies": {
     "@arx-research/libhalo": "1.20.0",

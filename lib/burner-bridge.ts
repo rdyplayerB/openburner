@@ -1,3 +1,5 @@
+import { log } from "./log";
+
 // Direct WebSocket communication with HaLo Bridge
 // This provides direct communication with the bridge for Burner card operations
 
@@ -65,16 +67,15 @@ export async function connectToBridge(): Promise<void> {
     ws = new WebSocket(BRIDGE_WS_URL);
 
     ws.onopen = () => {
-      console.log("Connected to HaLo Bridge");
+      log.debug("[Bridge] Connected");
     };
 
     ws.onmessage = (event: MessageEvent) => {
       const msg: BridgeMessage = JSON.parse(event.data);
-      console.log("Bridge message:", msg);
 
       if (msg.event === "handle_added") {
         currentHandle = msg.data.handle;
-        console.log("Burner card detected, handle:", currentHandle);
+        log.debug("[Bridge] Card detected");
         resolve();
       } else if (msg.event === "exec_success" && msg.uid) {
         const callback = messageCallbacks.get(msg.uid);
@@ -88,12 +89,10 @@ export async function connectToBridge(): Promise<void> {
           // Check if it's a password error - handle it directly instead of opening popup
           const errorMsg = msg.data.exception?.message || "";
           if (errorMsg.includes("ERROR_CODE_WRONG_PWD")) {
-            console.log("🔐 Wrong PIN detected - returning error to UI");
             callback({ error: "Incorrect PIN. Please try again." });
             messageCallbacks.delete(msg.uid);
             return;
           } else if (errorMsg.includes("NEEDS_CONSENT")) {
-            console.log("🔐 PIN required - opening consent page...");
             // Open consent page in a new window for PIN entry
             const consentUrl = `http://localhost:32868/consent?uid=${msg.uid}`;
             window.open(consentUrl, "Burner PIN", "width=400,height=600");
@@ -104,18 +103,16 @@ export async function connectToBridge(): Promise<void> {
           messageCallbacks.delete(msg.uid);
         }
       } else if (msg.event === "consent_success" && msg.uid) {
-        console.log("✅ PIN consent granted, waiting for execution...");
-        // The exec_success will follow
+        // PIN consent granted — exec_success will follow
       }
     };
 
-    ws.onerror = (error: Event) => {
-      console.error("Bridge connection error:", error);
+    ws.onerror = () => {
+      log.warn("[Bridge] Connection error");
       reject(new Error("Failed to connect to HaLo Bridge"));
     };
 
     ws.onclose = () => {
-      console.log("Bridge connection closed");
       currentHandle = null;
     };
 
@@ -141,7 +138,7 @@ export async function execBridgeCommand(command: any): Promise<any> {
       return;
     }
 
-    const uid = Math.random().toString();
+    const uid = crypto.randomUUID();
     const message = {
       uid,
       type: "exec_halo",

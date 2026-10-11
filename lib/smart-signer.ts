@@ -1,162 +1,129 @@
-import { ethers } from 'ethers';
-import { getAppConfig, AppConfig } from './config/environment';
-import { signTransactionWithBurner, signDigestWithBurner } from './burner';
-import { signTransactionWithMobileNFC, signDigestWithMobileNFC } from './mobile/nfc';
-import { signTransactionWithGateway, signDigestWithGateway } from './burner-gateway';
-import { useWalletStore } from '../store/wallet-store';
-
-// Track ongoing signing operations to prevent parallel calls
-const ongoingSigning = new Set<string>();
+import { ethers } from "ethers";
+import { getAppConfig, AppConfig } from "./config/environment";
+import { useWalletStore } from "../store/wallet-store";
+import { buildUnsignedTx, signCommand, signatureFromResult } from "./card/tx";
+import { assertTxSignedBy, assertDigestSignedBy, SignerMismatchError } from "./card/verify";
+import { log } from "./log";
 
 /**
- * Smart transaction signing that automatically detects the connection mode
- * and uses the appropriate signing method
+ * Routes signing to the active transport (mobile Web NFC, phone gateway, or USB
+ * bridge), then checks that the signature recovers to the connected address
+ * before anything is broadcast or returned to a dApp.
+ *
+ * Transports are imported on demand so libhalo stays out of the first load.
  */
-export async function signTransactionSmart(
-  transaction: ethers.TransactionRequest,
-  keySlot: number = 1,
-  pin?: string,
-  config?: AppConfig
-): Promise<string> {
-  console.log("🚀 [Smart Signer] ENTRY - signTransactionSmart called");
-  console.log("🚀 [Smart Signer] Config passed:", config);
-  
-  // Create a unique key for this signing operation
-  const operationKey = `${transaction.to}-${transaction.value}-${Date.now()}`;
-  
-  // Check if there's already an ongoing signing operation
-  if (ongoingSigning.size > 0) {
-    console.log("⚠️ [Smart Signer] Another signing operation is in progress, waiting...");
-    // Wait a bit and try again
-    await new Promise(resolve => setTimeout(resolve, 100));
-    if (ongoingSigning.size > 0) {
-      throw new Error("Another signing operation is in progress. Please wait and try again.");
-    }
-  }
-  
-  // Mark this operation as ongoing
-  ongoingSigning.add(operationKey);
-  console.log("🔒 [Smart Signer] Marked operation as ongoing:", operationKey);
-  
-  try {
-    // Use provided config or fall back to server-side config
-    const environmentConfig = config || getAppConfig();
-    
-    // Get connection mode from wallet store
-    const { connectionMode } = useWalletStore.getState();
-  
-    console.log("🔍 [Smart Signer] Detecting signing method...");
-    console.log(`   Mode: ${environmentConfig.mode}`);
-    console.log(`   Device: ${environmentConfig.deviceType}`);
-    console.log(`   Is Hosted: ${environmentConfig.isHosted}`);
-    console.log(`   Is Mobile: ${environmentConfig.isMobile}`);
-    console.log(`   Connection Mode: ${connectionMode}`);
-    
-    if (environmentConfig.isHosted && environmentConfig.isMobile) {
-      // Mobile hosted version - use mobile NFC (direct connection)
-      console.log("📱 [Smart Signer] Using mobile NFC signing");
-      return await signTransactionWithMobileNFC(transaction, keySlot, pin);
-    } else if (environmentConfig.isHosted && environmentConfig.isDesktop) {
-      // Desktop hosted version - use regular gateway
-      console.log("🖥️ [Smart Signer] Using desktop gateway signing");
-      return await signTransactionWithGateway(await getGatewayInstance(), transaction, keySlot, pin);
-    } else if (!environmentConfig.isHosted && connectionMode === 'gateway') {
-      // Local desktop version, explicitly connected via gateway
-      console.log("🖥️ [Smart Signer] Using local desktop gateway signing");
-      return await signTransactionWithGateway(await getGatewayInstance(), transaction, keySlot, pin);
-    } else {
-      // Default to bridge for local (e.g., local desktop with no gateway, or local mobile)
-      console.log("🔌 [Smart Signer] Using bridge signing");
-      return await signTransactionWithBurner(transaction, keySlot, pin);
-    }
-  } catch (error: any) {
-    console.error("❌ [Smart Signer] Signing failed:", error);
-    
-    // Provide better error messages for common issues
-    let errorMessage = error.message || "Failed to sign transaction";
-    
-    // Prioritize card detection error over signing conflict
-    if (error.message?.includes('No Burner card detected')) {
-      errorMessage = 'No Burner card detected. Please place your Burner card on the reader and try again.';
-    } else if (error.message?.includes('WRONG_PWD') || error.message?.includes('password')) {
-      errorMessage = 'Incorrect PIN. Please try again.';
-    } else if (error.message?.includes('transaction type not supported')) {
-      errorMessage = 'Transaction type not supported. Please try again.';
-    } else if (error.message?.includes('Another signing operation is in progress')) {
-      errorMessage = 'Please wait for the current operation to complete before trying again.';
-    } else if (
-      error.message?.includes('GATEWAY_SESSION_CLOSED') ||
-      error.message?.includes('no connection open')
-    ) {
-      errorMessage = 'Phone connection dropped. Reconnect your phone and keep it awake, then try again.';
-    } else if (
-      error.message?.includes('GATEWAY_EXECUTOR_TIMEOUT') ||
-      error.message?.includes('no executor connected')
-    ) {
-      errorMessage = 'Waiting on your phone timed out. Wake your phone (keep the gateway page open), then try again.';
-    }
 
-    throw new Error(errorMessage);
+type Exec = (command: Record<string, unknown>) => Promise<any>;
+
+let signing = false;
+
+async function getExec(config?: AppConfig): Promise<Exec> {
+  const env = config || getAppConfig();
+  const { connectionMode } = useWalletStore.getState();
+
+  if (env.isHosted && env.isMobile) {
+    const { runNfcCommand } = await import("./mobile/nfc");
+    return runNfcCommand;
+  }
+  if (env.isHosted || connectionMode === "gateway") {
+    const { runGatewayCommand } = await import("./burner-gateway");
+    return runGatewayCommand;
+  }
+  const { runBridgeCommand } = await import("./burner");
+  return runBridgeCommand;
+}
+
+/** The connected wallet, or an error telling the user to reconnect. */
+function connectedWallet(): { address: string; keySlot: number } {
+  const { address, keySlot } = useWalletStore.getState();
+  if (!address || !keySlot) {
+    throw new Error("Your card session is missing its key. Disconnect and tap your card again.");
+  }
+  return { address, keySlot };
+}
+
+function friendlyError(error: any, fallback: string): Error {
+  if (error instanceof SignerMismatchError) return error;
+  const msg = String(error?.message || "");
+  if (msg.includes("No Burner card detected")) {
+    return new Error("No Burner card detected. Please place your Burner card on the reader and try again.");
+  }
+  if (msg.includes("WRONG_PWD") || msg.includes("Incorrect PIN") || msg.includes("password")) {
+    return new Error("Incorrect PIN. Please try again.");
+  }
+  if (msg.includes("GATEWAY_SESSION_CLOSED") || msg.includes("no connection open")) {
+    return new Error("Phone connection dropped. Reconnect your phone and keep it awake, then try again.");
+  }
+  if (msg.includes("GATEWAY_EXECUTOR_TIMEOUT") || msg.includes("no executor connected")) {
+    return new Error("Waiting on your phone timed out. Wake your phone (keep the gateway page open), then try again.");
+  }
+  if (msg.includes("transaction type not supported")) {
+    return new Error("Transaction type not supported. Please try again.");
+  }
+  return new Error(msg || fallback);
+}
+
+async function exclusive<T>(fn: () => Promise<T>): Promise<T> {
+  if (signing) {
+    throw new Error("Please wait for the current operation to complete before trying again.");
+  }
+  signing = true;
+  try {
+    return await fn();
   } finally {
-    // Always clean up the ongoing operation
-    ongoingSigning.delete(operationKey);
-    console.log("🔓 [Smart Signer] Cleared ongoing operation:", operationKey);
+    signing = false;
   }
 }
 
 /**
- * Smart digest signing — routes a raw 32-byte digest to the active connection mode.
- * Used by message (personal_sign) and typed-data (eth_signTypedData) signing.
+ * Sign a transaction with the connected card. Returns the serialized signed tx.
+ * `_keySlot` is ignored: the slot always comes from the connected card session.
+ */
+export async function signTransactionSmart(
+  transaction: ethers.TransactionRequest,
+  _keySlot?: number | null,
+  pin?: string,
+  config?: AppConfig
+): Promise<string> {
+  return exclusive(async () => {
+    try {
+      const { address, keySlot } = connectedWallet();
+      const exec = await getExec(config);
+      const tx = buildUnsignedTx(transaction);
+      const result = await exec(signCommand(tx.unsignedHash, keySlot, pin));
+      tx.signature = signatureFromResult(result);
+      const serialized = tx.serialized;
+      assertTxSignedBy(serialized, address);
+      return serialized;
+    } catch (error) {
+      log.warn("[Signer] Transaction signing failed");
+      throw friendlyError(error, "Failed to sign transaction");
+    }
+  });
+}
+
+/**
+ * Sign a raw 32-byte digest (message / typed-data signing).
  */
 export async function signDigestSmart(
   digest: string,
-  keySlot: number = 1,
+  _keySlot?: number | null,
   pin?: string,
   config?: AppConfig
 ): Promise<ethers.Signature> {
-  const operationKey = `digest-${digest.slice(0, 18)}-${pin ? "p" : "n"}`;
-  if (ongoingSigning.size > 0) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    if (ongoingSigning.size > 0) {
-      throw new Error("Another signing operation is in progress. Please wait and try again.");
+  return exclusive(async () => {
+    try {
+      const { address, keySlot } = connectedWallet();
+      const exec = await getExec(config);
+      const result = await exec(signCommand(digest, keySlot, pin));
+      const signature = signatureFromResult(result);
+      assertDigestSignedBy(digest, signature, address);
+      return signature;
+    } catch (error) {
+      log.warn("[Signer] Message signing failed");
+      throw friendlyError(error, "Failed to sign message");
     }
-  }
-  ongoingSigning.add(operationKey);
-
-  try {
-    const environmentConfig = config || getAppConfig();
-    const { connectionMode } = useWalletStore.getState();
-
-    if (environmentConfig.isHosted && environmentConfig.isMobile) {
-      return await signDigestWithMobileNFC(digest, keySlot, pin);
-    } else if (environmentConfig.isHosted && environmentConfig.isDesktop) {
-      return await signDigestWithGateway(await getGatewayInstance(), digest, keySlot, pin);
-    } else if (!environmentConfig.isHosted && connectionMode === 'gateway') {
-      return await signDigestWithGateway(await getGatewayInstance(), digest, keySlot, pin);
-    } else {
-      return await signDigestWithBurner(digest, keySlot, pin);
-    }
-  } catch (error: any) {
-    let errorMessage = error.message || "Failed to sign message";
-    if (error.message?.includes('No Burner card detected')) {
-      errorMessage = 'No Burner card detected. Please place your Burner card on the reader and try again.';
-    } else if (error.message?.includes('WRONG_PWD') || error.message?.includes('password')) {
-      errorMessage = 'Incorrect PIN. Please try again.';
-    } else if (
-      error.message?.includes('GATEWAY_SESSION_CLOSED') ||
-      error.message?.includes('no connection open')
-    ) {
-      errorMessage = 'Phone connection dropped. Reconnect your phone and keep it awake, then try again.';
-    } else if (
-      error.message?.includes('GATEWAY_EXECUTOR_TIMEOUT') ||
-      error.message?.includes('no executor connected')
-    ) {
-      errorMessage = 'Waiting on your phone timed out. Wake your phone (keep the gateway page open), then try again.';
-    }
-    throw new Error(errorMessage);
-  } finally {
-    ongoingSigning.delete(operationKey);
-  }
+  });
 }
 
 /**
@@ -165,7 +132,7 @@ export async function signDigestSmart(
  */
 export async function signMessageSmart(
   message: string | Uint8Array,
-  keySlot: number = 1,
+  keySlot?: number | null,
   pin?: string,
   config?: AppConfig
 ): Promise<string> {
@@ -182,7 +149,7 @@ export async function signTypedDataSmart(
   domain: ethers.TypedDataDomain,
   types: Record<string, Array<ethers.TypedDataField>>,
   message: Record<string, any>,
-  keySlot: number = 1,
+  keySlot?: number | null,
   pin?: string,
   config?: AppConfig
 ): Promise<string> {
@@ -191,14 +158,4 @@ export async function signTypedDataSmart(
   const digest = ethers.TypedDataEncoder.hash(domain, cleanTypes, message);
   const sig = await signDigestSmart(digest, keySlot, pin, config);
   return sig.serialized;
-}
-
-/**
- * Get the existing gateway instance for desktop hosted version
- * This reuses the global gateway instance created during pairing
- */
-async function getGatewayInstance(): Promise<any> {
-  // Import the global gateway instance from burner-gateway
-  const { getGlobalGateway } = await import('./burner-gateway');
-  return getGlobalGateway();
 }
