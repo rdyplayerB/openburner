@@ -11,6 +11,7 @@
 import { ethers } from 'ethers';
 import { rpcRateLimiter } from "./rpc-rate-limiter";
 import { getUserKey } from "./user-keys";
+import { log, errMsg } from "./log";
 
 // 0x Standard Swap API Configuration
 const ZEROX_API_BASE_URL = 'https://api.0x.org';
@@ -214,15 +215,6 @@ export async function getSwapPrice(params: SwapQuoteParams): Promise<any> {
   const url = `${getApiUrl(chainId)}?${queryParams.toString()}&endpoint=price`;
 
   try {
-    console.log('🔄 [Swap API] Fetching swap price via proxy:', { 
-      originalSellToken: sellToken, 
-      originalBuyToken: buyToken,
-      convertedSellToken, 
-      convertedBuyToken, 
-      sellAmount, 
-      buyAmount, 
-      chainId 
-    });
     
     const response = await fetch(url, {
       method: 'GET',
@@ -231,7 +223,7 @@ export async function getSwapPrice(params: SwapQuoteParams): Promise<any> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ [Swap API] Price request failed:', response.status, errorText);
+      log.error('❌ [Swap API] Price request failed:', errMsg(errorText));
       
       if (response.status === 400) {
         throw new Error('Invalid swap parameters. Please check token addresses and amounts.');
@@ -245,15 +237,10 @@ export async function getSwapPrice(params: SwapQuoteParams): Promise<any> {
     }
 
     const price = await response.json();
-    console.log('✅ [Swap API] Price received:', {
-      liquidityAvailable: price.liquidityAvailable,
-      buyAmount: price.buyAmount,
-      issues: price.issues,
-    });
 
     return price;
   } catch (error: any) {
-    console.error('❌ [Swap API] Price fetch error:', error);
+    log.error('❌ [Swap API] Price fetch error:', errMsg(error));
     throw new Error(error.message || 'Failed to fetch swap price');
   }
 }
@@ -299,15 +286,6 @@ export async function getSwapQuote(params: SwapQuoteParams): Promise<SwapQuote> 
   const url = `${getApiUrl(chainId)}?${queryParams.toString()}`;
 
   try {
-    console.log('🔄 [Swap API] Fetching swap quote via proxy:', { 
-      originalSellToken: sellToken, 
-      originalBuyToken: buyToken,
-      convertedSellToken, 
-      convertedBuyToken, 
-      sellAmount, 
-      buyAmount, 
-      chainId 
-    });
     
     const response = await fetch(url, {
       method: 'GET',
@@ -316,7 +294,7 @@ export async function getSwapQuote(params: SwapQuoteParams): Promise<SwapQuote> 
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ [Swap API] Quote request failed:', response.status, errorText);
+      log.error('❌ [Swap API] Quote request failed:', errMsg(errorText));
       
       if (response.status === 400) {
         throw new Error('Invalid swap parameters. Please check token addresses and amounts.');
@@ -330,17 +308,10 @@ export async function getSwapQuote(params: SwapQuoteParams): Promise<SwapQuote> 
     }
 
     const quote: SwapQuote = await response.json();
-    console.log('✅ [Swap API] Quote received:', {
-      sellAmount: quote.sellAmount,
-      buyAmount: quote.buyAmount,
-      price: quote.price,
-      priceImpact: quote.priceImpact,
-    });
-    console.log('✅ [Swap API] Full quote structure:', Object.keys(quote));
 
     return quote;
   } catch (error: any) {
-    console.error('❌ [Swap API] Quote fetch error:', error);
+    log.error('❌ [Swap API] Quote fetch error:', errMsg(error));
     throw new Error(error.message || 'Failed to fetch swap quote');
   }
 }
@@ -373,13 +344,6 @@ export async function checkTokenAllowance(
     const amountWei = ethers.parseUnits(amount, decimals);
     const needsApproval = allowanceWei < amountWei;
 
-    console.log('🔍 [Allowance] Check result:', {
-      tokenAddress,
-      spender,
-      allowance: allowanceWei.toString(),
-      amount: amountWei.toString(),
-      needsApproval,
-    });
 
     return {
       tokenAddress,
@@ -388,7 +352,7 @@ export async function checkTokenAllowance(
       needsApproval,
     };
   } catch (error: any) {
-    console.error('❌ [Allowance] Check failed:', error);
+    log.error('❌ [Allowance] Check failed:', errMsg(error));
     throw new Error(`Failed to check token allowance: ${error.message}`);
   }
 }
@@ -449,19 +413,10 @@ export async function buildApprovalTransaction(
       gasPrice: feeData.gasPrice, // Use gasPrice for all networks (simpler)
     };
 
-    console.log('🔧 [Approval] Transaction built:', {
-      tokenAddress,
-      spender,
-      amount: amountWei.toString(),
-      nonce,
-      gasLimit: gasLimit.toString(),
-      gasEstimate: gasEstimate.toString(),
-      gasPrice: feeData.gasPrice?.toString(),
-    });
 
     return transaction;
   } catch (error: any) {
-    console.error('❌ [Approval] Build failed:', error);
+    log.error('❌ [Approval] Build failed:', errMsg(error));
     throw new Error(`Failed to build approval transaction: ${error.message}`);
   }
 }
@@ -506,22 +461,10 @@ export async function buildSwapTransaction(quote: SwapQuote, from: string, provi
       ),
     };
 
-    console.log('🔧 [Swap] Transaction built:', {
-      to: quote.transaction.to,
-      value: quote.transaction.value,
-      baseGasLimit: quote.transaction.gas,
-      gasLimit: gasLimit.toString(),
-      nonce,
-      chainId,
-      type: isBaseNetwork ? 0 : 2,
-      gasPrice: isBaseNetwork ? feeData.gasPrice?.toString() : undefined,
-      maxFeePerGas: !isBaseNetwork ? feeData.maxFeePerGas?.toString() : undefined,
-      maxPriorityFeePerGas: !isBaseNetwork ? feeData.maxPriorityFeePerGas?.toString() : undefined,
-    });
 
     return transaction;
   } catch (error: any) {
-    console.error('❌ [Swap] Build failed:', error);
+    log.error('❌ [Swap] Build failed:', errMsg(error));
     throw new Error(`Failed to build swap transaction: ${error.message}`);
   }
 }
@@ -534,7 +477,6 @@ export async function submitSwapTransaction(
   signer: ethers.Signer
 ): Promise<ethers.TransactionResponse> {
   try {
-    console.log('🚀 [Swap] Submitting transaction...');
     
     const transaction = {
       to: quote.transaction.to,
@@ -542,23 +484,13 @@ export async function submitSwapTransaction(
       value: quote.transaction.value ? BigInt(quote.transaction.value) : undefined,
     };
 
-    console.log('🔧 [Swap] Transaction details:', {
-      to: transaction.to,
-      value: transaction.value,
-      dataLength: transaction.data.length,
-    });
 
     const txResponse = await signer.sendTransaction(transaction);
     
-    console.log('✅ [Swap] Transaction submitted:', {
-      hash: txResponse.hash,
-      to: txResponse.to,
-      value: txResponse.value?.toString(),
-    });
 
     return txResponse;
   } catch (error: any) {
-    console.error('❌ [Swap] Transaction submission failed:', error);
+    log.error('❌ [Swap] Transaction submission failed:', errMsg(error));
     throw new Error(`Failed to submit swap transaction: ${error.message}`);
   }
 }
@@ -569,8 +501,6 @@ export async function submitSwapTransaction(
 export function validateSwapQuote(quote: SwapQuote, expectedSellAmount?: string, expectedBuyAmount?: string): boolean {
   try {
     // Log the full quote for debugging
-    console.log('🔍 [Quote] Validating quote:', quote);
-    console.log('🔍 [Quote] Available fields:', Object.keys(quote));
     
     // Check required fields - be more flexible with field names
     const hasSellToken = quote.sellToken || quote.sellTokenAddress;
@@ -580,37 +510,21 @@ export function validateSwapQuote(quote: SwapQuote, expectedSellAmount?: string,
     
     // Check liquidity availability first
     if (quote.liquidityAvailable === false) {
-      console.warn('⚠️ [Quote] Insufficient liquidity available');
       return false;
     }
     
     // Check if we have the basic structure
     if (!quote.sellAmount || !quote.buyAmount) {
-      console.warn('⚠️ [Quote] Missing amount fields:', {
-        sellAmount: !!quote.sellAmount,
-        buyAmount: !!quote.buyAmount,
-        availableFields: Object.keys(quote),
-      });
       return false;
     }
     
     // Check if we have transaction data (using the actual API structure)
     if (!quote.transaction || !quote.transaction.to || !quote.transaction.data) {
-      console.warn('⚠️ [Quote] Missing transaction data:', {
-        transaction: !!quote.transaction,
-        to: !!quote.transaction?.to,
-        data: !!quote.transaction?.data,
-        availableFields: Object.keys(quote),
-      });
       return false;
     }
 
     // Check for reasonable values
     if (quote.sellAmount === '0' || quote.buyAmount === '0') {
-      console.warn('⚠️ [Quote] Zero amounts detected:', {
-        sellAmount: quote.sellAmount,
-        buyAmount: quote.buyAmount,
-      });
       return false;
     }
 
@@ -619,23 +533,14 @@ export function validateSwapQuote(quote: SwapQuote, expectedSellAmount?: string,
     const buyAmountNum = BigInt(quote.buyAmount);
     
     if (sellAmountNum <= 0n || buyAmountNum <= 0n) {
-      console.warn('⚠️ [Quote] Invalid amounts:', {
-        sellAmount: quote.sellAmount,
-        buyAmount: quote.buyAmount,
-      });
       return false;
     }
 
     // Log successful validation for debugging
-    console.log('✅ [Quote] Validation passed:', {
-      sellAmount: quote.sellAmount,
-      buyAmount: quote.buyAmount,
-      price: quote.price,
-    });
 
     return true;
   } catch (error) {
-    console.error('❌ [Quote] Validation failed:', error);
+    log.error('❌ [Quote] Validation failed:', errMsg(error));
     return false;
   }
 }

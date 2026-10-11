@@ -205,7 +205,7 @@ export function SendToken({
 
       setCurrentOperation("Signing with your Burner");
       const { signTransactionSmart } = await import("@/lib/smart-signer");
-      const signedTx = await signTransactionSmart(transaction, keySlot || 1, enteredPin, environment);
+      const signedTx = await signTransactionSmart(transaction, keySlot, enteredPin, environment);
 
       setCurrentOperation("Broadcasting transaction");
       const txResponse = await provider.broadcastTransaction(signedTx);

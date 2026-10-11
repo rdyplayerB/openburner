@@ -39,7 +39,7 @@ OpenBurner follows [Semantic Versioning (SemVer)](https://semver.org/) for all r
 - `feature/*`: Individual feature development
 - `hotfix/*`: Critical bug fixes for production
 
-## Current Stable Version: v1.1.0
+## Current Stable Version: v1.4.0
 
 This version represents the enhanced architecture with dual library support:
 - Dual library architecture (LibBurner + LibHalo)

@@ -13,7 +13,7 @@ interface BridgeMessage {
 
 let ws: any = null;
 let currentHandle: string | null = null;
-let messageCallbacks: Map<string, (data: any) => void> = new Map();
+const messageCallbacks: Map<string, (data: any) => void> = new Map();
 
 /**
  * Check if a card is currently connected to the bridge

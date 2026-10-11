@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Moon, Sun, ExternalLink } from "lucide-react";
 import { useThemeStore } from "@/store/theme-store";
+import { DEBUG_KEY, setDebugLogging } from "@/lib/log";
 import { getUserKeys, setUserKey, type UserKeyName } from "@/lib/user-keys";
 import { Modal } from "./common/modal";
 
@@ -13,7 +14,7 @@ interface ServerStatus {
   walletconnect: boolean;
 }
 
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.4.0";
 
 const KEYS: {
   key: UserKeyName;
@@ -52,6 +53,14 @@ export function SettingsModal({
 }) {
   const isDarkMode = useThemeStore((s) => s.isDarkMode);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
+  const [debugLogging, setDebugLoggingState] = useState(false);
+  useEffect(() => {
+    try {
+      setDebugLoggingState(window.localStorage.getItem(DEBUG_KEY) === "1");
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
   const isHosted = process.env.NEXT_PUBLIC_APP_MODE === "hosted";
   const [server, setServer] = useState<ServerStatus | null>(null);
   const [saved, setSaved] = useState<Partial<Record<UserKeyName, string>>>({});
@@ -116,6 +125,25 @@ export function SettingsModal({
               className={`relative w-10 h-6 rounded-full transition-colors ${isDarkMode ? "bg-[var(--sw-accent)]" : "bg-[var(--sw-line)]"}`}
             >
               <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${isDarkMode ? "translate-x-4" : ""}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between py-3">
+            <div className="min-w-0">
+              <span className="text-sm text-[var(--sw-ink)]">Debug logging</span>
+              <p className="text-[11px] text-[var(--sw-muted)] mt-0.5">For support sessions. Never logs keys, signatures or PINs.</p>
+            </div>
+            <button
+              onClick={() => {
+                setDebugLogging(!debugLogging);
+                setDebugLoggingState(!debugLogging);
+              }}
+              role="switch"
+              aria-checked={debugLogging}
+              aria-label="Debug logging"
+              className={`relative w-10 h-6 flex-shrink-0 rounded-full transition-colors ${debugLogging ? "bg-[var(--sw-accent)]" : "bg-[var(--sw-line)]"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${debugLogging ? "translate-x-4" : ""}`} />
             </button>
           </div>
 

@@ -30,7 +30,8 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. It supp
 - 🛡️ **Card Checks** - Every key the card reports is validated, and every signature is checked against your connected card before anything is sent
 
 ### Technical Highlights
-- **Multicall3 Integration** - Batch RPC calls for efficient balance queries
+- **Fast First Load** - About 111 kB of JavaScript up front; WalletConnect, the card libraries and each connect screen load only when you need them
+- **Multicall3 Integration** - One batched RPC call for native and token balances
 - **Advanced Caching** - Multi-tier price caching with a rate-limited server-side proxy
 - **Resilient Gateway Sessions** - Hosted phone-as-reader connections survive brief phone sleeps and resume in place, no constant QR re-scanning
 - **Burner Card Integration** - NFC-based hardware wallet support (local bridge or hosted gateway)

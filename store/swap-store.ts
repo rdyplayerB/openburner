@@ -93,71 +93,58 @@ export const useSwapStore = create<SwapState>()(
 
       // Actions
       setFromToken: (token) => {
-        console.log('🔄 [Swap Store] Setting from token:', token?.symbol);
         set({ fromToken: token, quote: null, quoteError: null });
       },
 
       setToToken: (token) => {
-        console.log('🔄 [Swap Store] Setting to token:', token?.symbol);
         set({ toToken: token, quote: null, quoteError: null });
       },
 
       setFromAmount: (amount) => {
-        console.log('🔄 [Swap Store] Setting from amount:', amount);
         set({ fromAmount: amount, quoteError: null });
       },
 
       setToAmount: (amount) => {
-        console.log('🔄 [Swap Store] Setting to amount:', amount);
         set({ toAmount: amount, quoteError: null });
       },
 
       setQuote: (quote) => {
-        console.log('🔄 [Swap Store] Setting quote:', quote ? 'received' : 'cleared');
         set({ quote, quoteError: null });
       },
 
       setQuoteLoading: (loading) => {
-        console.log('🔄 [Swap Store] Setting quote loading:', loading);
         set({ isLoadingQuote: loading });
       },
 
       setQuoteError: (error) => {
-        console.log('🔄 [Swap Store] Setting quote error:', error);
         set({ quoteError: error, quote: null });
       },
 
       setAllowanceInfo: (info) => {
-        console.log('🔄 [Swap Store] Setting allowance info:', info ? 'received' : 'cleared');
         set({ allowanceInfo: info });
       },
 
       setNeedsApproval: (needs) => {
-        console.log('🔄 [Swap Store] Setting needs approval:', needs);
         set({ needsApproval: needs });
       },
 
       updateSettings: (newSettings) => {
-        console.log('🔄 [Swap Store] Updating settings:', newSettings);
         set((state) => ({
           settings: { ...state.settings, ...newSettings },
         }));
       },
 
       addSwapToHistory: (swap) => {
-        console.log('🔄 [Swap Store] Adding swap to history:', swap.id);
         set((state) => ({
           swapHistory: [swap, ...state.swapHistory].slice(0, 50), // Keep last 50 swaps
         }));
       },
 
       clearSwapHistory: () => {
-        console.log('🔄 [Swap Store] Clearing swap history');
         set({ swapHistory: [] });
       },
 
       resetSwap: () => {
-        console.log('🔄 [Swap Store] Resetting swap state');
         set({
           fromToken: null,
           toToken: null,
@@ -172,7 +159,6 @@ export const useSwapStore = create<SwapState>()(
       },
 
       swapTokens: () => {
-        console.log('🔄 [Swap Store] Swapping token positions');
         const { fromToken, toToken, fromAmount, toAmount } = get();
         set({
           fromToken: toToken,

@@ -135,7 +135,7 @@ export function SendNft({
       const { signTransactionSmart } = await import("@/lib/smart-signer");
       const signedTx = await signTransactionSmart(
         transaction,
-        keySlot || 1,
+        keySlot,
         enteredPin,
         environment
       );

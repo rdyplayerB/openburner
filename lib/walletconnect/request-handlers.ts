@@ -67,7 +67,7 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
       // params: [message, address]
       const raw = params[0];
       const message = ethers.isHexString(raw) ? ethers.getBytes(raw) : raw;
-      return signMessageSmart(message, keySlot || 1, pin, config);
+      return signMessageSmart(message, keySlot, pin, config);
     }
 
     case "eth_signTypedData":
@@ -76,7 +76,7 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
       // params: [address, typedDataJson]
       const json = typeof params[1] === "string" ? JSON.parse(params[1]) : params[1];
       const { domain, types, message } = json;
-      return signTypedDataSmart(domain, types, message, keySlot || 1, pin, config);
+      return signTypedDataSmart(domain, types, message, keySlot, pin, config);
     }
 
     case "eth_sendTransaction":
@@ -132,7 +132,7 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
           };
 
-      const signedTx = await signTransactionSmart(transaction, keySlot || 1, pin, config);
+      const signedTx = await signTransactionSmart(transaction, keySlot, pin, config);
 
       if (method === "eth_signTransaction") {
         return signedTx;

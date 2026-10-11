@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function NotFound() {
   return (
     <div className="sw-screen min-h-screen flex items-center justify-center">
@@ -7,12 +9,12 @@ export default function NotFound() {
           <span className="sw-accent">4</span>0<span className="sw-accent">4</span>
         </h1>
         <p className="text-base text-[var(--sw-muted)] mb-8">Page not found</p>
-        <a
+        <Link
           href="/"
           className="sw-btn-primary inline-flex items-center px-6 py-3 text-sm"
         >
           Go home
-        </a>
+        </Link>
       </div>
     </div>
   );
