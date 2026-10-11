@@ -65,6 +65,8 @@ These rules sit on top of everything above. Where they disagree, these win.
 - **Orange is for action, not decoration.** Don't color headings, token symbols, the "$"
   sign or sort toggles orange. Small accent text (Max, Paste, links) uses `sw-link`
   (contrast-tuned). Tab underlines and focus rings may stay orange.
+- **Numbers use the UI sans with tabular figures** (`sw-num`). Geist Mono (`sw-mono`) is
+  for addresses, hashes and contract data only.
 - **Field labels are sentence case** with `sw-label`. `sw-uplabel` is only for an
   occasional section kicker, not every field.
 

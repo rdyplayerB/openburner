@@ -5,7 +5,23 @@ All notable changes to OpenBurner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] - Design Refresh
+
+### Added
+- **Tap-your-card signing** - PIN and card tap are one sheet with a live step list (Prepare → Sign with your Burner → Send) and a hint for your reader: phone, HaLo Gateway or USB
+- **Activity** - Sends, swaps, approvals, NFT transfers and dApp transactions from this device, grouped by day, with live pending/failed status
+- **Readable dApp requests** - "Approve unlimited USDC", "Sign in to app.uniswap.org" instead of raw data; warnings for unlimited approvals, collection-wide NFT access, marketplace orders, sign-in domain mismatches and unverified or scam sites, which need an extra confirmation
+- **Token details** - Tap any token for its balance, value, Send/Swap and contract address
+- **ENS and recent recipients** - Send to `name.eth`, paste in one tap, pick from your last recipients; your own ENS name shows on the dashboard
+
+### Changed
+- **New dashboard** - Two columns on desktop (account + assets/activity), one clean column on phones; identicon, balance that animates on change, and a native-balance headline when prices are off instead of "$—"
+- **New Send** - Large amount entry with USD toggle, token switcher in the sheet, a button that says what's missing, and a review step with the full recipient address (ends highlighted) and first-time-recipient warnings
+- **New Swap** - Opens on your native token, quotes as you type, keeps the main button visible, shows balances on both sides and folds rate, impact, minimum received and fees into one row
+- **New welcome screen** - A proper first impression with a card-tap illustration, one main button and a three-step "How it works"; live bridge/card status in local mode
+- **Bottom sheets on phones** - Every dialog opens from the bottom and stays above the keyboard
+- **Clearer, calmer visuals** - One shape for token icons with network badges, sentence-case labels, orange reserved for actions, readable button contrast (WCAG AA) and a clear disabled state
+- **One transaction screen** - Sent → Confirming → Confirmed in a single sheet, with explorer link
 
 ## [1.4.0] - 2026-10-11 - Security Hardening & Faster Loads
 

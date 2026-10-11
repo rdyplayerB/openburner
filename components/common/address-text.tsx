@@ -12,14 +12,15 @@ export function AddressText({ address, className = "" }: { address: string; clas
   const last = groups.length - 1;
 
   return (
-    <span className={`sw-mono break-all leading-relaxed ${className}`} aria-label={address}>
-      <span className="text-[var(--sw-muted)]">0x</span>
+    // Groups are inline blocks with a gap (not spaces), so lines wrap between
+    // groups and a manual copy still yields the exact address.
+    <span className={`sw-mono leading-relaxed ${className}`}>
       {groups.map((g, i) => {
         const strong = i === 0 || i === last;
         return (
-          <span key={i} aria-hidden="true">
+          <span key={i} className={`inline-block whitespace-nowrap ${i < last ? "mr-[0.35em]" : ""}`}>
+            {i === 0 && <span className="text-[var(--sw-muted)]">0x</span>}
             <span className={strong ? "text-[var(--sw-ink)] font-semibold" : "text-[var(--sw-ink-soft)]"}>{g}</span>
-            {i < last && <span className="inline-block w-[0.3em]" />}
           </span>
         );
       })}

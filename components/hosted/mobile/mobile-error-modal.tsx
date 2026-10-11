@@ -1,6 +1,6 @@
 "use client";
 
-import { Nfc, Smartphone, Wifi, X, RefreshCw } from "lucide-react";
+import { Nfc, Smartphone, Wifi, AlertTriangle } from "lucide-react";
 import { Modal } from "@/components/common/modal";
 
 interface MobileErrorModalProps {
@@ -9,110 +9,91 @@ interface MobileErrorModalProps {
   onRetry: () => void;
 }
 
+type Kind = "nfc" | "card" | "network" | "permission" | "other";
+
+function classify(error: string): Kind {
+  if (/not ?supported|NFC (is )?(off|disabled|unavailable)|NotSupportedError/i.test(error)) return "nfc";
+  if (/permission|not allowed|denied|access/i.test(error)) return "permission";
+  if (/network|connection|offline|failed to fetch/i.test(error)) return "network";
+  if (/card|tap|detected|key/i.test(error)) return "card";
+  return "other";
+}
+
+const COPY: Record<Kind, { title: string; body: string; tips: string[]; Icon: typeof Nfc }> = {
+  nfc: {
+    title: "NFC isn't available",
+    body: "This browser can't read your card.",
+    tips: ["Turn on NFC in your phone's settings.", "On Android use Chrome; on iPhone use Safari."],
+    Icon: Smartphone,
+  },
+  card: {
+    title: "Your card wasn't read",
+    body: "Hold it flat against the top of your phone and keep it still until it buzzes.",
+    tips: ["Take the phone out of a thick case.", "Move the card slowly around the top edge."],
+    Icon: Nfc,
+  },
+  network: {
+    title: "You're offline",
+    body: "Check your Wi-Fi or mobile data, then try again.",
+    tips: [],
+    Icon: Wifi,
+  },
+  permission: {
+    title: "NFC access was blocked",
+    body: "Allow NFC when your phone asks, then try again.",
+    tips: [],
+    Icon: Smartphone,
+  },
+  other: {
+    title: "Couldn't connect",
+    body: "Something went wrong reading your card. Try again.",
+    tips: [],
+    Icon: AlertTriangle,
+  },
+};
+
 export function MobileErrorModal({ error, onClose, onRetry }: MobileErrorModalProps) {
   if (!error) return null;
-
-  const getErrorIcon = () => {
-    if (error.includes('NFC') || error.includes('card')) return <Nfc className="w-10 h-10 text-[var(--sw-down)]" />;
-    if (error.includes('network') || error.includes('connection')) return <Wifi className="w-10 h-10 text-[var(--sw-down)]" />;
-    if (error.includes('permission') || error.includes('access')) return <Smartphone className="w-10 h-10 text-[var(--sw-down)]" />;
-    return <X className="w-10 h-10 text-[var(--sw-down)]" />;
-  };
-
-  const getErrorTitle = () => {
-    if (error.includes('NFC')) return 'NFC Not Available';
-    if (error.includes('card')) return 'Card Not Detected';
-    if (error.includes('network') || error.includes('connection')) return 'Connection Error';
-    if (error.includes('permission') || error.includes('access')) return 'Permission Denied';
-    return 'Connection Error';
-  };
-
-  const getErrorDescription = () => {
-    if (error.includes('NFC')) return 'Your device doesn\'t support NFC or it\'s disabled. Please enable NFC in your device settings.';
-    if (error.includes('card')) return 'Make sure your Burner card is properly placed on the back of your phone and try again.';
-    if (error.includes('network') || error.includes('connection')) return 'Please check your internet connection and try again.';
-    if (error.includes('permission') || error.includes('access')) return 'Please allow NFC access when prompted and try again.';
-    return 'Something went wrong. Please try again.';
-  };
-
-  const getErrorSuggestions = () => {
-    if (error.includes('NFC')) {
-      return [
-        'Enable NFC in your device settings',
-        'Make sure your device supports NFC',
-        'Try using a different browser'
-      ];
-    }
-    if (error.includes('card')) {
-      return [
-        'Ensure the card is properly positioned',
-        'Try moving the card around the back of your phone',
-        'Make sure the card is not damaged'
-      ];
-    }
-    if (error.includes('network') || error.includes('connection')) {
-      return [
-        'Check your Wi-Fi or mobile data connection',
-        'Try refreshing the page',
-        'Check if you\'re in an area with good signal'
-      ];
-    }
-    return [
-      'Try again in a moment',
-      'Make sure your device is working properly',
-      'Contact support if the problem persists'
-    ];
-  };
+  const { title, body, tips, Icon } = COPY[classify(error)];
 
   return (
-    <Modal onClose={onClose} labelledBy="mobile-error-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[90dvh] overflow-y-auto">
-        <div className="px-5 py-5 text-center" role="alert">
-          <div className="flex justify-center mb-4">
-            {getErrorIcon()}
-          </div>
+    <Modal onClose={onClose} labelledBy="mobile-error-title">
+      <div className="px-5 pt-6 pb-5" role="alert">
+        <span className="mx-auto mb-3 w-11 h-11 rounded-full bg-[var(--sw-down-bg)] text-[var(--sw-down)] flex items-center justify-center">
+          <Icon className="w-5 h-5" aria-hidden="true" />
+        </span>
+        <h2 id="mobile-error-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)] text-center">
+          {title}
+        </h2>
+        <p className="text-sm text-[var(--sw-ink-soft)] text-center mt-1.5 leading-relaxed">{body}</p>
 
-          <h3 id="mobile-error-title" className="text-lg font-bold text-[var(--sw-ink)] mb-2">
-            {getErrorTitle()}
-          </h3>
+        {tips.length > 0 && (
+          <ul className="sw-callout sw-callout-info mt-4 space-y-1">
+            {tips.map((tip) => (
+              <li key={tip} className="flex gap-2">
+                <span aria-hidden="true">·</span>
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        )}
 
-          <p className="text-sm text-[var(--sw-ink-soft)] mb-6 leading-relaxed">
-            {getErrorDescription()}
-          </p>
-
-          {/* Suggestions */}
-          <div className="text-left mb-6">
-            <h4 className="sw-uplabel mb-3">
-              Try these steps
-            </h4>
-            <ul className="space-y-2">
-              {getErrorSuggestions().map((suggestion, index) => (
-                <li key={index} className="text-xs text-[var(--sw-ink-soft)] flex items-start gap-2">
-                  <span className="text-[var(--sw-muted)] mt-1">•</span>
-                  <span>{suggestion}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={onRetry}
-              className="sw-btn-primary flex-1 py-3 px-4 text-sm flex items-center justify-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Try Again
-            </button>
-
-            <button
-              onClick={onClose}
-              className="sw-btn-ghost px-4 py-3 text-sm"
-              aria-label="Dismiss"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => {
+            onClose();
+            onRetry();
+          }}
+          className="sw-btn-primary w-full py-3.5 mt-5 text-sm"
+        >
+          Try again
+        </button>
+        <button
+          onClick={onClose}
+          className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+        >
+          Close
+        </button>
+      </div>
     </Modal>
   );
 }

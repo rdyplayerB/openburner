@@ -3,15 +3,42 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { useWalletStore } from "@/store/wallet-store";
+import { recordActivity, settleActivity } from "@/store/activity-store";
 import { PinInput } from "../pin-input";
-import { CheckCircle, ExternalLink, Clock, X } from "lucide-react";
+import { CheckCircle2, Clock, ExternalLink, X, XCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { useEnvironment } from "@/hooks/use-environment";
 import { NftMedia } from "./nft-media";
 import { encodeNftTransfer, type NftItem } from "@/lib/nft";
 import { Modal } from "@/components/common/modal";
+import { ChainLogo } from "@/components/common/token-icon";
 import { getProvider } from "@/lib/provider";
-import { getExplorerTxUrl, getNativeSymbol } from "@/lib/supported-chains";
+import { getChainDisplayName, getExplorerTxUrl, getNativeSymbol } from "@/lib/supported-chains";
 import { friendlyTxError, isRetryablePinError } from "@/lib/tx-errors";
+import { formatTokenBalance } from "@/lib/format-utils";
+import {
+  RecipientField,
+  RecipientReview,
+  useRecipient,
+  readRecentRecipients,
+  saveRecentRecipient,
+  clearRecentRecipients,
+  type RecentRecipient,
+} from "../send-token";
+import type { ProgressStep } from "../signing/signing-progress";
+
+interface Review {
+  to: string;
+  ens: string | null;
+  quantity: string;
+  data: string;
+  gasLimit: bigint;
+  feeWei: bigint;
+}
+
+type View = "form" | "review" | "confirming" | "done" | "failed" | "pending";
+
+/** How long to wait for a receipt before handing off to the activity list. */
+const CONFIRM_TIMEOUT_MS = 180_000;
 
 export function SendNft({
   nft,
@@ -28,328 +55,424 @@ export function SendNft({
   const chainId = useWalletStore((s) => s.chainId);
   const keySlot = useWalletStore((s) => s.keySlot);
   const chainName = useWalletStore((s) => s.chainName);
-  const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState("1");
-  const [isSending, setIsSending] = useState(false);
+  const network = getChainDisplayName(chainId, chainName);
+  const nativeSymbol = getNativeSymbol(chainId);
+
+  const recipient = useRecipient();
+  const [recents, setRecents] = useState<RecentRecipient[]>([]);
+  const [quantity, setQuantity] = useState("1");
+  const [view, setView] = useState<View>("form");
+  const [review, setReview] = useState<Review | null>(null);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentOperation, setCurrentOperation] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [isConfirmed, setIsConfirmed] = useState(false);
   const [showPinInput, setShowPinInput] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
-  const [lastUsedAddress, setLastUsedAddress] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
+  const [signStep, setSignStep] = useState<"prepare" | "sign" | "send">("prepare");
 
   const isMultiEdition = nft.tokenType === "ERC1155";
   const ownedQty = nft.balance ? parseInt(nft.balance, 10) : 1;
+  const qty = parseInt(quantity, 10);
+  const qtyValid = !isMultiEdition || (/^\d+$/.test(quantity) && qty >= 1 && qty <= ownedQty);
 
   useEffect(() => {
-    const stored = localStorage.getItem("lastRecipientAddress");
-    if (stored) setLastUsedAddress(stored);
+    setRecents(readRecentRecipients());
   }, []);
 
-  function saveLastUsedAddress(addr: string) {
+  useEffect(() => {
+    setError(null);
+  }, [recipient.trimmed, quantity]);
+
+  /** Encode the transfer and estimate its fee, then show the review step. */
+  async function handleReview() {
+    setSubmitAttempted(true);
+    const to = recipient.address;
+    if (!address || !rpcUrl || !to || !qtyValid || isPreparing) return;
+    setError(null);
+    setIsPreparing(true);
     try {
-      localStorage.setItem("lastRecipientAddress", addr);
-      setLastUsedAddress(addr);
-    } catch {
-      /* storage unavailable */
+      const provider = getProvider(chainId, rpcUrl);
+      const amount = isMultiEdition ? String(qty) : "1";
+      const data = encodeNftTransfer(nft, address, to, amount);
+      const [estimate, feeData, nativeBal] = await Promise.all([
+        provider.estimateGas({ to: nft.contractAddress, data, value: 0n, from: address }).catch((err) => {
+          // A revert here means the transfer would fail on-chain; anything else
+          // (flaky RPC) falls back to a safe limit.
+          if (err?.code === "CALL_EXCEPTION") throw err;
+          return 150000n;
+        }),
+        provider.getFeeData(),
+        provider.getBalance(address),
+      ]);
+      const gasLimit = (estimate * 120n) / 100n;
+      const feeWei = gasLimit * (feeData.maxFeePerGas ?? feeData.gasPrice ?? 0n);
+      if (nativeBal < feeWei) {
+        setError(`You need about ${formatTokenBalance(ethers.formatEther(feeWei))} ${nativeSymbol} to pay the network fee.`);
+        return;
+      }
+      setReview({ to, ens: recipient.ensName, quantity: amount, data, gasLimit, feeWei });
+      setView("review");
+    } catch (err: any) {
+      setError(friendlyTxError(err, nativeSymbol));
+    } finally {
+      setIsPreparing(false);
     }
   }
 
-  function handleSend() {
-    if (!address || !recipient || !rpcUrl) return;
-    if (!ethers.isAddress(recipient)) {
-      setError("Invalid recipient address");
-      return;
-    }
-    if (isMultiEdition) {
-      const qty = parseInt(amount, 10);
-      if (!qty || qty < 1 || qty > ownedQty) {
-        setError(`Enter a quantity between 1 and ${ownedQty}`);
-        return;
+  async function waitForOutcome(hash: string) {
+    if (!rpcUrl) return;
+    try {
+      const receipt = await getProvider(chainId, rpcUrl).waitForTransaction(hash, 1, CONFIRM_TIMEOUT_MS);
+      if (receipt && receipt.status === 0) {
+        settleActivity(hash, { status: "failed" });
+        setView("failed");
+      } else if (receipt) {
+        settleActivity(hash, { status: "success" });
+        setView("done");
+      } else {
+        setView("pending");
       }
+    } catch {
+      // Timed out or the RPC dropped: it may still confirm. Activity keeps it as pending.
+      setView("pending");
     }
-    setError(null);
-    setPinError(null);
-    setShowPinInput(true);
   }
 
   async function handlePinSubmit(enteredPin: string) {
-    if (!address || !recipient || !rpcUrl) return;
-    if (isSigning) return;
+    if (!address || !rpcUrl || !review || isSigning) return;
 
     setPinError(null);
-    setIsSending(true);
     setIsSigning(true);
-    setTxHash(null);
-
+    setSignStep("prepare");
     try {
       const provider = getProvider(chainId, rpcUrl);
-
-      const data = encodeNftTransfer(
-        nft,
-        address,
-        recipient,
-        isMultiEdition ? amount : "1"
-      );
-
-      const [nonce, feeData, gasEstimate] = await Promise.all([
+      const [nonce, feeData] = await Promise.all([
         provider.getTransactionCount(address, "pending"),
         provider.getFeeData(),
-        provider
-          .estimateGas({ to: nft.contractAddress, data, value: 0n, from: address })
-          .catch(() => 150000n),
       ]);
+      const base = { to: nft.contractAddress, value: 0n, data: review.data, nonce, chainId, gasLimit: review.gasLimit };
+      // Base: legacy pricing (matches the rest of the app).
+      const transaction: ethers.TransactionRequest =
+        chainId === 8453
+          ? { ...base, type: 0, gasPrice: feeData.gasPrice }
+          : { ...base, type: 2, maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas: feeData.maxPriorityFeePerGas };
 
-      const gasLimit = (gasEstimate * 120n) / 100n;
-      const isBaseNetwork = chainId === 8453;
-
-      let transaction: ethers.TransactionRequest;
-      if (isBaseNetwork) {
-        transaction = {
-          to: nft.contractAddress,
-          value: 0n,
-          data,
-          nonce,
-          chainId,
-          type: 0,
-          gasPrice: feeData.gasPrice,
-          gasLimit,
-        };
-      } else {
-        transaction = {
-          to: nft.contractAddress,
-          value: 0n,
-          data,
-          nonce,
-          chainId,
-          type: 2,
-          maxFeePerGas: feeData.maxFeePerGas,
-          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          gasLimit,
-        };
-      }
-
-      setCurrentOperation("Signing transaction");
+      setSignStep("sign");
       const { signTransactionSmart } = await import("@/lib/smart-signer");
-      const signedTx = await signTransactionSmart(
-        transaction,
-        keySlot,
-        enteredPin,
-        environment
-      );
+      const signedTx = await signTransactionSmart(transaction, keySlot, enteredPin, environment);
 
-      setShowPinInput(false);
-
-      setCurrentOperation("Broadcasting transaction");
+      setSignStep("send");
       const txResponse = await provider.broadcastTransaction(signedTx);
       setTxHash(txResponse.hash);
-
-      setCurrentOperation("Waiting for confirmation");
-      const receipt = await txResponse.wait().catch((e: any) => {
-        // ethers throws CALL_EXCEPTION for a mined-but-reverted tx.
-        if (e?.code === "CALL_EXCEPTION") return { status: 0 };
-        throw e;
+      setRecents(saveRecentRecipient({ address: review.to, ens: review.ens ?? undefined }));
+      recordActivity({
+        hash: txResponse.hash,
+        chainId,
+        kind: "nft",
+        label: nft.name,
+        recipient: review.to,
+        ...(isMultiEdition ? { fromAmount: review.quantity } : {}),
       });
-      if (receipt && receipt.status === 0) {
-        throw new Error("The transfer was reverted on-chain, so the NFT was not sent. A network fee may still have been charged.");
-      }
-
-      saveLastUsedAddress(recipient);
-      setIsConfirmed(true);
+      setShowPinInput(false);
+      setView("confirming");
+      waitForOutcome(txResponse.hash);
     } catch (err: any) {
       if (isRetryablePinError(err)) {
-        setPinError(friendlyTxError(err, getNativeSymbol(chainId)));
+        setPinError(friendlyTxError(err, nativeSymbol));
       } else {
         setShowPinInput(false);
-        setError(
-          String(err?.message || "").startsWith("The transfer was reverted")
-            ? err.message
-            : friendlyTxError(err, getNativeSymbol(chainId))
-        );
+        setError(friendlyTxError(err, nativeSymbol));
       }
     } finally {
-      setIsSending(false);
       setIsSigning(false);
-      setCurrentOperation(null);
     }
   }
 
   const explorerUrl = txHash ? getExplorerTxUrl(chainId, txHash) : null;
 
-  function handleReturnToWallet() {
-    onSuccess();
-    onClose();
-  }
+  // ─── After broadcast: confirming / done / failed / still pending ─────────
+  if (view === "confirming" || view === "done" || view === "failed" || view === "pending") {
+    const copy = {
+      confirming: { title: "Sending…", body: `Waiting for ${network} to confirm.` },
+      done: { title: "NFT sent", body: `${nft.name} is in the recipient's wallet.` },
+      failed: {
+        title: "Transfer failed",
+        body: "The transfer was reverted on-chain, so the NFT was not sent. A network fee may still have been charged.",
+      },
+      pending: {
+        title: "Still pending",
+        body: "Not confirmed yet. It may still go through. Check the explorer or your activity before trying again.",
+      },
+    }[view];
+    const finish = view === "failed" ? onClose : onSuccess;
 
-  if (isConfirmed && txHash) {
     return (
-      <Modal
-        onClose={handleReturnToWallet}
-        labelledBy="nft-sent-title"
-        className="sw-surface rounded-xl border border-[var(--sw-line)] p-5 sm:p-6 max-w-sm sm:max-w-md w-full mx-2"
-      >
-          <div className="flex justify-center mb-4" role="status">
-            <CheckCircle className="w-12 h-12 text-[var(--sw-up)]" />
+      <Modal onClose={finish} labelledBy="nft-status-title" closeOnBackdrop={view !== "confirming"}>
+        <div className="px-5 pt-6 pb-5 text-center" role={view === "failed" ? "alert" : "status"} aria-live="polite">
+          <div className="relative w-24 h-24 mx-auto mb-4">
+            <NftMedia nft={nft} className="w-24 h-24" rounded="rounded-xl" />
+            <span className="absolute -right-2 -bottom-2 w-8 h-8 rounded-full bg-[var(--sw-surface)] flex items-center justify-center">
+              {view === "confirming" ? (
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--sw-accent)]" aria-hidden="true" />
+              ) : view === "done" ? (
+                <CheckCircle2 className="w-7 h-7 text-[var(--sw-up)]" aria-hidden="true" />
+              ) : view === "failed" ? (
+                <XCircle className="w-7 h-7 text-[var(--sw-down)]" aria-hidden="true" />
+              ) : (
+                <Clock className="w-6 h-6 text-[var(--sw-warn)]" aria-hidden="true" />
+              )}
+            </span>
           </div>
-          <h2 id="nft-sent-title" className="text-xl font-bold text-[var(--sw-ink)] text-center mb-1">
-            NFT sent
+          <h2 id="nft-status-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)]">
+            {copy.title}
           </h2>
-          <p className="text-sm text-[var(--sw-ink-soft)] text-center mb-5">
-            <span className="font-semibold text-[var(--sw-ink)]">{nft.name}</span> is on its way
-          </p>
+          <p className="text-sm text-[var(--sw-ink-soft)] mt-1 mb-5 leading-relaxed max-w-[19rem] mx-auto">{copy.body}</p>
 
-          <div className="sw-list mb-5">
-            <div className="flex items-center justify-between gap-3 py-3 text-sm">
-              <span className="text-[var(--sw-muted)]">Recipient</span>
-              <span className="text-[var(--sw-ink)] sw-mono text-xs break-all text-right">{recipient}</span>
+          {review && (
+            <div className="rounded-xl bg-[var(--sw-fill)] p-3.5 mb-5 text-left">
+              <p className="sw-label mb-2">To</p>
+              <RecipientReview address={review.to} ens={review.ens} />
             </div>
-            <div className="flex items-center justify-between gap-3 py-3 text-sm">
-              <span className="text-[var(--sw-muted)]">Network</span>
-              <span className="text-[var(--sw-ink)] font-medium">{chainName}</span>
-            </div>
-          </div>
+          )}
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {explorerUrl && (
               <a
                 href={explorerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="sw-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2"
+                className={`${view === "pending" ? "sw-btn-primary" : "sw-btn-ghost"} w-full py-3 text-sm flex items-center justify-center gap-2`}
               >
-                View on block explorer
+                View on explorer
                 <ExternalLink className="w-4 h-4" aria-hidden="true" />
               </a>
             )}
             <button
-              onClick={handleReturnToWallet}
-              className="sw-btn-ghost w-full py-3 text-sm"
+              onClick={finish}
+              className={`${view === "pending" ? "sw-btn-ghost" : "sw-btn-primary"} w-full py-3 text-sm`}
             >
-              Return to wallet
+              {view === "confirming" ? "Close — keep waiting" : "Done"}
             </button>
           </div>
+          {view === "confirming" && (
+            <p className="text-xs text-[var(--sw-muted)] mt-3">You can close this. It&apos;ll show up in your activity.</p>
+          )}
+        </div>
       </Modal>
     );
   }
 
+  // ─── Form + review ───────────────────────────────────────────────────────
+  let cta = "Review";
+  let ctaReady = false;
+  if (!recipient.trimmed) cta = "Enter a recipient";
+  else if (recipient.resolving) cta = "Checking…";
+  else if (!recipient.address) cta = recipient.isEns ? "Name not found" : "Enter a valid address";
+  else if (!qtyValid) cta = `Enter 1 to ${ownedQty}`;
+  else if (isPreparing) cta = "Checking…";
+  else ctaReady = true;
+
+  const progressSteps: ProgressStep[] = [
+    { key: "prepare", label: "Prepare transfer" },
+    { key: "sign", label: "Sign with your Burner", card: true },
+    { key: "send", label: `Send to ${network}` },
+  ];
+
+  const inReview = view === "review" && review;
+  const toLower = review?.to.toLowerCase();
+  const isSelf = !!address && toLower === address.toLowerCase();
+  const isContract = toLower === nft.contractAddress.toLowerCase();
+  const knownRecipient = !!toLower && recents.some((r) => r.address.toLowerCase() === toLower);
+  const fee = review ? ethers.formatEther(review.feeWei) : null;
+
   return (
     <Modal
-      onClose={() => !isSending && onClose()}
+      onClose={() => !isSigning && onClose()}
       labelledBy="send-nft-title"
-      closeOnBackdrop={!isSending}
-      className="sw-surface rounded-xl border border-[var(--sw-line)] max-w-sm sm:max-w-md w-full mx-2 overflow-hidden"
+      closeOnBackdrop={!isSigning}
+      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden flex flex-col max-h-[90dvh]"
     >
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <h2 id="send-nft-title" className="sw-uplabel">Send NFT</h2>
-          <button
-            onClick={onClose}
-            disabled={isSending}
-            className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 flex-shrink-0">
+        <div className="flex items-center gap-1 min-w-0">
+          {inReview && (
+            <button
+              onClick={() => setView("form")}
+              disabled={isSigning}
+              className="sw-icon-btn p-2 -ml-1"
+              aria-label="Back to edit"
+            >
+              <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+            </button>
+          )}
+          <h2 id="send-nft-title" className={`text-lg font-bold tracking-tight text-[var(--sw-ink)] ${inReview ? "" : "pl-1"}`}>
+            {inReview ? "Review" : "Send NFT"}
+          </h2>
         </div>
+        <button onClick={onClose} disabled={isSigning} className="sw-icon-btn p-2 -mr-1" aria-label="Close">
+          <X className="w-5 h-5" aria-hidden="true" />
+        </button>
+      </div>
 
-        <div className="px-5 py-5">
-        {/* NFT preview */}
-        <div className="mb-5 flex items-center gap-3 p-3 rounded-lg border border-[var(--sw-line)]">
-          <NftMedia nft={nft} className="w-14 h-14 flex-shrink-0" rounded="rounded-lg" />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-[var(--sw-ink)] truncate">{nft.name}</p>
-            {nft.collectionName && (
-              <p className="text-xs text-[var(--sw-muted)] truncate">{nft.collectionName}</p>
-            )}
-            <span className="inline-block mt-1 px-1.5 py-0.5 rounded-sm text-[10px] font-medium sw-mono border border-[var(--sw-line)] text-[var(--sw-ink-soft)]">
-              {nft.tokenType}
-              {isMultiEdition ? ` · Owned: ${ownedQty}` : ""}
-            </span>
-          </div>
-        </div>
+      {inReview && review ? (
+        <div className="flex flex-col min-h-0 flex-auto">
+          <div className="px-5 pb-4 overflow-y-auto overscroll-contain min-h-0 flex-auto">
+            <div className="flex flex-col items-center text-center pt-1 pb-5">
+              <NftMedia nft={nft} className="w-28 h-28" rounded="rounded-xl" />
+              <p className="mt-3 text-lg font-bold tracking-tight text-[var(--sw-ink)] max-w-full truncate">
+                {isMultiEdition && <span className="tabular-nums">{review.quantity} × </span>}
+                {nft.name}
+              </p>
+              {nft.collectionName && <p className="text-sm text-[var(--sw-ink-soft)] truncate max-w-full">{nft.collectionName}</p>}
+            </div>
 
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="send-nft-recipient" className="sw-uplabel block mb-1.5">Recipient</label>
-            <input
-              id="send-nft-recipient"
-              type="text"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              placeholder="0x..."
-              className="sw-input w-full text-sm sw-mono"
-            />
-            {lastUsedAddress && lastUsedAddress !== recipient && (
-              <button
-                onClick={() => setRecipient(lastUsedAddress)}
-                className="mt-2 flex items-center gap-1.5 text-xs text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
-              >
-                <Clock className="w-3 h-3" />
-                Last used: <span className="sw-mono">{lastUsedAddress.slice(0, 6)}…{lastUsedAddress.slice(-4)}</span>
-              </button>
-            )}
-          </div>
+            <div className="rounded-xl bg-[var(--sw-fill)] p-3.5 mb-3">
+              <p className="sw-label mb-2">To</p>
+              <RecipientReview address={review.to} ens={review.ens} />
+            </div>
 
-          {isMultiEdition && (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="send-nft-qty" className="sw-uplabel block">Quantity</label>
-                <button
-                  onClick={() => setAmount(String(ownedQty))}
-                  className="text-xs text-[var(--sw-accent)] hover:underline"
-                >
-                  Max ({ownedQty})
-                </button>
+            <div className="mb-3">
+              {isContract ? (
+                <div className="sw-callout sw-callout-danger" role="alert">
+                  This is the NFT&apos;s own contract, not a wallet. NFTs sent here are usually lost for good.
+                </div>
+              ) : isSelf ? (
+                <div className="sw-callout sw-callout-warn">This is your own address. You&apos;ll only pay the network fee.</div>
+              ) : !knownRecipient ? (
+                <div className="sw-callout sw-callout-warn">First time sending to this address. Check every character.</div>
+              ) : null}
+            </div>
+
+            <dl className="sw-list text-sm">
+              <div className="flex items-center justify-between gap-3 py-3">
+                <dt className="text-[var(--sw-ink-soft)]">Network</dt>
+                <dd className="flex items-center gap-2 font-medium text-[var(--sw-ink)]">
+                  <ChainLogo chainId={chainId} name={network} className="w-4 h-4" />
+                  {network}
+                </dd>
               </div>
-              <input
-                id="send-nft-qty"
-                type="number"
-                min={1}
-                max={ownedQty}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="sw-input w-full text-sm sw-mono"
-              />
-            </div>
-          )}
+              {fee && (
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <dt className="text-[var(--sw-ink-soft)]">Network fee (max)</dt>
+                  <dd className="sw-num text-[var(--sw-ink)]">
+                    {formatTokenBalance(fee)} {nativeSymbol}
+                  </dd>
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-3 py-3">
+                <dt className="text-[var(--sw-ink-soft)]">Standard</dt>
+                <dd className="sw-mono text-xs text-[var(--sw-ink)]">{nft.tokenType}</dd>
+              </div>
+            </dl>
+          </div>
 
-          {error && (
-            <div role="alert" className="p-3 rounded-lg border border-[var(--sw-line)]">
-              <p className="text-xs text-[var(--sw-down)]">{error}</p>
-            </div>
-          )}
-
-          {txHash && !isConfirmed && (
-            <div className="p-3 rounded-lg border border-[var(--sw-line)]">
-              <p className="text-xs text-[var(--sw-ink-soft)] font-medium mb-1">Broadcasting transaction…</p>
-              <p className="text-xs text-[var(--sw-muted)] sw-mono break-all">{txHash}</p>
-            </div>
-          )}
-
-          <button
-            onClick={handleSend}
-            disabled={!recipient || isSending}
-            className="sw-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2"
-          >
-            {isSending ? (
-              <>
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                {txHash ? "Confirming…" : "Signing…"}
-              </>
-            ) : (
-              "Send NFT"
+          <div className="px-5 pt-3 pb-5 border-t border-[var(--sw-line-soft)] flex-shrink-0">
+            {error && (
+              <div role="alert" className="sw-callout sw-callout-danger mb-3">
+                {error}
+              </div>
             )}
-          </button>
+            <button
+              onClick={() => {
+                setError(null);
+                setPinError(null);
+                setShowPinInput(true);
+              }}
+              disabled={isSigning}
+              className="sw-btn-primary w-full py-3.5 text-sm"
+            >
+              Confirm and sign
+            </button>
+            <p className="text-xs text-[var(--sw-muted)] text-center mt-2.5">
+              You&apos;ll enter your PIN, then tap your Burner.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <form
+          className="flex flex-col min-h-0 flex-auto"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (ctaReady) handleReview();
+            else setSubmitAttempted(true);
+          }}
+        >
+          <div className="px-5 pb-4 overflow-y-auto overscroll-contain min-h-0 flex-auto space-y-5">
+            {/* NFT preview */}
+            <div className="flex items-center gap-3 rounded-xl bg-[var(--sw-fill)] p-3">
+              <NftMedia nft={nft} className="w-14 h-14 flex-shrink-0" rounded="rounded-lg" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[var(--sw-ink)] truncate">{nft.name}</p>
+                {nft.collectionName && <p className="text-xs text-[var(--sw-ink-soft)] truncate">{nft.collectionName}</p>}
+                <p className="text-xs text-[var(--sw-muted)] mt-0.5">
+                  <span className="sw-mono">{nft.tokenType}</span>
+                  {isMultiEdition ? ` · You own ${ownedQty}` : ""}
+                </p>
+              </div>
+            </div>
 
-          <p className="text-xs text-[var(--sw-muted)] text-center">
-            {isSending ? "Signing with your Burner…" : "Tap your Burner to sign."}
-          </p>
-        </div>
-        </div>
+            {isMultiEdition && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="send-nft-qty" className="sw-label">
+                    Quantity
+                  </label>
+                  <button type="button" onClick={() => setQuantity(String(ownedQty))} className="sw-link text-xs">
+                    Max ({ownedQty})
+                  </button>
+                </div>
+                <div className="sw-field px-3 py-2.5">
+                  <input
+                    id="send-nft-qty"
+                    type="text"
+                    inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "");
+                      setQuantity(v);
+                    }}
+                    autoComplete="off"
+                    aria-invalid={!qtyValid}
+                    className="sw-field-input sw-num text-sm"
+                  />
+                </div>
+                {!qtyValid && quantity !== "" && (
+                  <p className="text-xs text-[var(--sw-down)] mt-1.5">Enter a number from 1 to {ownedQty}.</p>
+                )}
+              </div>
+            )}
+
+            <RecipientField
+              id="send-nft-recipient"
+              state={recipient}
+              showProblem={submitAttempted}
+              recents={recents}
+              onClearRecents={() => {
+                clearRecentRecipients();
+                setRecents([]);
+              }}
+            />
+          </div>
+
+          <div className="px-5 pt-3 pb-5 border-t border-[var(--sw-line-soft)] flex-shrink-0">
+            {error && (
+              <div role="alert" className="sw-callout sw-callout-danger mb-3">
+                {error}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={!ctaReady}
+              className="sw-btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
+            >
+              {(isPreparing || recipient.resolving) && <Loader2 className="animate-spin h-4 w-4" aria-hidden="true" />}
+              {cta}
+            </button>
+          </div>
+        </form>
+      )}
 
       <PinInput
         isVisible={showPinInput}
@@ -359,8 +482,9 @@ export function SendNft({
           setPinError(null);
         }}
         error={pinError}
-        isLoading={isSending || isSigning}
-        loadingMessage={currentOperation || "Processing..."}
+        isLoading={isSigning}
+        progress={{ steps: progressSteps, current: signStep }}
+        title="Confirm with your PIN"
       />
     </Modal>
   );

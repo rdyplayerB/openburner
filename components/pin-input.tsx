@@ -32,6 +32,7 @@ export function PinInput({
 }: PinInputProps) {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const firstDigitRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (isVisible) {
@@ -113,6 +114,7 @@ export function PinInput({
       labelledBy="pin-title"
       closeOnBackdrop={false}
       closeOnEscape={!isLoading}
+      initialFocusRef={firstDigitRef}
     >
       {isLoading ? (
         <>
@@ -143,6 +145,7 @@ export function PinInput({
                 key={index}
                 ref={(el) => {
                   inputRefs.current[index] = el;
+                  if (index === 0) firstDigitRef.current = el;
                 }}
                 type="password"
                 inputMode="numeric"

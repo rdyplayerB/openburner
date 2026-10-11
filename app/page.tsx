@@ -68,11 +68,7 @@ export default function Home() {
           <WalletConnect />
         )
       ) : (
-        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="max-w-2xl mx-auto pt-4 pb-8">
-            <WalletDashboard />
-          </div>
-        </div>
+        <WalletDashboard />
       )}
       <ToastHost />
     </main>

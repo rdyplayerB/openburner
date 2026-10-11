@@ -41,3 +41,10 @@ export function formatUSDPrice(price: number): string {
 export function formatSwapBalance(balance: string, isStablecoin: boolean = false): string {
   return formatTokenBalance(balance, isStablecoin);
 }
+
+/** "$1,234.56"; tiny non-zero values read "<$0.01". */
+export function formatUsd(value: number): string {
+  if (!isFinite(value)) return "—";
+  if (value > 0 && value < 0.01) return "<$0.01";
+  return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}

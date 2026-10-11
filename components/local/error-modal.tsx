@@ -1,57 +1,71 @@
 "use client";
 
-import { AlertCircle, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Modal } from "@/components/common/modal";
 
 interface ErrorModalProps {
   error: string | null;
+  /** Which connection was being tried, for a more useful hint. */
+  mode?: "bridge" | "gateway" | null;
   onClose: () => void;
   onTryAgain?: () => void;
 }
 
-export function ErrorModal({ error, onClose, onTryAgain }: ErrorModalProps) {
+/** Plain-language title and one next step for a failed card connection. */
+function explain(error: string, mode?: "bridge" | "gateway" | null): { title: string; hint: string } {
+  if (/no burner card|card detected|no card|place your|timeout/i.test(error)) {
+    return {
+      title: "No card on the reader",
+      hint:
+        mode === "gateway"
+          ? "Hold your card flat against your phone until it reads, then try again."
+          : "Place your card flat on the reader and leave it there, then try again.",
+    };
+  }
+  if (/websocket|ECONNREFUSED|bridge|32868/i.test(error)) {
+    return {
+      title: "HaLo Bridge isn't running",
+      hint: "Start HaLo Bridge on this computer, plug in your USB reader, then try again.",
+    };
+  }
+  if (/unreadable key|no wallet key/i.test(error)) {
+    return {
+      title: "This card couldn't be read as a wallet",
+      hint: "Make sure it's a Burner card. If it is, take it off the reader and try again.",
+    };
+  }
+  return { title: "Couldn't connect", hint: "Check your reader and card, then try again." };
+}
+
+export function ErrorModal({ error, mode, onClose, onTryAgain }: ErrorModalProps) {
   if (!error) return null;
+  const { title, hint } = explain(error, mode);
 
   return (
     <Modal onClose={onClose} labelledBy="local-error-title">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-[var(--sw-down)]" strokeWidth={2.5} />
-            <h2 id="local-error-title" className="text-lg font-bold text-[var(--sw-ink)]">
-              Connection failed
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+      <div className="px-5 pt-6 pb-5" role="alert">
+        <span className="mx-auto mb-3 w-11 h-11 rounded-full bg-[var(--sw-down-bg)] text-[var(--sw-down)] flex items-center justify-center">
+          <AlertTriangle className="w-5 h-5" aria-hidden="true" />
+        </span>
+        <h2 id="local-error-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)] text-center">
+          {title}
+        </h2>
+        <p className="text-sm text-[var(--sw-ink-soft)] text-center mt-1.5 leading-relaxed">{hint}</p>
 
-        <div className="px-5 py-5">
-          {/* Error Message */}
-          <p role="alert" className="text-sm text-[var(--sw-ink-soft)] leading-relaxed mb-6">
-            {error}
-          </p>
+        {error !== title && (
+          <p className="sw-callout sw-callout-info mt-4 break-words">{error}</p>
+        )}
 
-          {/* Actions */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={onClose}
-              className="sw-btn-ghost py-3 px-4 text-sm"
-            >
-              Dismiss
-            </button>
-            <button
-              onClick={onTryAgain || onClose}
-              className="sw-btn-primary py-3 px-4 text-sm"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
+        <button onClick={onTryAgain || onClose} className="sw-btn-primary w-full py-3.5 mt-5 text-sm">
+          Try again
+        </button>
+        <button
+          onClick={onClose}
+          className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+        >
+          Close
+        </button>
+      </div>
     </Modal>
   );
 }

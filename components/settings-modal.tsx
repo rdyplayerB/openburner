@@ -102,9 +102,9 @@ export function SettingsModal({
       labelledBy="settings-title"
       className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[90dvh] flex flex-col"
     >
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <h2 id="settings-title" className="sw-uplabel">Settings</h2>
-          <button onClick={onClose} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors" aria-label="Close settings">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line-soft)]">
+          <h2 id="settings-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">Settings</h2>
+          <button onClick={onClose} className="sw-icon-btn p-2 -mr-2" aria-label="Close settings">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -122,9 +122,9 @@ export function SettingsModal({
               role="switch"
               aria-checked={isDarkMode}
               aria-label="Dark mode"
-              className={`relative w-10 h-6 rounded-full transition-colors ${isDarkMode ? "bg-[var(--sw-accent)]" : "bg-[var(--sw-line)]"}`}
+              className={`relative w-10 h-6 rounded-full transition-colors ${isDarkMode ? "bg-[var(--sw-accent-fill)]" : "bg-[var(--sw-fill-strong)]"}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${isDarkMode ? "translate-x-4" : ""}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${isDarkMode ? "translate-x-4" : ""}`} />
             </button>
           </div>
 
@@ -141,9 +141,9 @@ export function SettingsModal({
               role="switch"
               aria-checked={debugLogging}
               aria-label="Debug logging"
-              className={`relative w-10 h-6 flex-shrink-0 rounded-full transition-colors ${debugLogging ? "bg-[var(--sw-accent)]" : "bg-[var(--sw-line)]"}`}
+              className={`relative w-10 h-6 flex-shrink-0 rounded-full transition-colors ${debugLogging ? "bg-[var(--sw-accent-fill)]" : "bg-[var(--sw-fill-strong)]"}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${debugLogging ? "translate-x-4" : ""}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${debugLogging ? "translate-x-4" : ""}`} />
             </button>
           </div>
 
@@ -169,7 +169,7 @@ export function SettingsModal({
                       {!open && (
                         <button
                           onClick={() => openEdit(k.key)}
-                          className="text-xs font-semibold text-[var(--sw-accent)] hover:opacity-80 transition-opacity"
+                          className="sw-link text-xs"
                         >
                           {isSaved ? "Edit" : "Add key"}
                         </button>
@@ -189,7 +189,7 @@ export function SettingsModal({
                         }}
                         placeholder="Paste key"
                         aria-label={`${k.purpose} API key`}
-                        className="sw-input w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm sw-mono"
+                        className="sw-field w-full px-3 py-2.5 text-sm sw-mono bg-transparent text-[var(--sw-ink)] outline-none placeholder:text-[var(--sw-muted)]"
                       />
                       <div className="flex items-center justify-between mt-2.5">
                         <a
@@ -204,7 +204,7 @@ export function SettingsModal({
                           {isSaved && (
                             <button
                               onClick={() => remove(k.key)}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-md text-[var(--sw-down)] hover:bg-[var(--sw-line-soft)] transition-colors"
+                              className="text-xs font-semibold px-3 py-1.5 rounded-md text-[var(--sw-down)] hover:bg-[var(--sw-down-bg)] transition-colors"
                             >
                               Remove
                             </button>
@@ -236,7 +236,7 @@ export function SettingsModal({
           </p>
 
           {isHosted && (
-            <div className="mt-4 rounded-lg border border-[var(--sw-line)] bg-[var(--sw-line-soft)] px-3.5 py-3">
+            <div className="mt-4 sw-callout sw-callout-info">
               <p className="text-[11px] font-semibold text-[var(--sw-ink)] mb-1">
                 Shared free-tier instance
               </p>
@@ -249,7 +249,7 @@ export function SettingsModal({
                   href="https://github.com/rdyplayerB/openburner"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold text-[var(--sw-accent)] hover:opacity-80 transition-opacity"
+                  className="sw-link"
                 >
                   run your own instance
                 </a>

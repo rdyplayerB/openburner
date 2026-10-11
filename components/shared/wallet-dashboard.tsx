@@ -7,42 +7,19 @@ import { useWalletStore } from "@/store/wallet-store";
 import { useSwapStore } from "@/store/swap-store";
 import { useThemeStore } from "@/store/theme-store";
 import { useWalletConnectStore } from "@/store/walletconnect-store";
+import { useActivityStore, recordActivity, settleActivity } from "@/store/activity-store";
 import { showToast } from "@/store/toast-store";
 import { TokenList, type Token, type TokenListStatus } from "../token-list";
-import { TransactionWaitingModal } from "../transaction-waiting-modal";
-import {
-  TransactionCompletionModal,
-  type TransactionStatus,
-  type TransactionSummary,
-} from "../transaction-completion-modal";
-import { Modal } from "../common/modal";
-import { Tooltip } from "../common/tooltip";
-import {
-  Copy,
-  LogOut,
-  CheckCircle,
-  ChevronDown,
-  Plus,
-  Send,
-  Download,
-  Repeat2,
-  ExternalLink,
-  X,
-  Menu,
-  Moon,
-  Sun,
-  Globe,
-  Coins,
-  Images,
-  ScanLine,
-  Settings,
-} from "lucide-react";
+import { TransactionStatusModal, type TransactionStatus, type TransactionSummary } from "../transaction-completion-modal";
+import { AccountPanel } from "../dashboard/account-panel";
+import { NetworkMenu } from "../dashboard/network-menu";
+import { ActivityList } from "../dashboard/activity-list";
+import { ReceiveSheet } from "../dashboard/receive-sheet";
+import { LogOut, ExternalLink, Menu, Moon, Sun, Globe, ScanLine, Settings, WifiOff } from "lucide-react";
 import type { UserKeyName } from "@/lib/user-keys";
 import { getAppConfig } from "@/lib/config/environment";
 import type { GatewayConnState } from "@/lib/burner-gateway";
 import {
-  CHAINS,
-  getChainConfig,
   getExplorerAddressUrl,
   getNativeName,
   getNativeSymbol,
@@ -50,13 +27,11 @@ import {
   getUnsupportedChainMessage,
 } from "@/lib/supported-chains";
 import { getProvider } from "@/lib/provider";
-import { formatTokenBalance } from "@/lib/format-utils";
 import { log } from "@/lib/log";
 
 // Heavier / on-demand UI is split out of the dashboard chunk.
 const SendToken = dynamic(() => import("../send-token").then((m) => m.SendToken), { ssr: false });
 const SwapToken = dynamic(() => import("../swap-token").then((m) => m.SwapToken), { ssr: false });
-const TokenSelector = dynamic(() => import("../token-selector").then((m) => m.TokenSelector), { ssr: false });
 const NftGallery = dynamic(() => import("../nft/nft-gallery").then((m) => m.NftGallery), { ssr: false });
 const SettingsModal = dynamic(() => import("../settings-modal").then((m) => m.SettingsModal), { ssr: false });
 const WcProvider = dynamic(() => import("../walletconnect/wc-provider").then((m) => m.WcProvider), { ssr: false });
@@ -67,29 +42,10 @@ const WcSessionsList = dynamic(() => import("../walletconnect/wc-sessions-list")
   ssr: false,
 });
 
-type CustomRPCs = { [chainId: string]: { name: string; rpcUrl: string } };
+type Tab = "tokens" | "collectibles" | "activity";
 
-function ChainLogo({ chainId, name, size = "sm", active = false }: { chainId: number; name: string; size?: "sm" | "md"; active?: boolean }) {
-  const chain = getChainConfig(chainId);
-  const [broken, setBroken] = useState(false);
-  const imgClass =
-    size === "sm"
-      ? chain?.square
-        ? "w-3.5 h-3.5 object-cover rounded-[4px]"
-        : "w-4 h-4 object-cover rounded-full"
-      : chain?.square
-        ? "w-5 h-5 object-cover rounded-[5px]"
-        : "w-6 h-6 object-cover rounded-full";
-  if (!chain?.logo || broken) {
-    return (
-      <span className={`${size === "sm" ? "text-[9px] font-bold" : "text-xs font-semibold"} ${active ? "text-white" : "text-[var(--sw-ink)]"}`}>
-        {name[0]}
-      </span>
-    );
-  }
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={chain.logo} alt="" className={imgClass} onError={() => setBroken(true)} />;
-}
+/** How long to wait for prices before showing the native balance instead. */
+const PRICE_WAIT_MS = 8000;
 
 export function WalletDashboard() {
   const address = useWalletStore((s) => s.address);
@@ -100,23 +56,16 @@ export function WalletDashboard() {
   const connectionMode = useWalletStore((s) => s.connectionMode);
   const disconnect = useWalletStore((s) => s.disconnect);
   const setBalance = useWalletStore((s) => s.setBalance);
-  const setChain = useWalletStore((s) => s.setChain);
   const resetSwap = useSwapStore((s) => s.resetSwap);
   const isDarkMode = useThemeStore((s) => s.isDarkMode);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const wcSessions = useWalletConnectStore((s) => s.sessions);
+  const activity = useActivityStore((s) => s.items);
   const { pricingEnabled } = getAppConfig();
 
   const nativeSymbol = getNativeSymbol(chainId);
 
-  const [customRPCs, setCustomRPCs] = useState<CustomRPCs>({});
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("customRPCs");
-      if (stored) setCustomRPCs(JSON.parse(stored));
-    } catch {
-      /* ignore corrupt storage */
-    }
     // Fix up persisted RPC URLs for built-in networks if needed.
     useWalletStore.getState().initialize();
   }, []);
@@ -139,30 +88,22 @@ export function WalletDashboard() {
     };
   }, [connectionMode]);
 
-  const [selectedToken, setSelectedToken] = useState<Token | null>(null);
+  const [sendToken, setSendToken] = useState<Token | null>(null);
   const [swapToken, setSwapToken] = useState<Token | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
-  const [showCustomForm, setShowCustomForm] = useState(false);
-  const [customRpc, setCustomRpc] = useState("");
-  const [customChainId, setCustomChainId] = useState("");
-  const [customName, setCustomName] = useState("");
-  const [showReceiveModal, setShowReceiveModal] = useState(false);
-  const [receiveAddressCopied, setReceiveAddressCopied] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [showReceive, setShowReceive] = useState(false);
   const [availableTokens, setAvailableTokens] = useState<Token[]>([]);
   const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
   const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
   const [listStatus, setListStatus] = useState<TokenListStatus>({ loading: true, error: null, hasData: false });
-  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [showWcConnect, setShowWcConnect] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsFocus, setSettingsFocus] = useState<UserKeyName | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<"tokens" | "collectibles">("tokens");
+  const [activeTab, setActiveTab] = useState<Tab>("tokens");
   // Collectibles mount on first visit, then stay mounted (hidden) for instant switching.
   const [collectiblesMounted, setCollectiblesMounted] = useState(false);
   const [tokenRefreshSignal, setTokenRefreshSignal] = useState(0);
+  const [priceGaveUp, setPriceGaveUp] = useState(false);
 
   // Submitted transaction being tracked (send or swap).
   const [activeTx, setActiveTx] = useState<TransactionSummary | null>(null);
@@ -197,6 +138,22 @@ export function WalletDashboard() {
     return total;
   }, [pricingEnabled, listStatus.hasData, availableTokens, tokenPrices, nativeSymbol]);
 
+  // Prices arrive after balances. Wait briefly for them, then fall back to the
+  // native balance rather than showing an empty "$—".
+  useEffect(() => setPriceGaveUp(false), [chainId, address]);
+  useEffect(() => {
+    if (!pricingEnabled || !listStatus.hasData || totals !== null) return;
+    const t = setTimeout(() => setPriceGaveUp(true), PRICE_WAIT_MS);
+    return () => clearTimeout(t);
+  }, [pricingEnabled, listStatus.hasData, totals]);
+  const pricesPending = pricingEnabled && listStatus.hasData && totals === null && !priceGaveUp;
+
+  const otherTokenCount = availableTokens.filter((t) => t.address !== "native" && parseFloat(t.balance) > 0).length;
+  const pendingCount = useMemo(
+    () => activity.filter((i) => i.owner === address?.toLowerCase() && i.status === "pending").length,
+    [activity, address]
+  );
+
   // ─── Transactions ─────────────────────────────────────────────────────
   const trackTransaction = useCallback(
     async (tx: TransactionSummary) => {
@@ -204,6 +161,16 @@ export function WalletDashboard() {
       setActiveTx(tx);
       setTxStatus("waiting");
       setShowTxModal(true);
+      recordActivity({
+        hash: tx.txHash,
+        chainId: tx.chainId,
+        kind: tx.kind,
+        fromToken: tx.fromToken,
+        fromAmount: tx.fromAmount,
+        toToken: tx.toToken,
+        toAmount: tx.toAmount,
+        recipient: tx.recipient,
+      });
 
       let status: TransactionStatus = "pending";
       try {
@@ -216,11 +183,13 @@ export function WalletDashboard() {
         status = "pending";
       }
 
+      if (status !== "pending") settleActivity(tx.txHash, { status });
+      if (status === "success" && typeof navigator !== "undefined") navigator.vibrate?.(40);
+      // Balances changed (or at least gas was spent) — reload tokens + native.
+      refreshTokens();
       if (activeTxRef.current !== tx.txHash) return;
       setTxStatus(status);
       setShowTxModal(true);
-      // Balances changed (or at least gas was spent) — reload tokens + native.
-      refreshTokens();
     },
     [rpcUrl, refreshTokens]
   );
@@ -230,17 +199,29 @@ export function WalletDashboard() {
     if (txStatus !== "waiting") {
       activeTxRef.current = null;
       setActiveTx(null);
-      refreshTokens();
     }
   }
 
-  // ─── Swap helpers ─────────────────────────────────────────────────────
-  const handleSwapToken = useCallback(
+  // ─── Actions ──────────────────────────────────────────────────────────
+  const nativeToken = useCallback(
+    (): Token =>
+      availableTokens.find((t) => t.address === "native") ?? {
+        address: "native",
+        symbol: nativeSymbol,
+        name: getNativeName(chainId),
+        decimals: 18,
+        balance,
+      },
+    [availableTokens, nativeSymbol, chainId, balance]
+  );
+
+  const openSwap = useCallback(
     (token: Token) => {
+      if (!isSwapSupported(chainId)) return;
       resetSwap();
       setSwapToken(token);
     },
-    [resetSwap]
+    [chainId, resetSwap]
   );
 
   function handleTokenAdded(token: Token, imageUrl?: string) {
@@ -257,678 +238,239 @@ export function WalletDashboard() {
     } catch {
       /* storage unavailable */
     }
-    showToast(`Token ${token.symbol} added`, "success");
+    showToast(`${token.symbol} added`, "success");
   }
 
-  // ─── Receive QR (qrcode is loaded only when the modal opens) ───────────
+  // ─── App menu ─────────────────────────────────────────────────────────
+  const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!showReceiveModal || !address) return;
-    let cancelled = false;
-    import("qrcode")
-      .then((QR) => QR.toDataURL(address, { width: 320, margin: 0, errorCorrectionLevel: "H" }))
-      .then((url) => {
-        if (!cancelled) setQrDataUrl(url);
-      })
-      .catch(() => setQrDataUrl(null));
+    if (!showMenu) return;
+    function onDown(e: MouseEvent) {
+      if (!menuRef.current?.contains(e.target as Node)) setShowMenu(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowMenu(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
     return () => {
-      cancelled = true;
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
     };
-  }, [showReceiveModal, address]);
+  }, [showMenu]);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      if (showNetworkDropdown && !target.closest(".network-dropdown")) setShowNetworkDropdown(false);
-      if (showHamburgerMenu && !target.closest(".hamburger-menu")) setShowHamburgerMenu(false);
-    }
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setShowNetworkDropdown(false);
-        setShowHamburgerMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [showNetworkDropdown, showHamburgerMenu]);
+  if (!address) return null;
 
-  function formatAddress(addr: string) {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  }
-
-  async function copyAddress(setFlag: (v: boolean) => void) {
-    try {
-      await navigator.clipboard.writeText(address || "");
-      setFlag(true);
-      showToast("Address copied!", "success");
-      setTimeout(() => setFlag(false), 2000);
-    } catch {
-      showToast("Couldn't copy — select the address and copy it manually.", "error");
-    }
-  }
-
-  function handleChainSelect(chainIdToSet: number, url: string, name: string) {
-    setChain(chainIdToSet, url, name);
-    setShowNetworkDropdown(false);
-    setShowCustomForm(false);
-  }
-
-  function handleCustomChain() {
-    if (!customRpc || !customChainId || !customName) return;
-    const id = customChainId.toString();
-    const updated = { ...customRPCs, [id]: { name: customName, rpcUrl: customRpc } };
-    setCustomRPCs(updated);
-    try {
-      localStorage.setItem("customRPCs", JSON.stringify(updated));
-    } catch {
-      /* storage unavailable */
-    }
-    setChain(parseInt(customChainId), customRpc, customName);
-    setCustomRpc("");
-    setCustomChainId("");
-    setCustomName("");
-    setShowCustomForm(false);
-    setShowNetworkDropdown(false);
-  }
-
-  function removeCustomRPC(id: string) {
-    const updated = { ...customRPCs };
-    delete updated[id];
-    setCustomRPCs(updated);
-    try {
-      localStorage.setItem("customRPCs", JSON.stringify(updated));
-    } catch {
-      /* storage unavailable */
-    }
-    showToast(`Custom RPC removed for chain ${id}`, "info");
-  }
-
-  const explorerAddressUrl = address ? getExplorerAddressUrl(chainId, address) : null;
-  const hasOtherTokens = availableTokens.some((t) => t.address !== "native" && parseFloat(t.balance) > 0);
+  const explorerAddressUrl = getExplorerAddressUrl(chainId, address);
   const swapSupported = isSwapSupported(chainId);
+  const tabs: { id: Tab; label: string; badge?: number }[] = [
+    { id: "tokens", label: "Tokens" },
+    { id: "collectibles", label: "Collectibles" },
+    { id: "activity", label: "Activity", badge: pendingCount || undefined },
+  ];
+
+  const menuItem = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-[var(--sw-ink)] hover:bg-[var(--sw-fill)] transition-colors";
 
   return (
-    <div className="space-y-3">
-      {/* Gateway link dropped — guide the user to reload their phone (same session) */}
-      {gatewayState === "executor-away" && (
-        <div role="alert" className="rounded-lg border border-[var(--sw-accent)]/40 bg-[var(--sw-accent)]/10 px-3.5 py-2.5">
-          <p className="text-[12px] font-semibold text-[var(--sw-ink)]">Phone disconnected</p>
-          <p className="text-[11px] text-[var(--sw-muted)] leading-relaxed mt-0.5">
-            Your phone&apos;s link to the gateway dropped — it likely went to sleep. Reload the
-            HaLo Gateway page on your phone (tap&nbsp;↻); it rejoins the same session with no
-            re-scan, and any pending signature will resume.
-          </p>
-        </div>
-      )}
+    <div className="min-h-screen pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-[var(--sw-line-soft)] bg-[color-mix(in_srgb,var(--sw-paper)_88%,transparent)] backdrop-blur-md pt-[env(safe-area-inset-top)]">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 h-16 flex items-center gap-3">
+          <a href="https://openburner.xyz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 flex-shrink-0" aria-label="OpenBurner website">
+            <Image src="/images/openburnerlogo.svg" alt="" width={28} height={28} className="w-7 h-7" priority />
+            <span className="hidden md:inline text-[17px] font-bold tracking-tight text-[var(--sw-ink)]">OpenBurner</span>
+          </a>
+          <span className="hidden md:block w-px h-6 bg-[var(--sw-line)] mx-1" aria-hidden="true" />
+          <NetworkMenu />
 
-      {/* Header with Network Selector and Hamburger Menu */}
-      <div className="flex items-center justify-between">
-        <div className="relative network-dropdown">
-          <button
-            onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
-            aria-haspopup="listbox"
-            aria-expanded={showNetworkDropdown}
-            aria-label={`Network: ${chainName}. Change network`}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg sw-surface border border-[var(--sw-line)] hover:border-[var(--sw-accent)]/50 transition-all"
-          >
-            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--sw-line-soft)] overflow-hidden">
-              <ChainLogo key={chainId} chainId={chainId} name={chainName} />
-            </div>
-            <span className="font-semibold text-base text-[var(--sw-ink)]">{chainName}</span>
-            <ChevronDown
-              className={`w-3 h-3 text-[var(--sw-muted)] transition-transform ${showNetworkDropdown ? "rotate-180" : ""}`}
-              aria-hidden="true"
-            />
-          </button>
-
-          {showNetworkDropdown && (
-            <div
-              className="absolute left-0 top-full mt-2 w-72 sw-surface rounded-xl border border-[var(--sw-line)] z-50 p-2 max-h-96 overflow-y-auto shadow-lg"
-              data-network-dropdown
-            >
-              <div className="mb-1 px-3 py-2">
-                <p className="text-[11px] font-semibold text-[var(--sw-muted)] uppercase tracking-wider">Networks</p>
-              </div>
-              <div className="space-y-0.5" role="listbox" aria-label="Networks">
-                {CHAINS.map((chain) => {
-                  const active = chainId === chain.chainId;
-                  return (
-                    <button
-                      key={chain.chainId}
-                      role="option"
-                      aria-selected={active}
-                      onClick={() => handleChainSelect(chain.chainId, chain.rpcUrl, chain.name)}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all text-xs flex items-center gap-3 ${
-                        active ? "bg-[var(--sw-accent)] text-white" : "hover:bg-[var(--sw-line-soft)] text-[var(--sw-ink)]"
-                      }`}
-                    >
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 overflow-hidden ${
-                          active ? "bg-white/10" : "bg-[var(--sw-line-soft)]"
-                        }`}
-                      >
-                        <ChainLogo chainId={chain.chainId} name={chain.name} size="md" active={active} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold truncate">{chain.name}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {Object.keys(customRPCs).length > 0 && (
-                <div className="pt-2 mt-2 border-t border-[var(--sw-line)]">
-                  <div className="mb-1 px-3 py-2">
-                    <p className="text-[11px] font-semibold text-[var(--sw-muted)] uppercase tracking-wider">Custom RPCs</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    {Object.entries(customRPCs).map(([id, rpcData]) => {
-                      const active = parseInt(id) === chainId;
-                      return (
-                        <div
-                          key={id}
-                          className={`w-full px-3 py-2.5 rounded-lg transition-all text-xs flex items-center gap-3 ${
-                            active ? "bg-[var(--sw-accent)] text-white" : "hover:bg-[var(--sw-line-soft)] text-[var(--sw-ink)]"
-                          }`}
-                        >
-                          <button
-                            onClick={() => handleChainSelect(parseInt(id), rpcData.rpcUrl, rpcData.name)}
-                            className="flex items-center gap-3 flex-1 text-left"
-                          >
-                            <div
-                              className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 overflow-hidden ${
-                                active ? "bg-white/10" : "bg-[var(--sw-line-soft)]"
-                              }`}
-                            >
-                              <span className={`text-xs font-semibold ${active ? "text-white" : "text-[var(--sw-ink)]"}`}>
-                                {rpcData.name[0]}
-                              </span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold truncate">{rpcData.name}</div>
-                              <div className="text-[10px] opacity-70 truncate">Chain ID: {id}</div>
-                            </div>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeCustomRPC(id);
-                            }}
-                            className="p-1 rounded text-[var(--sw-muted)] hover:text-[var(--sw-down)] transition-colors"
-                            title="Remove custom RPC"
-                            aria-label={`Remove custom RPC ${rpcData.name}`}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-2 mt-2 border-t border-[var(--sw-line)]">
-                <button
-                  onClick={() => {
-                    setShowCustomForm(!showCustomForm);
-                    if (!showCustomForm) {
-                      setTimeout(() => {
-                        const dropdown = document.querySelector("[data-network-dropdown]") as HTMLElement | null;
-                        dropdown?.scrollTo({ top: dropdown.scrollHeight, behavior: "smooth" });
-                      }, 150);
-                    }
-                  }}
-                  aria-expanded={showCustomForm}
-                  className="w-full text-xs text-[var(--sw-muted)] hover:text-[var(--sw-ink)] flex items-center justify-center gap-1.5 py-2 hover:bg-[var(--sw-line-soft)] rounded-lg transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-                  {showCustomForm ? "Cancel" : "Custom RPC"}
-                </button>
-
-                {showCustomForm && (
-                  <div className="space-y-2 mt-2 px-1">
-                    <input
-                      type="text"
-                      value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
-                      placeholder="Network Name"
-                      aria-label="Network name"
-                      className="sw-input w-full px-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg sw-mono"
-                    />
-                    <input
-                      type="text"
-                      value={customRpc}
-                      onChange={(e) => setCustomRpc(e.target.value)}
-                      placeholder="RPC URL"
-                      aria-label="RPC URL"
-                      className="sw-input w-full px-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg sw-mono"
-                    />
-                    <input
-                      type="number"
-                      value={customChainId}
-                      onChange={(e) => setCustomChainId(e.target.value)}
-                      placeholder="Chain ID"
-                      aria-label="Chain ID"
-                      className="sw-input w-full px-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg sw-mono"
-                    />
-                    <button
-                      onClick={handleCustomChain}
-                      disabled={!customRpc || !customChainId || !customName}
-                      className="sw-btn-primary w-full py-2.5 px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Add Network
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* dApp connect + Hamburger Menu */}
-        <div className="flex items-center gap-2">
-          {wcSessions.length > 0 &&
-            (() => {
-              const MAX = 3;
-              const shown = wcSessions.slice(0, MAX);
-              const extra = wcSessions.length - shown.length;
-              const names = wcSessions.map((s: any) => s?.peer?.metadata?.name || "dApp").join(", ");
-              return (
-                <button
-                  onClick={() => setShowHamburgerMenu(true)}
-                  className="flex items-center p-2 rounded-lg sw-surface border border-[var(--sw-line)] hover:border-[var(--sw-accent)]/50 transition-all"
-                  title={`Connected to ${names}`}
-                  aria-label={`Connected dApps: ${names}`}
-                >
-                  {shown.map((s: any, i: number) => {
-                    const meta = s?.peer?.metadata || {};
-                    const icon = meta.icons?.[0];
-                    const isLast = i === shown.length - 1;
-                    return (
-                      <span key={s.topic} className={`relative ${i > 0 ? "-ml-2" : ""}`} style={{ zIndex: shown.length - i }}>
-                        <span className="block w-5 h-5 rounded-full overflow-hidden bg-[var(--sw-line-soft)] ring-2 ring-[var(--sw-surface)]">
-                          {icon ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={icon} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <Globe className="w-3.5 h-3.5 m-[3px] text-[var(--sw-muted)]" aria-hidden="true" />
-                          )}
-                        </span>
-                        {isLast && (
-                          <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--sw-up)] border-2 border-[var(--sw-surface)]" />
-                        )}
-                      </span>
-                    );
-                  })}
-                  {extra > 0 && <span className="ml-1 text-[11px] font-semibold text-[var(--sw-muted)]">+{extra}</span>}
-                </button>
-              );
-            })()}
-          <button
-            onClick={() => setShowWcConnect(true)}
-            className="p-2 rounded-lg sw-surface border border-[var(--sw-line)] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-all"
-            title="Connect to dApp"
-            aria-label="Connect to dApp"
-          >
-            <ScanLine className="w-5 h-5" strokeWidth={2.5} />
-          </button>
-          <div className="relative hamburger-menu">
-            <button
-              onClick={() => setShowHamburgerMenu(!showHamburgerMenu)}
-              className="p-2 rounded-lg sw-surface border border-[var(--sw-line)] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-all"
-              title="Menu"
-              aria-label="Menu"
-              aria-haspopup="menu"
-              aria-expanded={showHamburgerMenu}
-            >
-              <Menu className="w-5 h-5" strokeWidth={2.5} />
+          <div className="ml-auto flex items-center gap-1">
+            {wcSessions.length > 0 && <DappStack sessions={wcSessions} onClick={() => setShowMenu(true)} />}
+            <button onClick={() => setShowWcConnect(true)} className="sw-icon-btn p-2.5" title="Connect to a dApp" aria-label="Connect to a dApp">
+              <ScanLine className="w-5 h-5" />
             </button>
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="sw-icon-btn p-2.5"
+                title="Menu"
+                aria-label="Menu"
+                aria-haspopup="menu"
+                aria-expanded={showMenu}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
 
-            {showHamburgerMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 sw-surface rounded-xl border border-[var(--sw-line)] z-50 py-2 shadow-lg" role="menu">
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    toggleTheme();
-                    setShowHamburgerMenu(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
-                >
-                  {!isDarkMode ? (
-                    <Moon className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
-                  ) : (
-                    <Sun className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
-                  )}
-                  <span className="text-sm font-medium text-[var(--sw-ink)]">{!isDarkMode ? "Dark Mode" : "Light Mode"}</span>
-                </button>
-
-                <a
-                  role="menuitem"
-                  href="https://openburner.xyz"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
-                  <span className="text-sm font-medium text-[var(--sw-ink)]">OpenBurner.xyz</span>
-                </a>
-
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    setShowWcConnect(true);
-                    setShowHamburgerMenu(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
-                >
-                  <ScanLine className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
-                  <span className="text-sm font-medium text-[var(--sw-ink)]">Connect to dApp</span>
-                </button>
-                {wcSessions.length > 0 && (
-                  <div className="border-t border-[var(--sw-line)] mt-2 pt-2 px-4">
-                    <p className="sw-uplabel mb-1">Connected dApps</p>
-                    <WcSessionsList compact />
-                  </div>
-                )}
-
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    setSettingsFocus(undefined);
-                    setShowSettings(true);
-                    setShowHamburgerMenu(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] transition-colors"
-                >
-                  <Settings className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
-                  <span className="text-sm font-medium text-[var(--sw-ink)]">Settings</span>
-                </button>
-
-                <div className="border-t border-[var(--sw-line)] mt-2 pt-2">
+              {showMenu && (
+                <div className="ob-pop-in absolute right-0 top-full mt-2 w-64 sw-surface rounded-xl border border-[var(--sw-line)] z-50 p-1.5 shadow-xl" role="menu">
                   <button
                     role="menuitem"
                     onClick={() => {
-                      disconnect();
-                      setShowHamburgerMenu(false);
+                      toggleTheme();
+                      setShowMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--sw-line-soft)] text-[var(--sw-down)] transition-colors"
+                    className={menuItem}
                   >
-                    <LogOut className="w-4 h-4" aria-hidden="true" />
-                    <span className="text-sm font-medium">Disconnect</span>
+                    {isDarkMode ? <Sun className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" /> : <Moon className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />}
+                    {isDarkMode ? "Light mode" : "Dark mode"}
                   </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setShowWcConnect(true);
+                      setShowMenu(false);
+                    }}
+                    className={menuItem}
+                  >
+                    <ScanLine className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />
+                    Connect to a dApp
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsFocus(undefined);
+                      setShowSettings(true);
+                      setShowMenu(false);
+                    }}
+                    className={menuItem}
+                  >
+                    <Settings className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />
+                    Settings
+                  </button>
+                  <a role="menuitem" href="https://openburner.xyz" target="_blank" rel="noopener noreferrer" className={menuItem}>
+                    <ExternalLink className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />
+                    openburner.xyz
+                  </a>
 
-      {/* Main Balance Card */}
-      <div className="sw-surface rounded-xl border border-[var(--sw-line)] p-5">
-        {/* Address Bar */}
-        <div className="flex items-center justify-between mb-4 pb-4 border-b border-[var(--sw-line)]">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="flex items-center justify-center flex-shrink-0">
-              <Image src="/images/openburnerlogo.svg" alt="" width={26} height={26} className="w-6 h-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="sw-uplabel mb-1">Wallet address</p>
-              <div className="flex items-center gap-2">
-                <p className="text-sm sw-mono font-medium text-[var(--sw-ink)] truncate">{address ? formatAddress(address) : ""}</p>
-                <button
-                  onClick={() => copyAddress(setCopied)}
-                  className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors flex-shrink-0"
-                  title={copied ? "Copied" : "Copy address"}
-                  aria-label={copied ? "Address copied" : "Copy wallet address"}
-                >
-                  {copied ? <CheckCircle className="w-4 h-4 text-[var(--sw-up)]" /> : <Copy className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          </div>
-          {explorerAddressUrl && (
-            <a
-              href={explorerAddressUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
-              title="View on explorer"
-              aria-label="View address on block explorer"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          )}
-        </div>
+                  {wcSessions.length > 0 && (
+                    <div className="border-t border-[var(--sw-line-soft)] mt-1.5 pt-2 px-3 pb-1">
+                      <p className="sw-label mb-1">Connected dApps</p>
+                      <WcSessionsList compact />
+                    </div>
+                  )}
 
-        {/* Balance Display */}
-        <div className="mb-5" aria-live="polite">
-          <p className="sw-uplabel mb-2">Total balance</p>
-          <div className="flex items-baseline gap-2 mb-1.5">
-            <p className="text-5xl sw-display text-[var(--sw-ink)]">
-              {totals !== null ? (
-                <>
-                  <span className="sw-accent">$</span>
-                  {totals.toFixed(2)}
-                </>
-              ) : (
-                <span className="text-[var(--sw-muted)]" aria-label="Total not available">
-                  <span className="sw-accent">$</span>—
-                </span>
-              )}
-            </p>
-            <p className="text-base font-semibold text-[var(--sw-muted)]">USD</p>
-          </div>
-          <div className="text-sm text-[var(--sw-muted)]">
-            {!listStatus.hasData ? (
-              listStatus.error ? (
-                <span className="text-[var(--sw-down)]">Couldn&apos;t load balances</span>
-              ) : (
-                "Loading assets…"
-              )
-            ) : (
-              <>
-                <span className="sw-num">{formatTokenBalance(balance, false)}</span> {nativeSymbol}
-                {hasOtherTokens && " + other tokens"}
-                {listStatus.error && <span className="text-[var(--sw-down)]"> · last known</span>}
-                {!pricingEnabled ? (
-                  <>
-                    {" · "}
-                    <Tooltip
-                      content={
-                        <div className="space-y-2">
-                          <p className="font-medium">Pricing disabled</p>
-                          <p className="text-xs text-white/70">
-                            Add a CoinGecko key in Settings, or run OpenBurner locally, to see USD values.
-                          </p>
-                          <a
-                            href="https://github.com/rdyplayerB/openburner/blob/main/DOCS.md"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[var(--sw-accent)] hover:opacity-80 text-xs underline inline-flex items-center gap-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            View docs <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      }
+                  <div className="border-t border-[var(--sw-line-soft)] mt-1.5 pt-1.5">
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        disconnect();
+                        setShowMenu(false);
+                      }}
+                      className={`${menuItem} !text-[var(--sw-down)] hover:!bg-[var(--sw-down-bg)]`}
                     >
-                      <span tabIndex={0} className="cursor-help underline decoration-dotted underline-offset-2 hover:decoration-solid">
-                        Pricing disabled
-                      </span>
-                    </Tooltip>
-                  </>
-                ) : (
-                  totals === null && " · Loading prices…"
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex gap-2.5">
-          <button
-            onClick={() => setShowTokenSelector(true)}
-            className="sw-btn-primary flex-1 flex items-center justify-center gap-2 py-3 text-sm"
-          >
-            <Send className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
-            Send
-          </button>
-
-          <Tooltip content={!swapSupported ? getUnsupportedChainMessage(chainId, chainName) : "Swap tokens"} className="flex flex-1">
-            <button
-              onClick={() => {
-                if (!swapSupported) return;
-                resetSwap();
-                setSwapToken({ address: "native", symbol: nativeSymbol, name: getNativeName(chainId), decimals: 18, balance });
-              }}
-              disabled={!swapSupported}
-              className="sw-btn-ghost flex-1 flex items-center justify-center gap-2 py-3 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Repeat2 className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
-              Swap
-            </button>
-          </Tooltip>
-
-          <button
-            onClick={() => setShowReceiveModal(true)}
-            className="sw-btn-ghost flex-1 flex items-center justify-center gap-2 py-3 text-sm"
-          >
-            <Download className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
-            Receive
-          </button>
-        </div>
-      </div>
-
-      {/* Receive Modal */}
-      {showReceiveModal && (
-        <Modal onClose={() => setShowReceiveModal(false)} labelledBy="receive-title" className="sw-surface rounded-xl border border-[var(--sw-line)] w-full max-w-sm mx-2 overflow-hidden">
-          <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-            <h2 id="receive-title" className="sw-uplabel">
-              Receive {activeTab === "collectibles" ? "NFTs" : "tokens"}
-            </h2>
-            <button
-              onClick={() => setShowReceiveModal(false)}
-              className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="px-5 py-5">
-            <p className="text-xs text-[var(--sw-ink-soft)] mb-4 leading-relaxed">
-              Send only <span className="font-semibold text-[var(--sw-ink)]">{chainName}</span> assets to this address. Other networks will be lost.
-            </p>
-
-            <div className="bg-white rounded-lg p-5 mb-4 flex items-center justify-center border border-[var(--sw-line)]">
-              {qrDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={qrDataUrl} alt="QR code of your wallet address" width={160} height={160} className="w-40 h-40" />
-              ) : (
-                <div className="w-40 h-40 animate-pulse bg-black/5 rounded" aria-hidden="true" />
+                      <LogOut className="w-4 h-4" aria-hidden="true" />
+                      Disconnect card
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
+          </div>
+        </div>
+      </header>
 
-            <div className="rounded-lg p-3 border border-[var(--sw-line)]">
-              <p className="sw-uplabel mb-2">Your {chainName} address</p>
-              <div className="flex items-center gap-2">
-                <p className="flex-1 text-xs sw-mono text-[var(--sw-ink)] break-all">{address}</p>
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-4 lg:pt-8">
+        {/* Gateway link dropped — guide the user to reload their phone (same session) */}
+        {gatewayState === "executor-away" && (
+          <div role="alert" className="sw-callout sw-callout-warn mb-4 flex items-start gap-3">
+            <WifiOff className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--sw-warn)]" aria-hidden="true" />
+            <p>
+              <span className="font-semibold">Your phone disconnected.</span> It probably went to sleep. Reload the HaLo
+              Gateway page on your phone — it rejoins this session without a new scan, and any pending signature resumes.
+            </p>
+          </div>
+        )}
+
+        <div className="grid gap-4 lg:gap-8 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] items-start">
+          <div className="lg:sticky lg:top-24">
+            <AccountPanel
+              address={address}
+              explorerUrl={explorerAddressUrl}
+              nativeSymbol={nativeSymbol}
+              nativeBalance={balance}
+              totalUsd={totals}
+              pricingEnabled={pricingEnabled}
+              pricesPending={pricesPending}
+              loading={listStatus.loading}
+              error={listStatus.error}
+              hasData={listStatus.hasData}
+              otherTokenCount={otherTokenCount}
+              swapSupported={swapSupported}
+              swapUnsupportedMessage={getUnsupportedChainMessage(chainId, chainName)}
+              onSend={() => setSendToken(nativeToken())}
+              onSwap={() => openSwap(nativeToken())}
+              onReceive={() => setShowReceive(true)}
+              onRetry={refreshTokens}
+            />
+          </div>
+
+          <section className="sw-surface rounded-2xl border border-[var(--sw-line)] min-w-0 overflow-hidden" aria-label="Assets and activity">
+            <div className="flex gap-6 border-b border-[var(--sw-line-soft)] px-5" role="tablist" aria-label="Assets">
+              {tabs.map((t) => (
                 <button
-                  onClick={() => copyAddress(setReceiveAddressCopied)}
-                  className="flex-shrink-0 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
-                  title={receiveAddressCopied ? "Copied" : "Copy address"}
-                  aria-label={receiveAddressCopied ? "Address copied" : "Copy wallet address"}
+                  key={t.id}
+                  role="tab"
+                  id={`tab-${t.id}`}
+                  aria-selected={activeTab === t.id}
+                  aria-controls={`panel-${t.id}`}
+                  onClick={() => {
+                    setActiveTab(t.id);
+                    if (t.id === "collectibles") setCollectiblesMounted(true);
+                  }}
+                  className={`sw-tab text-sm py-4 flex items-center gap-1.5 ${activeTab === t.id ? "sw-tab-active" : ""}`}
                 >
-                  {receiveAddressCopied ? <CheckCircle className="w-5 h-5 text-[var(--sw-up)]" /> : <Copy className="w-5 h-5" />}
+                  {t.label}
+                  {t.badge ? (
+                    <span className="min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-[var(--sw-warn-bg)] text-[var(--sw-warn)] text-[10px] font-bold flex items-center justify-center">
+                      {t.badge}
+                    </span>
+                  ) : null}
                 </button>
-              </div>
+              ))}
             </div>
 
-            <button onClick={() => setShowReceiveModal(false)} className="sw-btn-primary w-full py-3 mt-5 text-sm">
-              Done
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* Tabs: Tokens | Collectibles */}
-      <div className="flex gap-6 border-b border-[var(--sw-line)] px-1" role="tablist" aria-label="Assets">
-        <button
-          role="tab"
-          id="tab-tokens"
-          aria-selected={activeTab === "tokens"}
-          aria-controls="panel-tokens"
-          onClick={() => setActiveTab("tokens")}
-          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${activeTab === "tokens" ? "sw-tab-active" : ""}`}
-        >
-          <Coins className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
-          Tokens
-        </button>
-        <button
-          role="tab"
-          id="tab-collectibles"
-          aria-selected={activeTab === "collectibles"}
-          aria-controls="panel-collectibles"
-          onClick={() => {
-            setActiveTab("collectibles");
-            setCollectiblesMounted(true);
-          }}
-          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${activeTab === "collectibles" ? "sw-tab-active" : ""}`}
-        >
-          <Images className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
-          Collectibles
-        </button>
-      </div>
-
-      {/* Both tabs stay mounted once opened, so switching back is instant. */}
-      <div
-        id="panel-tokens"
-        role="tabpanel"
-        aria-labelledby="tab-tokens"
-        hidden={activeTab !== "tokens"}
-        className="border border-[var(--sw-line)] rounded-xl overflow-hidden"
-      >
-        <TokenList
-          refreshSignal={tokenRefreshSignal}
-          onSendToken={setSelectedToken}
-          onSwapToken={handleSwapToken}
-          onTokensLoaded={handleTokensLoaded}
-          onStatusChange={handleStatusChange}
-        />
-      </div>
-      {collectiblesMounted && (
-        <div
-          id="panel-collectibles"
-          role="tabpanel"
-          aria-labelledby="tab-collectibles"
-          hidden={activeTab !== "collectibles"}
-          className="border border-[var(--sw-line)] rounded-xl overflow-hidden"
-        >
-          <NftGallery onReceive={() => setShowReceiveModal(true)} />
+            {/* Panels stay mounted once opened, so switching back is instant. */}
+            <div id="panel-tokens" role="tabpanel" aria-labelledby="tab-tokens" hidden={activeTab !== "tokens"}>
+              <TokenList
+                refreshSignal={tokenRefreshSignal}
+                onSendToken={setSendToken}
+                onSwapToken={openSwap}
+                onTokensLoaded={handleTokensLoaded}
+                onStatusChange={handleStatusChange}
+              />
+            </div>
+            {collectiblesMounted && (
+              <div id="panel-collectibles" role="tabpanel" aria-labelledby="tab-collectibles" hidden={activeTab !== "collectibles"}>
+                <NftGallery onReceive={() => setShowReceive(true)} />
+              </div>
+            )}
+            {activeTab === "activity" && (
+              <div id="panel-activity" role="tabpanel" aria-labelledby="tab-activity">
+                <ActivityList address={address} />
+              </div>
+            )}
+          </section>
         </div>
+      </div>
+
+      {showReceive && (
+        <ReceiveSheet
+          address={address}
+          chainId={chainId}
+          chainName={chainName}
+          noun={activeTab === "collectibles" ? "NFTs" : "tokens"}
+          onClose={() => setShowReceive(false)}
+        />
       )}
 
-      {showTokenSelector && (
-        <TokenSelector
+      {sendToken && (
+        <SendToken
+          token={sendToken}
           tokens={availableTokens}
-          onSelectToken={setSelectedToken}
-          onClose={() => setShowTokenSelector(false)}
           tokenImages={tokenImages}
           tokenPrices={tokenPrices}
-        />
-      )}
-
-      {selectedToken && (
-        <SendToken
-          token={selectedToken}
-          onClose={() => setSelectedToken(null)}
+          onClose={() => setSendToken(null)}
           onSubmitted={(tx) => {
-            setSelectedToken(null);
+            setSendToken(null);
             trackTransaction(tx);
           }}
         />
@@ -947,24 +489,8 @@ export function WalletDashboard() {
         />
       )}
 
-      {activeTx && (
-        <>
-          <TransactionWaitingModal
-            isOpen={showTxModal && txStatus === "waiting"}
-            tx={activeTx}
-            chainName={chainName}
-            onDismiss={() => setShowTxModal(false)}
-          />
-          {txStatus !== "waiting" && (
-            <TransactionCompletionModal
-              isOpen={showTxModal}
-              status={txStatus}
-              tx={activeTx}
-              chainName={chainName}
-              onClose={closeTxModal}
-            />
-          )}
-        </>
+      {activeTx && showTxModal && (
+        <TransactionStatusModal status={txStatus} tx={activeTx} chainName={chainName} onClose={closeTxModal} />
       )}
 
       {/* WalletConnect: global proposal/request handling + connect modal */}
@@ -990,5 +516,36 @@ export function WalletDashboard() {
         />
       )}
     </div>
+  );
+}
+
+/** Overlapping icons of connected dApps (opens the menu that lists them). */
+function DappStack({ sessions, onClick }: { sessions: any[]; onClick: () => void }) {
+  const MAX = 3;
+  const shown = sessions.slice(0, MAX);
+  const extra = sessions.length - shown.length;
+  const names = sessions.map((s: any) => s?.peer?.metadata?.name || "dApp").join(", ");
+  return (
+    <button onClick={onClick} className="sw-icon-btn px-2 py-2 gap-0" title={`Connected to ${names}`} aria-label={`Connected dApps: ${names}`}>
+      {shown.map((s: any, i: number) => {
+        const icon = s?.peer?.metadata?.icons?.[0];
+        return (
+          <span key={s.topic} className={`relative ${i > 0 ? "-ml-2" : ""}`} style={{ zIndex: shown.length - i }}>
+            <span className="block w-6 h-6 rounded-full overflow-hidden bg-[var(--sw-fill-strong)] ring-2 ring-[var(--sw-paper)]">
+              {icon ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={icon} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <Globe className="w-4 h-4 m-1 text-[var(--sw-muted)]" aria-hidden="true" />
+              )}
+            </span>
+            {i === shown.length - 1 && (
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--sw-up)] ring-2 ring-[var(--sw-paper)]" />
+            )}
+          </span>
+        );
+      })}
+      {extra > 0 && <span className="ml-1 text-[11px] font-semibold text-[var(--sw-muted)]">+{extra}</span>}
+    </button>
   );
 }

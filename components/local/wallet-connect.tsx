@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import { useWalletStore } from "@/store/wallet-store";
-import { Nfc, Loader2, CheckCircle, XCircle, Smartphone, X } from "lucide-react";
+import { Nfc, Loader2, Smartphone, ArrowUpRight } from "lucide-react";
 import { QRDisplay } from "./qr-display";
 import { ModeToggle } from "./mode-toggle";
 import { ErrorModal } from "./error-modal";
 import { useGatewayPairing } from "@/hooks/use-gateway-pairing";
+import { ConnectLayout, StatusPill } from "@/components/connect/connect-layout";
 
 const BRIDGE_WS_URL = "ws://127.0.0.1:32868/ws";
+const BRIDGE_DOWNLOAD_URL = "https://github.com/arx-research/libhalo/releases";
 
 export function WalletConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -28,6 +29,8 @@ export function WalletConnect() {
 
   // Use ref to track connecting state for interval callback
   const isConnectingRef = useRef(false);
+  // Bumped on cancel so a card read that finishes later is ignored.
+  const attemptRef = useRef(0);
 
   // Clear errors when connection mode changes
   useEffect(() => {
@@ -109,6 +112,7 @@ export function WalletConnect() {
   }
 
   function handleCancel() {
+    attemptRef.current++;
     setIsConnecting(false);
     isConnectingRef.current = false;
     setError(null);
@@ -128,6 +132,7 @@ export function WalletConnect() {
   }
 
   function handleModeChange() {
+    attemptRef.current++;
     setError(null);
     setErrorMode(null);
     setIsConnecting(false);
@@ -142,180 +147,105 @@ export function WalletConnect() {
       return;
     }
 
+    const attempt = ++attemptRef.current;
     setIsConnecting(true);
     isConnectingRef.current = true;
     try {
       const { getBurnerAddress } = await import("@/lib/burner");
       const { address, publicKey, keySlot } = await getBurnerAddress();
+      if (attempt !== attemptRef.current) return; // cancelled meanwhile
       setWallet(address, publicKey, keySlot);
     } catch (err: any) {
-      // Only report if the user is still on the mode that started this attempt
-      if (useWalletStore.getState().connectionMode === mode) {
+      // Only report if this attempt is still current and on the same mode
+      if (attempt === attemptRef.current && useWalletStore.getState().connectionMode === mode) {
         setError(err.message || "Failed to connect Burner card");
         setErrorMode(mode);
       }
     } finally {
-      setIsConnecting(false);
-      isConnectingRef.current = false;
+      if (attempt === attemptRef.current) {
+        setIsConnecting(false);
+        isConnectingRef.current = false;
+      }
     }
   }
 
-  return (
-    <div className="max-w-lg mx-auto space-y-6">
-      {/* Mode Toggle */}
-      <ModeToggle onModeChange={handleModeChange} />
+  const isBridge = connectionMode === "bridge";
+  const busy = isConnecting || pairing.stage === "starting";
 
-      <div className="sw-surface rounded-xl border border-[var(--sw-line)] overflow-hidden">
-        <div className="text-center px-8 pt-10 pb-8">
-          {/* Icon and Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <Image
-                src="/images/openburnerlogo.svg"
-                alt="OpenBurner logo"
-                width={40}
-                height={40}
-                className="w-10 h-10 -mt-1"
-              />
-              <h1 className="text-3xl font-bold text-[var(--sw-ink)] tracking-tight leading-none">
-                Open<span className="sw-accent">Burner</span>
-              </h1>
-            </div>
-            <p className="text-[var(--sw-ink-soft)] text-base leading-relaxed max-w-sm mx-auto">
-              {connectionMode === 'bridge'
-                ? 'Connect your Burner card using a USB NFC reader'
-                : 'Use your smartphone as an NFC reader to connect'
-              }
-            </p>
-          </div>
-
-          {/* Connect Button */}
-          <div className="space-y-3">
-            <button
-              onClick={() => handleConnect()}
-              disabled={isConnecting || pairing.stage === "starting"}
-              className="sw-btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
-            >
-              {isConnecting || pairing.stage === "starting" ? (
-                <>
-                  <Loader2 className="animate-spin h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
-                  <span>
-                    {connectionMode === 'bridge' ? 'Reading card…' : 'Starting gateway…'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {connectionMode === 'bridge' ? (
-                    <Nfc className="h-5 w-5" strokeWidth={2.5} />
-                  ) : (
-                    <Smartphone className="h-5 w-5" strokeWidth={2.5} />
-                  )}
-                  <span>
-                    {connectionMode === 'bridge' ? 'Connect with NFC reader' : 'Connect with smartphone'}
-                  </span>
-                </>
-              )}
-            </button>
-
-            {/* Cancel Button - only show when connecting */}
-            {isConnecting && (
-              <button
-                onClick={handleCancel}
-                className="sw-btn-ghost w-full py-3 text-sm flex items-center justify-center gap-2"
-              >
-                <X className="h-4 w-4" strokeWidth={2.5} />
-                <span>Cancel</span>
-              </button>
-            )}
-          </div>
-
-        </div>
-
-        {/* Requirements List */}
-        <div className="px-8 py-6 border-t border-[var(--sw-line)]">
-          <div className="sw-uplabel mb-4">Connection requirements</div>
-
-          <div className="sw-list">
-            {connectionMode === 'bridge' ? (
-              <>
-                <div className="flex items-center gap-4 py-3">
-                  <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                    {bridgeConnected === null ? (
-                      <Loader2 className="w-5 h-5 text-[var(--sw-muted)] animate-spin" strokeWidth={2.5} />
-                    ) : bridgeConnected ? (
-                      <CheckCircle className="w-5 h-5 text-[var(--sw-up)]" strokeWidth={2.5} />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-[var(--sw-accent)]" strokeWidth={2.5} />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-[var(--sw-ink)]">
-                      HaLo Bridge software
-                    </p>
-                    <p className="text-xs text-[var(--sw-muted)] mt-0.5">
-                      {bridgeConnected === null ? 'Checking connection…' :
-                       bridgeConnected ? 'Connected and ready' :
-                       'Not detected — start HaLo Bridge'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 py-3">
-                  <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                    {readerConnected === null ? (
-                      <Loader2 className="w-5 h-5 text-[var(--sw-muted)] animate-spin" strokeWidth={2.5} />
-                    ) : readerConnected ? (
-                      <CheckCircle className="w-5 h-5 text-[var(--sw-up)]" strokeWidth={2.5} />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-[var(--sw-accent)]" strokeWidth={2.5} />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-[var(--sw-ink)]">
-                      NFC reader & card
-                    </p>
-                    <p className="text-xs text-[var(--sw-muted)] mt-0.5">
-                      {readerConnected === null ? 'Checking for card…' :
-                       readerConnected ? 'Card detected and ready' :
-                       'Place your Burner card on the reader'}
-                    </p>
-                  </div>
-                </div>
-              </>
+  const action = (
+    <>
+      <button
+        onClick={() => handleConnect()}
+        disabled={busy}
+        className="sw-btn-primary w-full py-4 text-sm flex items-center justify-center gap-2"
+      >
+        {busy ? (
+          <>
+            <Loader2 className="animate-spin h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
+            <span>{isBridge ? "Reading card…" : "Starting…"}</span>
+          </>
+        ) : (
+          <>
+            {isBridge ? (
+              <Nfc className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
             ) : (
-              <>
-                <div className="flex items-center gap-4 py-3">
-                  <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-[var(--sw-up)]" strokeWidth={2.5} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-[var(--sw-ink)]">
-                      Internet connection
-                    </p>
-                    <p className="text-xs text-[var(--sw-muted)] mt-0.5">
-                      Required for gateway communication
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 py-3">
-                  <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                    <Smartphone className="w-5 h-5 text-[var(--sw-accent)]" strokeWidth={2.5} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-[var(--sw-ink)]">
-                      Smartphone with NFC
-                    </p>
-                    <p className="text-xs text-[var(--sw-muted)] mt-0.5">
-                      Your phone will act as the NFC reader
-                    </p>
-                  </div>
-                </div>
-              </>
+              <Smartphone className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
             )}
+            <span>{isBridge ? "Connect with USB reader" : "Connect with your phone"}</span>
+          </>
+        )}
+      </button>
+
+      {isConnecting && (
+        <button
+          onClick={handleCancel}
+          className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+        >
+          Cancel
+        </button>
+      )}
+
+      {isBridge ? (
+        <div className="mt-4" aria-live="polite">
+          <div className="flex flex-wrap gap-2">
+            <StatusPill
+              label="Bridge"
+              state={bridgeConnected === null ? "checking" : bridgeConnected ? "ok" : "bad"}
+              value={bridgeConnected === null ? "Checking…" : bridgeConnected ? "Ready" : "Not running"}
+            />
+            <StatusPill
+              label="Card"
+              state={readerConnected === null ? "checking" : readerConnected ? "ok" : "bad"}
+              value={readerConnected === null ? "Checking…" : readerConnected ? "Detected" : "Place it on the reader"}
+            />
           </div>
+          {bridgeConnected === false && (
+            <a
+              href={BRIDGE_DOWNLOAD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sw-link inline-flex items-center gap-1 text-sm mt-3"
+            >
+              Set up HaLo Bridge
+              <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </a>
+          )}
         </div>
-      </div>
+      ) : (
+        <p className="text-sm text-[var(--sw-muted)] mt-3 leading-snug">
+          You&apos;ll scan a QR code with your phone, then tap your card to it.
+        </p>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      <ConnectLayout
+        reader={isBridge ? "reader" : "gateway"}
+        controls={<ModeToggle onModeChange={handleModeChange} />}
+        action={action}
+      />
 
       {/* QR Code Display (gateway pairing with live progress) */}
       {showQR && (
@@ -333,12 +263,13 @@ export function WalletConnect() {
       {/* Error Modal */}
       <ErrorModal
         error={error}
+        mode={errorMode}
         onClose={() => {
           setError(null);
           setErrorMode(null);
         }}
         onTryAgain={handleTryAgain}
       />
-    </div>
+    </>
   );
 }

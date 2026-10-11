@@ -12,8 +12,9 @@ import {
   hasSavedSessionsFlag,
   setSavedSessionsFlag,
 } from "@/lib/walletconnect/client";
-import { requiresSigning } from "@/lib/walletconnect/chains";
+import { parseCaipChainId, requiresSigning } from "@/lib/walletconnect/chains";
 import { useWalletStore } from "./wallet-store";
+import { recordActivity } from "./activity-store";
 import { showToast } from "./toast-store";
 import { log } from "@/lib/log";
 
@@ -154,6 +155,10 @@ export const useWalletConnectStore = create<WalletConnectState>((set, get) => {
         // Signing stack is loaded only when a request is actually approved.
         const { executeRequest } = await import("@/lib/walletconnect/request-handlers");
         const result = await executeRequest(request, { pin });
+        if (method === "eth_sendTransaction" && typeof result === "string") {
+          // Broadcast already happened: record it even if replying to the dApp fails.
+          recordActivity({ hash: result, chainId: parseCaipChainId(request.params.chainId), kind: "dapp", label: name });
+        }
         await respondResult(topic, id, result);
         advanceQueue();
         if (method === "eth_sendTransaction") {

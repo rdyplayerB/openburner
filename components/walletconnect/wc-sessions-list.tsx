@@ -1,7 +1,8 @@
 "use client";
 
-import { Globe, Unplug } from "lucide-react";
+import { Unplug } from "lucide-react";
 import { useWalletConnectStore } from "@/store/walletconnect-store";
+import { DappIcon, dappHost } from "./dapp-identity";
 
 /**
  * List of active dApp connections with per-session disconnect.
@@ -12,36 +13,28 @@ export function WcSessionsList({ compact = false }: { compact?: boolean }) {
   const disconnect = useWalletConnectStore((s) => s.disconnect);
 
   if (sessions.length === 0) {
-    return (
-      <p className="text-xs text-[var(--sw-muted)] py-3">No connected dApps.</p>
-    );
+    return <p className="text-xs text-[var(--sw-muted)] py-3">No connected dApps.</p>;
   }
 
   return (
     <div className="sw-list">
       {sessions.map((s) => {
         const meta = s.peer?.metadata || {};
+        const host = dappHost(meta.url);
         return (
-          <div key={s.topic} className="flex items-center gap-3 py-3">
-            <div className="w-8 h-8 sw-mark rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
-              {meta.icons?.[0] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={meta.icons[0]} alt={meta.name || "dApp"} className="w-full h-full object-cover" />
-              ) : (
-                <Globe className="w-4 h-4" />
-              )}
-            </div>
+          <div key={s.topic} className={`flex items-center gap-3 ${compact ? "py-2" : "py-3"}`}>
+            <DappIcon src={meta.icons?.[0]} size="sm" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-[var(--sw-ink)] truncate">{meta.name || "dApp"}</p>
-              {!compact && <p className="text-xs text-[var(--sw-muted)] truncate">{meta.url || ""}</p>}
+              {!compact && host && <p className="text-xs text-[var(--sw-muted)] truncate">{host}</p>}
             </div>
             <button
               onClick={() => disconnect(s.topic)}
-              className="text-[var(--sw-muted)] hover:text-[var(--sw-down)] transition-colors p-1.5"
+              className="sw-icon-btn p-1.5 hover:!text-[var(--sw-down)]"
               title="Disconnect"
               aria-label={`Disconnect ${meta.name || "dApp"}`}
             >
-              <Unplug className="w-4 h-4" />
+              <Unplug className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         );

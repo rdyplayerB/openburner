@@ -2,71 +2,70 @@
 
 import { useState } from "react";
 import { useWalletStore, ConnectionMode } from "@/store/wallet-store";
-import { cleanupGateway } from "@/lib/burner-gateway";
-import { Wifi, Smartphone, Usb, SmartphoneIcon } from "lucide-react";
+import { Smartphone, Usb } from "lucide-react";
 
 interface ModeToggleProps {
   onModeChange?: () => void;
 }
 
+const OPTIONS: { mode: ConnectionMode; label: string; Icon: typeof Usb }[] = [
+  { mode: "bridge", label: "USB reader", Icon: Usb },
+  { mode: "gateway", label: "Phone as reader", Icon: Smartphone },
+];
+
+/** Segmented control: connect through a USB NFC reader or a phone (HaLo Gateway). */
 export function ModeToggle({ onModeChange }: ModeToggleProps) {
-  const { connectionMode, setConnectionMode } = useWalletStore();
+  const connectionMode = useWalletStore((s) => s.connectionMode);
+  const setConnectionMode = useWalletStore((s) => s.setConnectionMode);
   const [isChanging, setIsChanging] = useState(false);
 
   const handleModeChange = async (newMode: ConnectionMode) => {
-    if (newMode === connectionMode) return;
-    
+    if (newMode === connectionMode || isChanging) return;
     setIsChanging(true);
-    
-    // Clean up existing connections when switching modes
-    if (connectionMode === 'gateway') {
-      cleanupGateway();
+
+    // Close any open gateway session when leaving phone mode. Loaded on demand
+    // so libhalo stays out of this screen's first load.
+    if (connectionMode === "gateway") {
+      import("@/lib/burner-gateway").then((m) => m.cleanupGateway()).catch(() => {});
     }
-    
-    // Add a small delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
+
     setConnectionMode(newMode);
     setIsChanging(false);
-    
-    // Notify parent component about mode change
     onModeChange?.();
   };
 
   return (
     <div>
-      <div className="sw-uplabel mb-3">Connection mode</div>
-
-      <div className="flex gap-6 border-b border-[var(--sw-line)]">
-        <button
-          onClick={() => handleModeChange('bridge')}
-          disabled={isChanging}
-          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${
-            connectionMode === 'bridge' ? 'sw-tab-active' : ''
-          } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <Usb className="w-4 h-4" />
-          <span>Bridge</span>
-        </button>
-
-        <button
-          onClick={() => handleModeChange('gateway')}
-          disabled={isChanging}
-          className={`sw-tab text-sm pb-3 flex items-center gap-2 ${
-            connectionMode === 'gateway' ? 'sw-tab-active' : ''
-          } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <Smartphone className="w-4 h-4" />
-          <span>Gateway</span>
-        </button>
-      </div>
-
-      <p className="mt-3 text-sm text-[var(--sw-muted)]">
-        {connectionMode === 'bridge'
-          ? 'USB NFC reader with HaLo Bridge software'
-          : 'Smartphone as NFC reader via HaLo Gateway'
-        }
+      <p id="connect-mode-label" className="sw-label mb-2">
+        How will you tap your card?
       </p>
+      <div
+        role="radiogroup"
+        aria-labelledby="connect-mode-label"
+        className="inline-flex w-full sm:w-auto rounded-full bg-[var(--sw-fill-strong)] p-1"
+      >
+        {OPTIONS.map(({ mode, label, Icon }) => {
+          const active = connectionMode === mode;
+          return (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => handleModeChange(mode)}
+              disabled={isChanging}
+              className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 min-h-[40px] text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sw-accent)] ${
+                active
+                  ? "bg-[var(--sw-surface)] text-[var(--sw-ink)] shadow-[0_0_0_1px_var(--sw-line)]"
+                  : "text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)]"
+              }`}
+            >
+              <Icon className="w-4 h-4" aria-hidden="true" />
+              {label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

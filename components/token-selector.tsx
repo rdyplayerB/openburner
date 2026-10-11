@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { X, Search, Plus } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { X, Search, Plus, Check } from "lucide-react";
 import { Modal } from "./common/modal";
+import { TokenIcon } from "./common/token-icon";
 import { getAppConfig } from "@/lib/config/environment";
 import { formatTokenBalance } from "@/lib/format-utils";
 
@@ -23,6 +24,14 @@ interface TokenSelectorProps {
   tokenPrices: { [symbol: string]: number };
   title?: string;
   onAddToken?: () => void;
+  /** Address of the token that's currently chosen (shows a check). */
+  selectedAddress?: string | null;
+}
+
+const STABLES = new Set(["USDC", "USDT", "DAI", "USDC.E", "USDBC"]);
+
+function usd(value: number): string {
+  return value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 }
 
 export function TokenSelector({
@@ -31,165 +40,142 @@ export function TokenSelector({
   onClose,
   tokenImages,
   tokenPrices,
-  title = "Select Token",
+  title = "Select a token",
   onAddToken,
+  selectedAddress,
 }: TokenSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { pricingEnabled } = getAppConfig();
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Focus search only with a mouse/trackpad; on phones the keyboard would cover the list.
+  const finePointer = typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches;
 
-  // Filter and sort tokens
-  const filteredTokens = useMemo(() => tokens
-    .filter((token) => {
-      if (!searchQuery.trim()) return true;
-      
-      const query = searchQuery.toLowerCase().trim();
-      const matchesSymbol = token.symbol.toLowerCase().includes(query);
-      const matchesName = token.name.toLowerCase().includes(query);
-      const matchesAddress = token.address.toLowerCase().includes(query);
-      
-      return matchesSymbol || matchesName || matchesAddress;
-    })
-    .sort((a, b) => {
-      // Always keep native token at the top
-      const aIsNative = a.address === "native";
-      const bIsNative = b.address === "native";
-      
-      if (aIsNative && !bIsNative) return -1;
-      if (!aIsNative && bIsNative) return 1;
-      
-      // Sort all other tokens by USD value (highest first)
-      const aValue = parseFloat(a.balance) * (tokenPrices[a.symbol] || 0);
-      const bValue = parseFloat(b.balance) * (tokenPrices[b.symbol] || 0);
-      return bValue - aValue;
-    }), [tokens, searchQuery, tokenPrices]);
+  const filteredTokens = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    const value = (t: Token) => parseFloat(t.balance) * (tokenPrices[t.symbol] || 0);
+    return tokens
+      .filter(
+        (t) =>
+          !q ||
+          t.symbol.toLowerCase().includes(q) ||
+          t.name.toLowerCase().includes(q) ||
+          t.address.toLowerCase().includes(q)
+      )
+      .sort((a, b) => {
+        // Native first, then by USD value, then by balance held, then A–Z.
+        if (a.address === "native") return -1;
+        if (b.address === "native") return 1;
+        const dv = value(b) - value(a);
+        if (dv !== 0) return dv;
+        const ha = parseFloat(a.balance) > 0 ? 1 : 0;
+        const hb = parseFloat(b.balance) > 0 ? 1 : 0;
+        if (ha !== hb) return hb - ha;
+        return a.symbol.localeCompare(b.symbol);
+      });
+  }, [tokens, searchQuery, tokenPrices]);
 
   return (
     <Modal
       onClose={onClose}
       labelledBy="token-selector-title"
-      align="top"
-      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[85dvh] flex flex-col"
+      initialFocusRef={finePointer ? searchRef : undefined}
+      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden h-[min(600px,85dvh)] flex flex-col"
     >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <h2 id="token-selector-title" className="text-lg font-bold text-[var(--sw-ink)]">
-            {title}
-          </h2>
-          <div className="flex items-center gap-3">
-            {/* Add Token Button */}
-            {onAddToken && (
-              <button
-                onClick={onAddToken}
-                className="sw-uplabel text-[var(--sw-accent)] hover:text-[var(--sw-accent-press)] flex items-center gap-1.5 group"
-              >
-                <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
-                Add token
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+      <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
+        <h2 id="token-selector-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">
+          {title}
+        </h2>
+        <button onClick={onClose} className="sw-icon-btn p-2 -mr-2" aria-label="Close">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-        <div className="px-5 pt-4 pb-5 flex flex-col min-h-0 flex-1">
-        {/* Search Input */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--sw-muted)]" />
+      <div className="px-5 pb-3 flex-shrink-0">
+        <div className="sw-field flex items-center gap-2 px-3 py-2.5">
+          <Search className="w-4 h-4 text-[var(--sw-muted)] flex-shrink-0" aria-hidden="true" />
           <input
+            ref={searchRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search name, symbol, or address"
+            placeholder="Search name, symbol or address"
             aria-label="Search tokens"
-            className="sw-input w-full pl-10 pr-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg"
-            autoFocus
+            autoComplete="off"
+            spellCheck={false}
+            className="sw-field-input text-sm"
           />
-        </div>
-
-
-        {/* Token List */}
-        <div className="overflow-y-auto flex-1">
-          {tokens.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-[var(--sw-muted)]">No tokens available</p>
-            </div>
-          ) : filteredTokens.length === 0 ? (
-            <div className="text-center py-6">
-              <Search className="w-6 h-6 text-[var(--sw-muted)] mx-auto mb-2" />
-              <p className="text-sm text-[var(--sw-ink-soft)]">No tokens found</p>
-              <p className="text-xs text-[var(--sw-muted)] mt-1">
-                Try a name, symbol, or address
-              </p>
-            </div>
-          ) : (
-            <div className="sw-divide">
-              {filteredTokens.map((token, index) => (
-                <button
-                  key={token.address}
-                  style={{ animationDelay: `${Math.min(index, 10) * 30}ms` }}
-                  onClick={() => {
-                    onSelectToken(token);
-                    onClose();
-                  }}
-                  className="ob-rise-in w-full flex items-center justify-between py-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {/* Token Icon */}
-                    <div className="flex-shrink-0">
-                      {tokenImages[token.symbol.toUpperCase()] ? (
-                        <div className="w-8 h-8 rounded-lg overflow-hidden">
-                          <img
-                            src={tokenImages[token.symbol.toUpperCase()]}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.className = 'w-8 h-8 sw-mark rounded-lg flex items-center justify-center';
-                                parent.innerHTML = `<span class="text-xs font-bold">${token.symbol[0]}</span>`;
-                              }
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-8 h-8 sw-mark rounded-lg flex items-center justify-center">
-                          <span className="text-xs font-bold">{token.symbol[0]}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Token Info */}
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="font-bold text-[var(--sw-ink)] text-sm">{token.symbol}</p>
-                      <p className="text-xs text-[var(--sw-muted)] truncate">{token.name}</p>
-                    </div>
-
-                    {/* Balance - Only show if not zero */}
-                    <div className="text-right">
-                      {parseFloat(token.balance) > 0 ? (
-                        <p className="sw-mono text-sm font-bold text-[var(--sw-ink)]">
-                          {formatTokenBalance(token.balance, token.symbol === 'USDC' || token.symbol === 'USDT')}
-                        </p>
-                      ) : (
-                        <div className="h-5"></div>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]" aria-label="Clear search">
+              <X className="w-4 h-4" />
+            </button>
           )}
         </div>
+      </div>
+
+      <div className="overflow-y-auto overscroll-contain flex-1 min-h-0 px-2 pb-2" role="listbox" aria-label="Tokens">
+        {tokens.length === 0 ? (
+          <div className="text-center py-12 px-6">
+            <p className="text-sm font-semibold text-[var(--sw-ink)]">No tokens yet</p>
+            <p className="text-xs text-[var(--sw-muted)] mt-1">Tokens you hold on this network show up here.</p>
+          </div>
+        ) : filteredTokens.length === 0 ? (
+          <div className="text-center py-12 px-6">
+            <Search className="w-5 h-5 text-[var(--sw-muted)] mx-auto mb-2" aria-hidden="true" />
+            <p className="text-sm font-semibold text-[var(--sw-ink)]">No match for &ldquo;{searchQuery.trim()}&rdquo;</p>
+            <p className="text-xs text-[var(--sw-muted)] mt-1">
+              {onAddToken ? "Paste its contract address to add it." : "Try a name, symbol or contract address."}
+            </p>
+          </div>
+        ) : (
+          filteredTokens.map((token) => {
+            const amount = parseFloat(token.balance);
+            const price = tokenPrices[token.symbol];
+            const selected = !!selectedAddress && selectedAddress.toLowerCase() === token.address.toLowerCase();
+            return (
+              <button
+                key={token.address}
+                role="option"
+                aria-selected={selected}
+                onClick={() => {
+                  onSelectToken(token);
+                  onClose();
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-[var(--sw-fill)] ${
+                  selected ? "bg-[var(--sw-fill)]" : ""
+                }`}
+              >
+                <TokenIcon symbol={token.symbol} url={tokenImages[token.symbol.toUpperCase()]} size="md" />
+                <span className="flex-1 min-w-0">
+                  <span className="flex items-center gap-1.5">
+                    <span className="font-semibold text-sm text-[var(--sw-ink)] truncate">{token.symbol}</span>
+                    {selected && <Check className="w-3.5 h-3.5 text-[var(--sw-ink)] flex-shrink-0" aria-hidden="true" />}
+                  </span>
+                  <span className="block text-xs text-[var(--sw-muted)] truncate">{token.name}</span>
+                </span>
+                {amount > 0 && (
+                  <span className="text-right flex-shrink-0">
+                    <span className="block text-sm font-semibold text-[var(--sw-ink)] sw-num">
+                      {formatTokenBalance(token.balance, STABLES.has(token.symbol.toUpperCase()))}
+                    </span>
+                    {pricingEnabled && price !== undefined && (
+                      <span className="block text-xs text-[var(--sw-muted)] sw-num">{usd(amount * price)}</span>
+                    )}
+                  </span>
+                )}
+              </button>
+            );
+          })
+        )}
+      </div>
+
+      {onAddToken && (
+        <div className="px-5 py-3 border-t border-[var(--sw-line-soft)] flex-shrink-0">
+          <button onClick={onAddToken} className="sw-link text-sm inline-flex items-center gap-1.5">
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            Add a token by address
+          </button>
         </div>
+      )}
     </Modal>
   );
 }

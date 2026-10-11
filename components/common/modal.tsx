@@ -10,7 +10,8 @@ import { createPortal } from "react-dom";
  *   Modals opened later sit above earlier ones; toasts (z 2000) sit above all.
  * - role="dialog" + aria-modal, labelled by `title`/`labelledBy`/`ariaLabel`.
  * - Escape closes the top-most modal only; backdrop click closes (opt-out).
- * - Focus moves into the dialog, is trapped while open, and is restored after.
+ * - Focus moves to the dialog (or initialFocusRef / [data-autofocus]), is
+ *   trapped while open, and is restored after.
  * - Body scroll is locked while any modal is open.
  * - On phones it opens as a bottom sheet (align="center"), lifted above the
  *   on-screen keyboard so inputs and the main button stay visible.
@@ -58,7 +59,9 @@ function useKeyboardInset(active: boolean): number {
   useEffect(() => {
     const vv = typeof window !== "undefined" ? window.visualViewport : null;
     if (!active || !vv) return;
-    const update = () => setInset(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    // Phones only: on desktop a pinch-zoom also shrinks the visual viewport.
+    const update = () =>
+      setInset(window.innerWidth < 640 ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0);
     update();
     vv.addEventListener("resize", update);
     vv.addEventListener("scroll", update);
@@ -99,12 +102,17 @@ export function Modal({
     stack.push(id);
     lockScroll();
 
-    const focusTarget =
-      initialFocusRef?.current ||
-      panelRef.current?.querySelector<HTMLElement>("[autofocus]") ||
-      panelRef.current?.querySelector<HTMLElement>(FOCUSABLE) ||
-      panelRef.current;
-    focusTarget?.focus({ preventScroll: true });
+    // Focus the dialog itself unless something asks for focus (initialFocusRef,
+    // data-autofocus, or a React autoFocus input that already took it), so
+    // opening a sheet doesn't light up its close button.
+    const alreadyInside = !!panelRef.current?.contains(document.activeElement);
+    if (!alreadyInside || initialFocusRef?.current) {
+      const focusTarget =
+        initialFocusRef?.current ||
+        panelRef.current?.querySelector<HTMLElement>("[data-autofocus]") ||
+        panelRef.current;
+      focusTarget?.focus({ preventScroll: true });
+    }
 
     function onKeyDown(e: KeyboardEvent) {
       if (stack[stack.length - 1] !== id) return;
@@ -125,6 +133,11 @@ export function Modal({
         const first = nodes[0];
         const last = nodes[nodes.length - 1];
         const active = document.activeElement;
+        if (active === panelRef.current) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+          return;
+        }
         if (e.shiftKey && (active === first || !panelRef.current.contains(active))) {
           e.preventDefault();
           last.focus();

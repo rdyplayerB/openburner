@@ -3,18 +3,21 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ethers } from "ethers";
 import { useWalletStore } from "@/store/wallet-store";
-import { Plus, Send, RefreshCw, X, Trash2, Search, SortAsc, AlertTriangle } from "lucide-react";
+import { Plus, RefreshCw, X, Trash2, Search, ArrowDownUp, AlertTriangle, ArrowUpRight, Repeat2, Copy, Check, ExternalLink } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
 import { getTokenPricesWithAddresses, clearPriceCache, fetchTokenDataByContract } from "@/lib/price-oracle";
 import { batchGetTokenImages, getCachedTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
-import { formatTokenBalance } from "@/lib/format-utils";
+import { formatTokenBalance, formatUsd } from "@/lib/format-utils";
 import { getAppConfig } from "@/lib/config/environment";
 import { getProvider } from "@/lib/provider";
-import { getNativeName, getNativeSymbol } from "@/lib/supported-chains";
+import { getExplorerAddressUrl, getNativeName, getNativeSymbol, isSwapSupported } from "@/lib/supported-chains";
 import { friendlyTxError } from "@/lib/tx-errors";
 import { log } from "@/lib/log";
 import { Modal } from "./common/modal";
+import { TokenIcon } from "./common/token-icon";
+import { AddressText } from "./common/address-text";
+import { showToast } from "@/store/toast-store";
 
 export interface Token {
   address: string;
@@ -160,33 +163,6 @@ async function fetchTokenBalances(chainId: number, rpcUrl: string, address: stri
   return list;
 }
 
-function TokenIcon({ symbol, url }: { symbol: string; url?: string }) {
-  const [broken, setBroken] = useState(false);
-  useEffect(() => setBroken(false), [url]);
-  if (url && !broken) {
-    return (
-      <div className="w-8 h-8 rounded-lg overflow-hidden border border-[var(--sw-line)]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt=""
-          width={32}
-          height={32}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover"
-          onError={() => setBroken(true)}
-        />
-      </div>
-    );
-  }
-  return (
-    <div className="w-8 h-8 sw-mark rounded-lg flex items-center justify-center" aria-hidden="true">
-      <span className="text-sm font-bold">{symbol[0]}</span>
-    </div>
-  );
-}
-
 interface TokenListProps {
   onSendToken: (token: Token) => void;
   onSwapToken?: (token: Token) => void;
@@ -200,6 +176,7 @@ interface TokenListProps {
 
 function TokenListImpl({
   onSendToken,
+  onSwapToken,
   refreshSignal = 0,
   onTokensLoaded,
   onStatusChange,
@@ -228,6 +205,7 @@ function TokenListImpl({
   const [sortBy, setSortBy] = useState<"alphabetical" | "value">("value");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [customVersion, setCustomVersion] = useState(0);
+  const [openToken, setOpenToken] = useState<Token | null>(null);
 
   const requestId = useRef(0);
   const onTokensLoadedRef = useRef(onTokensLoaded);
@@ -508,298 +486,260 @@ function TokenListImpl({
   }
 
   const showSkeleton = !hasData && (isLoading || !error);
+  const stable = (sym: string) => sym === "USDC" || sym === "USDT" || sym === "DAI";
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--sw-line)]">
-        <h2 className="sw-seclabel !border-b-0 !pb-0">Assets</h2>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleManualRefresh}
-            disabled={isLoading}
-            className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors disabled:opacity-50"
-            aria-label="Refresh balances and prices"
-            title="Refresh balances & prices"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} aria-hidden="true" />
-          </button>
-          <button
-            onClick={() => {
-              setShowAddToken(!showAddToken);
-              setAddError(null);
-            }}
-            aria-expanded={showAddToken}
-            className="text-xs sw-accent hover:opacity-80 font-semibold flex items-center gap-1 transition-opacity group"
-          >
-            {showAddToken ? (
-              <>
-                <X className="w-3.5 h-3.5" aria-hidden="true" />
-                Cancel
-              </>
-            ) : (
-              <>
-                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" aria-hidden="true" />
-                Add token
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* RPC error while we still have last-known values on screen */}
-      {error && hasData && (
-        <div
-          role="alert"
-          className="mb-3 flex items-start gap-2.5 rounded-lg border border-[var(--sw-down)]/40 bg-[color-mix(in_srgb,var(--sw-down)_8%,transparent)] px-3 py-2.5"
-        >
-          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--sw-down)]" aria-hidden="true" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[var(--sw-ink)]">Couldn&apos;t refresh balances</p>
-            <p className="text-[11px] text-[var(--sw-muted)] leading-relaxed">{error} Showing last known values.</p>
-          </div>
-          <button
-            onClick={() => loadTokens({ force: true })}
-            className="text-xs font-semibold text-[var(--sw-accent)] hover:opacity-80 flex-shrink-0"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      {/* Search and Sort Controls */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
+    <div>
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+        <div className="sw-field flex items-center gap-2 px-3 py-2 flex-1 min-w-0 !rounded-full">
+          <Search className="w-4 h-4 text-[var(--sw-muted)] flex-shrink-0" aria-hidden="true" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search name, symbol, or address"
-            aria-label="Search tokens"
-            className="sw-input w-full pl-6 pr-2 py-2 text-sm"
+            placeholder="Search tokens"
+            aria-label="Search tokens by name, symbol or address"
+            className="sw-field-input text-sm"
           />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="sw-uplabel" aria-hidden="true">Sort</span>
-          <div className="flex gap-3" role="group" aria-label="Sort tokens">
-            <button
-              onClick={() => {
-                if (sortBy === "alphabetical") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-                else {
-                  setSortBy("alphabetical");
-                  setSortDirection("asc");
-                }
-              }}
-              aria-pressed={sortBy === "alphabetical"}
-              className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
-                sortBy === "alphabetical" ? "sw-accent" : "text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
-              }`}
-            >
-              <SortAsc
-                className={`w-3 h-3 ${sortBy === "alphabetical" && sortDirection === "desc" ? "rotate-180" : ""}`}
-                aria-hidden="true"
-              />
-              {sortBy === "alphabetical" && sortDirection === "desc" ? "Z-A" : "A-Z"}
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]" aria-label="Clear search">
+              <X className="w-3.5 h-3.5" />
             </button>
-            <button
-              onClick={() => {
-                if (sortBy === "value") setSortDirection(sortDirection === "desc" ? "asc" : "desc");
-                else {
-                  setSortBy("value");
-                  setSortDirection("desc");
-                }
-              }}
-              aria-pressed={sortBy === "value"}
-              className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
-                sortBy === "value" ? "sw-accent" : "text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
-              }`}
-            >
-              <SortAsc
-                className={`w-3 h-3 ${sortBy === "value" && sortDirection === "asc" ? "rotate-180" : ""}`}
-                aria-hidden="true"
-              />
-              Value
-            </button>
-          </div>
+          )}
         </div>
+        <button
+          onClick={() => {
+            if (sortBy === "value") {
+              setSortBy("alphabetical");
+              setSortDirection("asc");
+            } else {
+              setSortBy("value");
+              setSortDirection("desc");
+            }
+          }}
+          className="sw-icon-btn px-2.5 py-2 text-xs font-semibold gap-1.5"
+          aria-label={`Sorted by ${sortBy === "value" ? "value" : "name"}. Change sort`}
+          title={sortBy === "value" ? "Sorted by value" : "Sorted by name"}
+        >
+          <ArrowDownUp className="w-3.5 h-3.5" aria-hidden="true" />
+          <span className="hidden sm:inline">{sortBy === "value" ? "Value" : "A–Z"}</span>
+        </button>
+        <button
+          onClick={handleManualRefresh}
+          disabled={isLoading}
+          className="sw-icon-btn p-2 disabled:opacity-50"
+          aria-label="Refresh balances and prices"
+          title="Refresh"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => {
+            setShowAddToken(!showAddToken);
+            setAddError(null);
+          }}
+          aria-expanded={showAddToken}
+          className="sw-icon-btn p-2"
+          aria-label={showAddToken ? "Cancel adding a token" : "Add a token"}
+          title="Add a token"
+        >
+          {showAddToken ? <X className="w-4 h-4" aria-hidden="true" /> : <Plus className="w-4 h-4" aria-hidden="true" />}
+        </button>
       </div>
 
       {showAddToken && (
-        <div className="mb-3 p-4 sw-surface rounded-xl border border-[var(--sw-line)]">
-          <label htmlFor="add-token-address" className="block sw-uplabel mb-2">
+        <div className="mx-4 mb-2 mt-1 ob-fade-in">
+          <label htmlFor="add-token-address" className="sw-label block mb-1.5">
             Token contract address
           </label>
-          <input
-            id="add-token-address"
-            type="text"
-            value={newTokenAddress}
-            onChange={(e) => setNewTokenAddress(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddToken();
-            }}
-            placeholder="0x..."
-            autoComplete="off"
-            spellCheck={false}
-            className="sw-input sw-mono w-full px-0 py-2 text-sm mb-3"
-          />
+          <div className="flex gap-2">
+            <div className="sw-field px-3 py-2.5 flex-1 min-w-0">
+              <input
+                id="add-token-address"
+                type="text"
+                value={newTokenAddress}
+                onChange={(e) => setNewTokenAddress(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddToken();
+                }}
+                placeholder="0x…"
+                autoComplete="off"
+                spellCheck={false}
+                autoFocus
+                className="sw-field-input sw-mono text-sm"
+              />
+            </div>
+            <button onClick={handleAddToken} disabled={!newTokenAddress || isAdding} className="sw-btn-primary px-4 text-sm">
+              {isAdding ? "Adding…" : "Add"}
+            </button>
+          </div>
           {addError && (
-            <p role="alert" className="text-xs text-[var(--sw-down)] mb-3 font-medium">
+            <p role="alert" className="text-xs text-[var(--sw-down)] mt-2">
               {addError}
             </p>
           )}
-          <button
-            onClick={handleAddToken}
-            disabled={!newTokenAddress || isAdding}
-            className="sw-btn-primary w-full text-sm py-2.5 px-3"
-          >
-            {isAdding ? "Adding..." : "Add token"}
+        </div>
+      )}
+
+      {/* RPC error while we still have last-known values on screen */}
+      {error && hasData && (
+        <div role="alert" className="sw-callout sw-callout-danger mx-4 mb-2 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--sw-down)]" aria-hidden="true" />
+          <p className="flex-1 min-w-0">
+            <span className="font-semibold">Couldn&apos;t refresh balances.</span> {error} Showing last known values.
+          </p>
+          <button onClick={() => loadTokens({ force: true })} className="sw-link flex-shrink-0">
+            Retry
           </button>
         </div>
       )}
 
       {showSkeleton ? (
-        <div className="sw-list" aria-busy="true" aria-label="Loading assets">
+        <div className="px-4 pb-3" aria-busy="true" aria-label="Loading assets">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
-              <div className="w-8 h-8 rounded-lg bg-[var(--sw-line-soft)] flex-shrink-0" />
-              <div className="flex-1 space-y-1.5">
-                <div className="h-3 w-20 rounded bg-[var(--sw-line-soft)]" />
-                <div className="h-2.5 w-28 rounded bg-[var(--sw-line-soft)]" />
+            <div key={i} className="flex items-center gap-3 py-3">
+              <div className="w-9 h-9 rounded-full sw-skeleton flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-20 sw-skeleton" />
+                <div className="h-2.5 w-28 sw-skeleton" />
               </div>
-              <div className="h-3 w-16 rounded bg-[var(--sw-line-soft)]" />
+              <div className="space-y-2 flex flex-col items-end">
+                <div className="h-3 w-16 sw-skeleton" />
+                <div className="h-2.5 w-10 sw-skeleton" />
+              </div>
             </div>
           ))}
         </div>
       ) : !hasData && error ? (
-        <div className="text-center py-12" role="alert">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-lg border border-[var(--sw-line)] flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-[var(--sw-down)]" aria-hidden="true" />
-          </div>
-          <p className="text-[var(--sw-ink)] text-sm font-semibold mb-1">Couldn&apos;t load your assets</p>
-          <p className="text-[var(--sw-muted)] text-xs mb-4 max-w-xs mx-auto">{error}</p>
+        <div className="text-center px-6 py-14" role="alert">
+          <span className="mx-auto mb-4 w-12 h-12 rounded-full bg-[var(--sw-down-bg)] flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-[var(--sw-down)]" aria-hidden="true" />
+          </span>
+          <p className="text-sm font-semibold text-[var(--sw-ink)]">Couldn&apos;t load your assets</p>
+          <p className="text-sm text-[var(--sw-muted)] mt-1 mb-4 max-w-xs mx-auto">{error}</p>
           <button onClick={() => loadTokens({ force: true })} className="sw-btn-ghost py-2.5 px-5 text-sm">
-            Retry
+            Try again
           </button>
         </div>
-      ) : tokens.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-lg border border-[var(--sw-line)] flex items-center justify-center">
-            <Plus className="w-6 h-6 text-[var(--sw-muted)]" aria-hidden="true" />
-          </div>
-          <p className="text-[var(--sw-ink)] text-sm font-semibold mb-1">No assets found</p>
-          <p className="text-[var(--sw-muted)] text-xs">Popular tokens are auto-detected</p>
+      ) : visibleTokens.length === 0 ? (
+        <div className="text-center px-6 py-14">
+          <p className="text-sm font-semibold text-[var(--sw-ink)]">{searchQuery ? "No matching tokens" : "No assets yet"}</p>
+          <p className="text-sm text-[var(--sw-muted)] mt-1">
+            {searchQuery ? "Try a name, symbol or contract address." : "Popular tokens show up here automatically."}
+          </p>
         </div>
       ) : (
-        <ul className="sw-list">
+        <ul className="px-2 pb-2">
           {visibleTokens.map((token, index) => {
             const isNative = token.address === "native";
             const lower = token.address.toLowerCase();
             const isCustomToken = !isNative && customSet.has(lower) && !popularSet.has(lower);
-            const hasBalance = parseFloat(token.balance) > 0;
             const price = tokenPrices[token.symbol];
+            const amount = parseFloat(token.balance);
+            const usd = pricingEnabled && price !== undefined ? amount * price : null;
+            const balanceText = formatTokenBalance(token.balance, stable(token.symbol));
 
             return (
               <li
                 key={token.address}
-                className={`flex items-center justify-between py-3 transition-colors hover:bg-[color-mix(in_srgb,var(--sw-ink)_4%,transparent)] group ${
-                  animateRows ? "ob-rise-in" : ""
-                }`}
+                className={animateRows ? "ob-rise-in" : ""}
                 style={animateRows ? { animationDelay: `${Math.min(index, 10) * 40}ms` } : undefined}
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
-                    <TokenIcon symbol={token.symbol} url={tokenImages[token.symbol.toUpperCase()]} />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="font-semibold text-[var(--sw-ink)] token-opacity">{token.symbol}</p>
-                      {isCustomToken && <span className="sw-uplabel">Custom</span>}
-                    </div>
-                    <p className="text-xs text-[var(--sw-muted)] truncate leading-tight">{token.name}</p>
-                  </div>
-
-                  <div className="text-right flex-shrink-0">
-                    {hasBalance && (
+                <button
+                  onClick={() => setOpenToken(token)}
+                  className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl text-left transition-colors hover:bg-[var(--sw-fill)] focus-visible:bg-[var(--sw-fill)]"
+                  aria-label={`${token.name}: ${balanceText} ${token.symbol}${usd !== null ? `, ${formatUsd(usd)}` : ""}`}
+                >
+                  <TokenIcon symbol={token.symbol} url={tokenImages[token.symbol.toUpperCase()]} size="md" />
+                  <span className="flex-1 min-w-0">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-[15px] font-semibold text-[var(--sw-ink)] truncate">{token.name}</span>
+                      {isCustomToken && (
+                        <span className="text-[10px] font-semibold px-1.5 py-px rounded-full bg-[var(--sw-fill-strong)] text-[var(--sw-ink-soft)]">Custom</span>
+                      )}
+                    </span>
+                    <span className="block text-xs text-[var(--sw-muted)] truncate">
+                      {usd !== null || !pricingEnabled ? token.symbol : `${token.symbol} · price unavailable`}
+                    </span>
+                  </span>
+                  <span className="text-right flex-shrink-0">
+                    {usd !== null ? (
                       <>
-                        <p className="text-sm font-semibold text-[var(--sw-ink)] sw-num balance-number">
-                          {formatTokenBalance(token.balance, token.symbol === "USDC" || token.symbol === "USDT")}
-                        </p>
-                        <p className="text-xs text-[var(--sw-muted)] sw-num leading-tight">
-                          {pricingEnabled
-                            ? price !== undefined
-                              ? `≈ $${(parseFloat(token.balance) * price).toFixed(2)}`
-                              : "—"
-                            : "-"}
-                        </p>
+                        <span className="block text-[15px] font-semibold text-[var(--sw-ink)] sw-num">{formatUsd(usd)}</span>
+                        <span className="block text-xs text-[var(--sw-muted)] sw-num">
+                          {balanceText} {token.symbol}
+                        </span>
                       </>
+                    ) : (
+                      <span className="block text-[15px] font-semibold text-[var(--sw-ink)] sw-num">
+                        {balanceText} <span className="text-[var(--sw-muted)] font-medium">{token.symbol}</span>
+                      </span>
                     )}
-                  </div>
-                </div>
-
-                {/* Row actions: on hover/focus (pointer) and always on touch screens */}
-                <div className="ml-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity flex items-center gap-1">
-                  {hasBalance && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSendToken(token);
-                      }}
-                      className="p-2 sw-accent hover:bg-[color-mix(in_srgb,var(--sw-accent)_12%,transparent)] rounded-lg transition-colors"
-                      title="Send"
-                      aria-label={`Send ${token.symbol}`}
-                    >
-                      <Send className="w-4 h-4" aria-hidden="true" />
-                    </button>
-                  )}
-                  {isCustomToken ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveTokenClick(token.address);
-                      }}
-                      className="p-2 text-[var(--sw-down)] hover:bg-[color-mix(in_srgb,var(--sw-down)_12%,transparent)] rounded-lg transition-colors"
-                      title="Remove from wallet"
-                      aria-label={`Remove ${token.symbol} from wallet`}
-                    >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
-                    </button>
-                  ) : (
-                    <div className="w-8 h-8" />
-                  )}
-                </div>
+                  </span>
+                </button>
               </li>
             );
           })}
         </ul>
       )}
 
+      {openToken && (
+        <TokenSheet
+          token={openToken}
+          chainId={chainId}
+          image={tokenImages[openToken.symbol.toUpperCase()]}
+          price={pricingEnabled ? tokenPrices[openToken.symbol] : undefined}
+          isCustom={
+            openToken.address !== "native" &&
+            customSet.has(openToken.address.toLowerCase()) &&
+            !popularSet.has(openToken.address.toLowerCase())
+          }
+          onClose={() => setOpenToken(null)}
+          onSend={() => {
+            const t = openToken;
+            setOpenToken(null);
+            onSendToken(t);
+          }}
+          onSwap={
+            onSwapToken && isSwapSupported(chainId)
+              ? () => {
+                  const t = openToken;
+                  setOpenToken(null);
+                  onSwapToken(t);
+                }
+              : undefined
+          }
+          onRemove={() => {
+            const addr = openToken.address;
+            setOpenToken(null);
+            handleRemoveTokenClick(addr);
+          }}
+        />
+      )}
+
       {showRemoveConfirm && (
         <Modal onClose={() => setShowRemoveConfirm(null)} labelledBy="remove-token-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden p-6">
-          <h3 id="remove-token-title" className="text-lg font-bold text-[var(--sw-ink)] mb-2">
-            Remove token
+          <h3 id="remove-token-title" className="text-lg font-bold text-[var(--sw-ink)] mb-1">
+            Remove this token?
           </h3>
-          <p className="text-sm text-[var(--sw-ink-soft)] mb-4">Remove this token from your wallet?</p>
-          <div className="flex items-center gap-2 mb-6">
+          <p className="text-sm text-[var(--sw-ink-soft)] mb-4">It disappears from your list. Your balance stays on-chain and you can add it again any time.</p>
+          <label className="flex items-center gap-2 mb-6 text-sm text-[var(--sw-ink-soft)] cursor-pointer">
             <input
               type="checkbox"
-              id="dontShowAgain"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
               className="w-4 h-4 accent-[var(--sw-accent)] rounded"
             />
-            <label htmlFor="dontShowAgain" className="text-sm text-[var(--sw-muted)] cursor-pointer">
-              Don&apos;t show this again
-            </label>
-          </div>
-          <div className="flex gap-3">
-            <button onClick={() => setShowRemoveConfirm(null)} className="sw-btn-ghost flex-1 text-sm py-2.5 px-4">
+            Don&apos;t ask again
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => setShowRemoveConfirm(null)} className="sw-btn-ghost text-sm py-3">
               Cancel
             </button>
             <button
               onClick={() => removeToken(showRemoveConfirm)}
-              className="flex-1 text-sm font-semibold py-2.5 px-4 rounded-[3px] uppercase tracking-[0.05em] text-white bg-[var(--sw-down)] hover:brightness-105 transition-all"
+              className="text-sm font-semibold py-3 rounded-[3px] uppercase tracking-[0.05em] text-white bg-[var(--sw-down)] hover:brightness-105 transition-all"
             >
               Remove
             </button>
@@ -807,6 +747,117 @@ function TokenListImpl({
         </Modal>
       )}
     </div>
+  );
+}
+
+/** Token detail: balance, value, the actions for it, and its contract. */
+function TokenSheet({
+  token,
+  chainId,
+  image,
+  price,
+  isCustom,
+  onClose,
+  onSend,
+  onSwap,
+  onRemove,
+}: {
+  token: Token;
+  chainId: number;
+  image?: string;
+  price?: number;
+  isCustom: boolean;
+  onClose: () => void;
+  onSend: () => void;
+  onSwap?: () => void;
+  onRemove: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const isNative = token.address === "native";
+  const amount = parseFloat(token.balance);
+  const hasBalance = amount > 0;
+  const explorer = !isNative ? getExplorerAddressUrl(chainId, token.address) : null;
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(token.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      showToast("Couldn't copy the contract address.", "error");
+    }
+  }
+
+  return (
+    <Modal onClose={onClose} labelledBy="token-sheet-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+      <div className="px-5 pt-5 pb-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <TokenIcon symbol={token.symbol} url={image} size="lg" chainId={chainId} />
+            <div className="min-w-0">
+              <h2 id="token-sheet-title" className="text-lg font-bold text-[var(--sw-ink)] truncate tracking-tight">
+                {token.name}
+              </h2>
+              <p className="text-sm text-[var(--sw-muted)]">
+                {token.symbol}
+                {price !== undefined && <> · {formatUsd(price)}</>}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="sw-icon-btn p-2 -mr-2 -mt-1" aria-label="Close">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="mt-6">
+          <p className="text-sm text-[var(--sw-ink-soft)]">Balance</p>
+          <p className="text-3xl sw-display text-[var(--sw-ink)] break-all">
+            {formatTokenBalance(token.balance)} <span className="text-lg font-semibold text-[var(--sw-muted)] tracking-normal">{token.symbol}</span>
+          </p>
+          {price !== undefined && <p className="text-sm text-[var(--sw-muted)] sw-num mt-0.5">{formatUsd(amount * price)}</p>}
+        </div>
+
+        <div className={`grid gap-2 mt-6 ${onSwap ? "grid-cols-2" : "grid-cols-1"}`}>
+          <button onClick={onSend} disabled={!hasBalance} className="sw-btn-primary py-3.5 text-sm flex items-center justify-center gap-1.5">
+            <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
+            Send
+          </button>
+          {onSwap && (
+            <button onClick={onSwap} className="sw-btn-ghost py-3.5 text-sm flex items-center justify-center gap-1.5">
+              <Repeat2 className="w-4 h-4" aria-hidden="true" />
+              Swap
+            </button>
+          )}
+        </div>
+
+        {!isNative && (
+          <div className="mt-6 pt-4 border-t border-[var(--sw-line-soft)]">
+            <p className="sw-label mb-1.5">Contract address</p>
+            <div className="flex items-start gap-2">
+              <AddressText address={token.address} className="text-xs flex-1" />
+              <button onClick={copy} className="sw-icon-btn p-1.5" aria-label={copied ? "Copied" : "Copy contract address"}>
+                {copied ? <Check className="w-4 h-4 text-[var(--sw-up)]" /> : <Copy className="w-4 h-4" />}
+              </button>
+              {explorer && (
+                <a href={explorer} target="_blank" rel="noopener noreferrer" className="sw-icon-btn p-1.5" aria-label="View contract on explorer">
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isCustom && (
+          <button
+            onClick={onRemove}
+            className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-[var(--sw-down)] rounded-lg hover:bg-[var(--sw-down-bg)]"
+          >
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
+            Remove from list
+          </button>
+        )}
+      </div>
+    </Modal>
   );
 }
 

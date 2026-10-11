@@ -100,10 +100,18 @@ function StepDot({ state }: { state: "done" | "active" | "todo" }) {
 }
 
 /** A Burner card easing toward a phone (or reader) with NFC waves between them. */
-export function CardTapArt({ reader = "phone", active = true }: { reader?: Reader; active?: boolean }) {
+export function CardTapArt({
+  reader = "phone",
+  active = true,
+  className = "w-full max-w-[220px] h-auto mx-auto block",
+}: {
+  reader?: Reader;
+  active?: boolean;
+  className?: string;
+}) {
   const ink = { stroke: "var(--sw-ink)" };
   return (
-    <svg viewBox="0 0 200 120" className="w-full max-w-[220px] h-auto mx-auto block" aria-hidden="true">
+    <svg viewBox="0 0 200 120" className={className} aria-hidden="true">
       {reader === "reader" ? (
         // Desktop USB reader: a flat pad with a status light.
         <g>

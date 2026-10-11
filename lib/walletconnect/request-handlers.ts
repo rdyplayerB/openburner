@@ -21,6 +21,14 @@ import {
   requiresSigning,
 } from "./chains";
 import { getProvider } from "../provider";
+import {
+  parseChainIdParam,
+  parsePersonalSignParams,
+  parseTxParams,
+  parseTypedDataParams,
+  personalSignPayload,
+  RequestParamsError,
+} from "./params";
 
 export class RpcError extends Error {
   code: number;
@@ -56,128 +64,130 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
   const config = opts.config || getAppConfig();
   const { method, params } = request.params.request;
   const requestChainId = parseCaipChainId(request.params.chainId);
-  const { keySlot } = useWalletStore.getState();
+  const { keySlot, address: account } = useWalletStore.getState();
 
-  switch (method) {
-    case "eth_sign":
-      // Blind signing is intentionally not supported.
-      throw new RpcError(4001, "Blind signing (eth_sign) is not supported by OpenBurner.");
+  try {
+    return await execute();
+  } catch (err) {
+    if (err instanceof RequestParamsError) throw new RpcError(err.code, err.message);
+    throw err;
+  }
 
-    case "personal_sign": {
-      // params: [message, address]
-      const raw = params[0];
-      const message = ethers.isHexString(raw) ? ethers.getBytes(raw) : raw;
-      return signMessageSmart(message, keySlot, pin, config);
-    }
+  // Parameters are parsed with the same helpers the review screen uses, so the
+  // card signs exactly what was shown.
+  async function execute(): Promise<any> {
+    switch (method) {
+      case "eth_sign":
+        // Blind signing is intentionally not supported.
+        throw new RpcError(4001, "Blind signing (eth_sign) is not supported by OpenBurner.");
 
-    case "eth_signTypedData":
-    case "eth_signTypedData_v3":
-    case "eth_signTypedData_v4": {
-      // params: [address, typedDataJson]
-      const json = typeof params[1] === "string" ? JSON.parse(params[1]) : params[1];
-      const { domain, types, message } = json;
-      return signTypedDataSmart(domain, types, message, keySlot, pin, config);
-    }
-
-    case "eth_sendTransaction":
-    case "eth_signTransaction": {
-      const rpcUrl = getRpcForChain(requestChainId);
-      if (!rpcUrl) {
-        throw new RpcError(4902, `No RPC configured for chain ${requestChainId}.`);
-      }
-      autoSwitchActiveChain(requestChainId);
-
-      const txParam = params[0];
-      const provider = getProvider(requestChainId, rpcUrl);
-      const from: string = txParam.from;
-      const isBaseNetwork = requestChainId === 8453;
-
-      const [nonce, feeData] = await rpcRateLimiter.makeRequest(async () =>
-        Promise.all([provider.getTransactionCount(from), provider.getFeeData()])
-      );
-
-      // Gas: use dApp-provided limit or estimate (+20%).
-      let gasLimit: bigint;
-      if (txParam.gas) {
-        gasLimit = BigInt(txParam.gas);
-      } else {
-        const est = await rpcRateLimiter
-          .makeRequest(async () =>
-            provider.estimateGas({
-              from,
-              to: txParam.to,
-              data: txParam.data || "0x",
-              value: txParam.value ? BigInt(txParam.value) : 0n,
-            })
-          )
-          .catch(() => 100000n);
-        gasLimit = (est * 120n) / 100n;
+      case "personal_sign": {
+        const message = parsePersonalSignParams(params, account);
+        return signMessageSmart(personalSignPayload(message), keySlot, pin, config);
       }
 
-      const base: ethers.TransactionRequest = {
-        to: txParam.to,
-        value: txParam.value ? BigInt(txParam.value) : 0n,
-        data: txParam.data || "0x",
-        nonce,
-        chainId: requestChainId,
-        gasLimit,
-      };
-
-      const transaction: ethers.TransactionRequest = isBaseNetwork
-        ? { ...base, type: 0, gasPrice: feeData.gasPrice }
-        : {
-            ...base,
-            type: 2,
-            maxFeePerGas: feeData.maxFeePerGas,
-            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          };
-
-      const signedTx = await signTransactionSmart(transaction, keySlot, pin, config);
-
-      if (method === "eth_signTransaction") {
-        return signedTx;
-      }
-      const txResponse = await rpcRateLimiter.makeRequest(async () =>
-        provider.broadcastTransaction(signedTx)
-      );
-      return txResponse.hash;
-    }
-
-    case "wallet_switchEthereumChain": {
-      const target = parseInt(params[0].chainId, 16);
-      const info = getChainInfo(target);
-      if (!info) {
-        throw new RpcError(4902, `Chain ${target} is not configured. Add an RPC for it in Network settings.`);
-      }
-      useWalletStore.getState().setChain(target, info.rpcUrl, info.name);
-      return null;
-    }
-
-    case "wallet_addEthereumChain": {
-      const p = params[0];
-      const target = parseInt(p.chainId, 16);
-      const rpcUrl: string | undefined = (p.rpcUrls || [])[0];
-      if (!rpcUrl) throw new RpcError(4001, "No RPC URL provided by dApp.");
-
-      // Validate the provided RPC actually serves the claimed chain id.
-      // staticNetwork: true => one eth_chainId probe, no endless retry loop on a bad URL.
-      const probe = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
-      const net = await probe.getNetwork().catch(() => null);
-      probe.destroy();
-      if (!net || Number(net.chainId) !== target) {
-        throw new RpcError(4001, "The dApp-provided RPC did not match the requested chain.");
+      case "eth_signTypedData":
+      case "eth_signTypedData_v3":
+      case "eth_signTypedData_v4": {
+        const { domain, types, message } = parseTypedDataParams(params, account);
+        return signTypedDataSmart(domain, types, message, keySlot, pin, config);
       }
 
-      const name: string = p.chainName || `Chain ${target}`;
-      const existing = JSON.parse(localStorage.getItem("customRPCs") || "{}");
-      existing[String(target)] = { name, rpcUrl };
-      localStorage.setItem("customRPCs", JSON.stringify(existing));
+      case "eth_sendTransaction":
+      case "eth_signTransaction": {
+        const rpcUrl = getRpcForChain(requestChainId);
+        if (!rpcUrl) {
+          throw new RpcError(4902, `No RPC configured for chain ${requestChainId}.`);
+        }
+        autoSwitchActiveChain(requestChainId);
 
-      useWalletStore.getState().setChain(target, rpcUrl, name);
-      return null;
+        const tx = parseTxParams(params);
+        if (!account) throw new RpcError(4100, "No wallet connected.");
+        const provider = getProvider(requestChainId, rpcUrl);
+        // Always the connected card's account (the signer refuses any other).
+        const from = account;
+        const isBaseNetwork = requestChainId === 8453;
+
+        const [nonce, feeData] = await rpcRateLimiter.makeRequest(async () =>
+          Promise.all([provider.getTransactionCount(from), provider.getFeeData()])
+        );
+
+        // Gas: use dApp-provided limit or estimate (+20%).
+        let gasLimit: bigint;
+        if (tx.gas) {
+          gasLimit = tx.gas;
+        } else {
+          const est = await rpcRateLimiter
+            .makeRequest(async () => provider.estimateGas({ from, to: tx.to, data: tx.data, value: tx.value }))
+            .catch(() => 100000n);
+          gasLimit = (est * 120n) / 100n;
+        }
+
+        const base: ethers.TransactionRequest = {
+          to: tx.to,
+          value: tx.value,
+          data: tx.data,
+          nonce,
+          chainId: requestChainId,
+          gasLimit,
+        };
+
+        const transaction: ethers.TransactionRequest = isBaseNetwork
+          ? { ...base, type: 0, gasPrice: feeData.gasPrice }
+          : {
+              ...base,
+              type: 2,
+              maxFeePerGas: feeData.maxFeePerGas,
+              maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+            };
+
+        const signedTx = await signTransactionSmart(transaction, keySlot, pin, config);
+
+        if (method === "eth_signTransaction") {
+          return signedTx;
+        }
+        const txResponse = await rpcRateLimiter.makeRequest(async () =>
+          provider.broadcastTransaction(signedTx)
+        );
+        return txResponse.hash;
+      }
+
+      case "wallet_switchEthereumChain": {
+        const target = parseChainIdParam(params?.[0]?.chainId);
+        const info = getChainInfo(target);
+        if (!info) {
+          throw new RpcError(4902, `Chain ${target} is not configured. Add an RPC for it in Network settings.`);
+        }
+        useWalletStore.getState().setChain(target, info.rpcUrl, info.name);
+        return null;
+      }
+
+      case "wallet_addEthereumChain": {
+        const p = params?.[0] ?? {};
+        const target = parseChainIdParam(p.chainId);
+        const rpcUrl: string | undefined = (p.rpcUrls || [])[0];
+        if (!rpcUrl) throw new RpcError(4001, "No RPC URL provided by dApp.");
+
+        // Validate the provided RPC actually serves the claimed chain id.
+        // staticNetwork: true => one eth_chainId probe, no endless retry loop on a bad URL.
+        const probe = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
+        const net = await probe.getNetwork().catch(() => null);
+        probe.destroy();
+        if (!net || Number(net.chainId) !== target) {
+          throw new RpcError(4001, "The dApp-provided RPC did not match the requested chain.");
+        }
+
+        const name: string = p.chainName || `Chain ${target}`;
+        const existing = JSON.parse(localStorage.getItem("customRPCs") || "{}");
+        existing[String(target)] = { name, rpcUrl };
+        localStorage.setItem("customRPCs", JSON.stringify(existing));
+
+        useWalletStore.getState().setChain(target, rpcUrl, name);
+        return null;
+      }
+
+      default:
+        throw new RpcError(4200, `Method ${method} is not supported.`);
     }
-
-    default:
-      throw new RpcError(4200, `Method ${method} is not supported.`);
   }
 }

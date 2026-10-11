@@ -67,5 +67,19 @@ export const useActivityStore = create<ActivityState>()(
 export function recordActivity(item: Omit<ActivityItem, "timestamp" | "owner" | "status"> & { status?: ActivityStatus }) {
   const owner = useWalletStore.getState().address;
   if (!owner) return;
-  useActivityStore.getState().add({ status: "pending", ...item, owner });
+  try {
+    useActivityStore.getState().add({ status: "pending", ...item, owner });
+  } catch {
+    // History is a convenience: a full or blocked storage must never turn a
+    // broadcast transaction into an error.
+  }
+}
+
+/** Update an activity item's status; never throws (see recordActivity). */
+export function settleActivity(hash: string, patch: Partial<ActivityItem>) {
+  try {
+    useActivityStore.getState().update(hash, patch);
+  } catch {
+    /* storage unavailable */
+  }
 }

@@ -1,23 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ethers } from 'ethers';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowUpDown, Settings, AlertTriangle, X, RefreshCw } from 'lucide-react';
+import { ArrowDownUp, Settings2, X, ChevronDown, Loader2 } from 'lucide-react';
 import { useWalletStore } from '../store/wallet-store';
 import { useSwapStore, SwapTokenInfo } from '../store/swap-store';
-import { getSwapQuote, buildSwapTransaction, validateSwapQuote, formatPriceImpact, formatExchangeRate, getPriceImpactWarning, type SwapQuote } from '../lib/swap-api';
+import { recordActivity, settleActivity } from '../store/activity-store';
+import { setCardPhase } from '../store/signing-store';
+import { getSwapQuote, buildSwapTransaction, validateSwapQuote, getPriceImpactWarning, type SwapQuote } from '../lib/swap-api';
 import { getAllowanceInfo, buildInfiniteApprovalTransaction, buildSpecificApprovalTransaction } from '../lib/token-allowance';
 import { getAppConfig } from '../lib/config/environment';
 import { TokenSelector } from './token-selector';
 import { PinInput } from './pin-input';
 import { Modal } from './common/modal';
-import { getTokenImage } from '../lib/token-icons';
+import { TokenIcon, ChainLogo } from './common/token-icon';
+import type { ProgressStep } from './signing/signing-progress';
+import { getTokenImage, getCachedTokenImage } from '../lib/token-icons';
+import { getTokenListForChain } from '../lib/token-lists';
 import { formatSwapBalance } from '../lib/format-utils';
 import { getProvider } from '../lib/provider';
 import { truncateToDecimals, parseAmount, formatAmountForInput, getNativeGasReserve } from '../lib/amount';
 import { friendlyTxError, isRetryablePinError } from '../lib/tx-errors';
-import { getNativeSymbol } from '../lib/supported-chains';
+import { getChainDisplayName, getNativeSymbol } from '../lib/supported-chains';
 import { showToast } from '../store/toast-store';
 import type { TransactionSummary } from './transaction-completion-modal';
 
@@ -30,6 +35,12 @@ const ERC20_ABI = [
 
 // Typical upper bound for a 0x swap; used only to size the native "Max" reserve.
 const SWAP_GAS_FOR_RESERVE = 350000n;
+/** Wait this long after the last keystroke before asking for a quote. */
+const QUOTE_DEBOUNCE_MS = 600;
+/** Quotes older than this are refreshed before signing. */
+const QUOTE_TTL_MS = 30_000;
+const SLIPPAGE_PRESETS = [0.5, 1, 3];
+const STABLES = new Set(['USDC', 'USDT', 'DAI', 'USDC.E', 'USDBC']);
 
 interface SwapTokenProps {
   onClose: () => void;
@@ -43,20 +54,33 @@ interface SwapTokenProps {
   onTokenAdded?: (token: SwapTokenInfo, imageUrl?: string) => void;
 }
 
-function toBaseUnits(amount: string, token: SwapTokenInfo): string {
-  const decimals = token.address === 'native' ? 18 : token.decimals;
-  return ethers.parseUnits(truncateToDecimals(amount, decimals), decimals).toString();
+type PinFlow = 'swap' | 'auto-approve' | 'approve';
+
+const decimalsOf = (t: SwapTokenInfo) => (t.address === 'native' ? 18 : t.decimals);
+const sameToken = (a?: SwapTokenInfo | null, b?: SwapTokenInfo | null) =>
+  !!a && !!b && a.address.toLowerCase() === b.address.toLowerCase();
+
+function usd(value: number): string {
+  return value.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 }
 
-function UsdValue({ amount, symbol, prices }: { amount: string; symbol?: string; prices: { [s: string]: number } }) {
-  const { pricingEnabled } = getAppConfig();
-  const price = symbol ? prices[symbol] : undefined;
-  const value = parseFloat(amount);
-  if (!pricingEnabled || !price || !isFinite(value) || value <= 0) return null;
-  return <div className="sw-mono text-sm text-[var(--sw-muted)]">${(value * price).toFixed(2)}</div>;
+function formatRate(rate: number): string {
+  if (!isFinite(rate) || rate <= 0) return '—';
+  if (rate >= 1000) return rate.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  if (rate >= 1) return rate.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  return rate.toLocaleString(undefined, { maximumSignificantDigits: 4 });
 }
 
-export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availableTokens = [], tokenImages = {}, tokenPrices = {}, onTokenAdded }: SwapTokenProps) {
+export function SwapToken({
+  onClose,
+  onSuccess,
+  onTransactionSubmitted,
+  initialFromToken,
+  availableTokens = [],
+  tokenImages = {},
+  tokenPrices = {},
+  onTokenAdded,
+}: SwapTokenProps) {
   const address = useWalletStore((s) => s.address);
   const rpcUrl = useWalletStore((s) => s.rpcUrl);
   const chainId = useWalletStore((s) => s.chainId);
@@ -97,6 +121,7 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
 
   const [showTokenSelector, setShowTokenSelector] = useState<'from' | 'to' | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [showAddToken, setShowAddToken] = useState(false);
   const [addTokenContext, setAddTokenContext] = useState<'from' | 'to' | null>(null);
   const [newTokenAddress, setNewTokenAddress] = useState('');
@@ -105,89 +130,145 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
   const [isExecuting, setIsExecuting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isMaxLoading, setIsMaxLoading] = useState(false);
-  const [currentOperation, setCurrentOperation] = useState<string | null>(null);
   const [pinMode, setPinMode] = useState<'approve' | 'swap' | null>(null);
+  const [pinFlow, setPinFlow] = useState<PinFlow>('swap');
+  const [step, setStep] = useState<string>('prepare');
   const [pinError, setPinError] = useState<string | null>(null);
+  const [noRoute, setNoRoute] = useState(false);
+  const [quoteAt, setQuoteAt] = useState<number | null>(null);
+  const [expired, setExpired] = useState(false);
+  const [customSlippage, setCustomSlippage] = useState('');
+  const [maxError, setMaxError] = useState<string | null>(null);
 
+  const quoteReq = useRef(0);
   const environment = getAppConfig();
+  const { pricingEnabled } = environment;
   const nativeSymbol = getNativeSymbol(chainId);
+  const network = getChainDisplayName(chainId, chainName);
   const busy = isExecuting || isApproving;
 
-  const quoteParams = useCallback(() => {
-    if (!fromToken || !toToken || !address) return null;
-    const sellAmount = fromAmount && fromAmount !== '0' ? toBaseUnits(fromAmount, fromToken) : undefined;
-    const buyAmount = !sellAmount && toAmount && toAmount !== '0' ? toBaseUnits(toAmount, toToken) : undefined;
-    if (!sellAmount && !buyAmount) return null;
-    return {
-      sellToken: fromToken.address,
-      buyToken: toToken.address,
-      sellAmount,
-      buyAmount,
-      slippagePercentage: settings.slippagePercentage,
-      takerAddress: address,
-      chainId,
-    };
-  }, [fromToken, toToken, fromAmount, toAmount, address, chainId, settings.slippagePercentage]);
+  // The dashboard resets the store and passes the token to start from (native by default).
+  useEffect(() => {
+    if (!useSwapStore.getState().fromToken && initialFromToken) setFromToken(initialFromToken);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // One 0x call per quote: /quote already reports liquidity, so the separate /price
-  // pre-check is skipped.
+  /** Latest balance from the dashboard's token list (falls back to the stored token). */
+  const balanceOf = useCallback(
+    (t: SwapTokenInfo | null): string => {
+      if (!t) return '0';
+      const live = availableTokens.find((x) => x.address.toLowerCase() === t.address.toLowerCase());
+      return live?.balance ?? t.balance;
+    },
+    [availableTokens]
+  );
+
+  // You can receive tokens you don't hold yet: add this network's popular tokens.
+  const receiveTokens = useMemo(() => {
+    const held = new Set(availableTokens.map((t) => t.address.toLowerCase()));
+    const extra = getTokenListForChain(chainId)
+      .filter((t) => !held.has(t.address.toLowerCase()))
+      .map((t) => ({ ...t, balance: '0' }));
+    return [...availableTokens, ...extra];
+  }, [availableTokens, chainId]);
+
+  const images = useMemo(() => {
+    const map = { ...tokenImages };
+    for (const t of receiveTokens) {
+      const key = t.symbol.toUpperCase();
+      if (map[key]) continue;
+      const url = getCachedTokenImage(t.symbol, t.address === 'native' ? undefined : t.address, chainId);
+      if (url) map[key] = url;
+    }
+    return map;
+  }, [tokenImages, receiveTokens, chainId]);
+
+  const fromDecimals = fromToken ? decimalsOf(fromToken) : 18;
+  const toDecimals = toToken ? decimalsOf(toToken) : 18;
+  const fromBalance = balanceOf(fromToken);
+  const fromBalanceWei = fromToken ? parseAmount(fromBalance, fromDecimals) ?? 0n : 0n;
+  const sellWei = fromToken && fromAmount ? parseAmount(truncateToDecimals(fromAmount, fromDecimals), fromDecimals) : null;
+  const amountValid = sellWei !== null && sellWei > 0n;
+  const insufficient = amountValid && sellWei! > fromBalanceWei;
+  const nativeBalance = parseFloat(availableTokens.find((t) => t.address === 'native')?.balance ?? '');
+  const noGas = !!fromToken && fromToken.address !== 'native' && nativeBalance === 0;
+
+  const clearQuote = useCallback(() => {
+    quoteReq.current++;
+    setQuote(null);
+    setQuoteLoading(false);
+    setNeedsApproval(false);
+    setAllowanceInfo(null);
+    setNoRoute(false);
+    setQuoteAt(null);
+  }, [setQuote, setQuoteLoading, setNeedsApproval, setAllowanceInfo]);
+
   const fetchQuote = useCallback(async () => {
-    if (!fromToken || !toToken || !address || !rpcUrl) return;
-
-    if (fromToken.address === toToken.address) {
-      setQuoteError('Cannot swap the same token');
-      return;
-    }
-
-    if (fromAmount) {
-      const decimals = fromToken.address === 'native' ? 18 : fromToken.decimals;
-      const requested = parseAmount(fromAmount, decimals);
-      const balance = parseAmount(fromToken.balance, decimals) ?? 0n;
-      if (requested === null || requested <= 0n) {
-        setQuoteError('Enter an amount greater than 0.');
-        return;
-      }
-      if (requested > balance) {
-        setQuoteError(`Insufficient ${fromToken.symbol} balance. You have ${formatSwapBalance(fromToken.balance)}.`);
-        return;
-      }
-    }
-
-    let params;
-    try {
-      params = quoteParams();
-    } catch {
-      setQuoteError('Enter a valid amount.');
-      return;
-    }
-    if (!params) {
-      setQuote(null);
-      return;
-    }
-
+    if (!fromToken || !toToken || !address || !rpcUrl || !sellWei || sellWei <= 0n) return;
+    const id = ++quoteReq.current;
     setQuoteLoading(true);
     setQuoteError(null);
+    setNoRoute(false);
     try {
-      const newQuote = await getSwapQuote(params);
-      if (newQuote.liquidityAvailable === false) {
-        throw new Error('Insufficient liquidity for this swap');
-      }
-      if (!validateSwapQuote(newQuote, params.sellAmount, params.buyAmount)) {
-        setQuoteError('Invalid quote received');
+      const sellAmount = sellWei.toString();
+      const next = await getSwapQuote({
+        sellToken: fromToken.address,
+        buyToken: toToken.address,
+        sellAmount,
+        slippagePercentage: settings.slippagePercentage,
+        takerAddress: address,
+        chainId,
+      });
+      if (id !== quoteReq.current) return;
+      if (next.liquidityAvailable === false) {
+        setNoRoute(true);
+        setQuoteError('No route found for this pair. Try a smaller amount or another token.');
         return;
       }
-      setQuote(newQuote);
-      if (params.sellAmount) {
-        setToAmount(ethers.formatUnits(newQuote.buyAmount, toToken.address === 'native' ? 18 : toToken.decimals));
-      } else {
-        setFromAmount(ethers.formatUnits(newQuote.sellAmount, fromToken.address === 'native' ? 18 : fromToken.decimals));
+      if (!validateSwapQuote(next, sellAmount)) {
+        setQuoteError("Couldn't get a usable quote. Try again.");
+        return;
       }
+      setQuote(next);
+      setToAmount(ethers.formatUnits(next.buyAmount, decimalsOf(toToken)));
+      setQuoteAt(Date.now());
     } catch (error: any) {
-      setQuoteError(error?.message || 'Failed to fetch quote');
+      if (id !== quoteReq.current) return;
+      const message = String(error?.message || '');
+      if (/liquidity/i.test(message)) {
+        setNoRoute(true);
+        setQuoteError('No route found for this pair. Try a smaller amount or another token.');
+      } else {
+        setQuoteError(message || "Couldn't get a quote. Try again.");
+      }
     } finally {
-      setQuoteLoading(false);
+      if (id === quoteReq.current) setQuoteLoading(false);
     }
-  }, [fromToken, toToken, fromAmount, address, rpcUrl, quoteParams, setQuote, setQuoteLoading, setQuoteError, setToAmount, setFromAmount]);
+  }, [fromToken, toToken, address, rpcUrl, sellWei, settings.slippagePercentage, chainId, setQuote, setQuoteLoading, setQuoteError, setToAmount]);
+
+  // Auto-quote: any change to the pair, amount or slippage drops the old quote and
+  // asks again once typing settles. Invalid input just waits (the button says why).
+  const sellKey = sellWei?.toString() ?? '';
+  useEffect(() => {
+    if (busy) return;
+    clearQuote();
+    setToAmount('');
+    if (!fromToken || !toToken || !address) return;
+    if (sameToken(fromToken, toToken)) return;
+    if (!amountValid || insufficient) return;
+    const timer = setTimeout(fetchQuote, QUOTE_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+    // fetchQuote is rebuilt with the same inputs listed here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromToken?.address, toToken?.address, sellKey, insufficient, settings.slippagePercentage, address, chainId]);
+
+  // Mark the quote stale after QUOTE_TTL_MS; the button then refreshes it.
+  useEffect(() => {
+    setExpired(false);
+    if (!quoteAt) return;
+    const timer = setTimeout(() => setExpired(true), Math.max(0, quoteAt + QUOTE_TTL_MS - Date.now()));
+    return () => clearTimeout(timer);
+  }, [quoteAt]);
 
   // Check allowance whenever a new quote arrives (ERC-20 sells only).
   const checkAllowance = useCallback(async () => {
@@ -206,55 +287,63 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
         address,
         getProvider(chainId, rpcUrl)
       );
+      // A slower answer for an earlier quote must not overwrite the current one.
+      if (useSwapStore.getState().quote !== quote) return;
       setAllowanceInfo(info);
       // With auto-approve on, approval happens inside the swap signing flow.
       setNeedsApproval(info.needsApproval && !settings.autoApprove);
     } catch {
+      if (useSwapStore.getState().quote !== quote) return;
+      // Unknown allowance: don't let a swap go out that might revert for lack of one.
+      setAllowanceInfo(null);
       setNeedsApproval(false);
+      setQuote(null);
+      setQuoteError(`Couldn't check your ${fromToken.symbol} approval. Try again.`);
     }
-  }, [quote, fromToken, address, rpcUrl, chainId, settings.autoApprove, setAllowanceInfo, setNeedsApproval]);
+  }, [quote, fromToken, address, rpcUrl, chainId, settings.autoApprove, setAllowanceInfo, setNeedsApproval, setQuote, setQuoteError]);
 
   useEffect(() => {
     checkAllowance();
   }, [checkAllowance]);
 
-  const clearQuote = () => {
-    setQuote(null);
-    setNeedsApproval(false);
-    setAllowanceInfo(null);
-  };
-
   const handleTokenSelect = (token: SwapTokenInfo) => {
-    if (showTokenSelector === 'from') setFromToken(token);
-    else if (showTokenSelector === 'to') setToToken(token);
-    clearQuote();
-    setToAmount('');
+    const side = showTokenSelector;
     setShowTokenSelector(null);
+    // Re-picking the current token changes nothing (and must not drop the quote).
+    if ((side === 'from' && sameToken(token, fromToken)) || (side === 'to' && sameToken(token, toToken))) return;
+    // Picking the other side's token flips the pair instead of making it the same on both.
+    if ((side === 'from' && sameToken(token, toToken)) || (side === 'to' && sameToken(token, fromToken))) {
+      swapTokens();
+      return;
+    }
+    setMaxError(null);
+    if (side === 'from') setFromToken(token);
+    else if (side === 'to') setToToken(token);
   };
 
-  const handleAmountChange = (amount: string, type: 'from' | 'to') => {
-    if (type === 'from') setFromAmount(amount);
-    else setToAmount(amount);
-    if (quote) clearQuote();
+  const handleAmountChange = (raw: string) => {
+    const value = raw.replace(',', '.');
+    if (value !== '' && !/^\d*\.?\d*$/.test(value)) return;
+    setMaxError(null);
+    setFromAmount(value);
   };
 
   // Native "Max" leaves enough for the swap's network fee.
   const handleMaxAmount = async () => {
     if (!fromToken) return;
-    if (quote) clearQuote();
+    setMaxError(null);
     if (fromToken.address !== 'native') {
-      setFromAmount(fromToken.balance);
+      setFromAmount(fromBalance);
       return;
     }
     if (!rpcUrl) return;
     setIsMaxLoading(true);
     try {
-      const balance = parseAmount(fromToken.balance, 18) ?? 0n;
       const reserve = await getNativeGasReserve(getProvider(chainId, rpcUrl), chainId, SWAP_GAS_FOR_RESERVE);
-      const max = balance - reserve;
+      const max = fromBalanceWei - reserve;
       if (max <= 0n) {
         setFromAmount('');
-        setQuoteError(`Your ${nativeSymbol} balance is too low to cover the network fee.`);
+        setMaxError(`Your ${nativeSymbol} balance is too low to cover the network fee.`);
       } else {
         setFromAmount(formatAmountForInput(max, 18));
       }
@@ -266,7 +355,7 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
   const handleAddToken = async () => {
     if (!newTokenAddress || !address || !rpcUrl) return;
     if (!ethers.isAddress(newTokenAddress.trim())) {
-      setAddTokenError('Invalid token address format');
+      setAddTokenError("That isn't a valid contract address.");
       return;
     }
 
@@ -300,8 +389,6 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
 
       if (addTokenContext === 'from') setFromToken(newToken);
       else if (addTokenContext === 'to') setToToken(newToken);
-      clearQuote();
-      setToAmount('');
 
       setShowAddToken(false);
       setNewTokenAddress('');
@@ -309,7 +396,7 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
     } catch (err: any) {
       setAddTokenError(
         err?.code === 'CALL_EXCEPTION' || err?.code === 'BAD_DATA'
-          ? 'Invalid contract address or contract not found on this network'
+          ? "No ERC-20 token at this address on this network."
           : friendlyTxError(err, nativeSymbol)
       );
     } finally {
@@ -320,6 +407,8 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
   const openPin = (mode: 'approve' | 'swap') => {
     if (!quote || !address || !rpcUrl || !keySlot || busy) return;
     setPinError(null);
+    setStep(mode === 'approve' ? 'prepare' : settings.autoApprove && allowanceInfo?.needsApproval ? 'approve' : 'prepare');
+    setPinFlow(mode === 'approve' ? 'approve' : settings.autoApprove && allowanceInfo?.needsApproval ? 'auto-approve' : 'swap');
     setPinMode(mode);
   };
 
@@ -329,7 +418,7 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
     setPinError(null);
   };
 
-  /** Shown inside the PIN dialog; wrong PIN / no card keep it open for a retry. */
+  /** Shown inside the PIN sheet; wrong PIN / no card keep it open for a retry. */
   const handlePinFailure = (error: any) => {
     const message = friendlyTxError(error, nativeSymbol);
     if (isRetryablePinError(error)) {
@@ -341,38 +430,57 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
     }
   };
 
-  const signAndBroadcast = async (tx: ethers.TransactionRequest, pin: string) => {
-    const provider = getProvider(chainId, rpcUrl);
+  /** Sign with the card (marks the card step), returning the serialized tx. */
+  const signWithCard = async (tx: ethers.TransactionRequest, pin: string, cardStep: string) => {
+    setCardPhase('idle');
+    setStep(cardStep);
     const { signTransactionSmart } = await import('../lib/smart-signer');
-    const signed = await signTransactionSmart(tx, keySlot!, pin, environment);
-    return provider.broadcastTransaction(signed);
+    return signTransactionSmart(tx, keySlot!, pin, environment);
   };
 
-  // Manual approval (auto-approve off).
+  /** Record an approval in Activity and settle its status when the receipt arrives. */
+  const trackApproval = (hash: string, symbol: string) => {
+    recordActivity({ hash, chainId, kind: 'approve', fromToken: symbol });
+  };
+  const settleApproval = (hash: string, ok: boolean) => {
+    settleActivity(hash, { status: ok ? 'success' : 'failed' });
+  };
+
+  // Manual approval (auto-approve off): exact amount.
   const handleApprovalPinSubmit = async (enteredPin: string) => {
     if (!quote || !fromToken || !address || !rpcUrl || !keySlot || isApproving) return;
     setIsApproving(true);
     setPinError(null);
+    let hash: string | null = null;
     try {
       const provider = getProvider(chainId, rpcUrl);
-      setCurrentOperation('Signing approval');
+      setStep('prepare');
       const approvalTx = await buildSpecificApprovalTransaction(fromToken.address, quote.allowanceTarget, quote.sellAmount, address, provider);
-      const txResponse = await signAndBroadcast(approvalTx, enteredPin);
+      const signed = await signWithCard(approvalTx, enteredPin, 'approve');
+      setStep('send-approval');
+      const txResponse = await provider.broadcastTransaction(signed);
+      hash = txResponse.hash;
+      trackApproval(hash, fromToken.symbol);
       setPinMode(null);
-      setCurrentOperation(null);
-      showToast('Approval submitted — waiting for confirmation', 'info');
+      showToast(`Approving ${fromToken.symbol}…`, 'info');
       const receipt = await txResponse.wait();
       if (receipt?.status === 0) {
-        setQuoteError('The approval transaction failed on-chain. Please try again.');
+        settleApproval(hash, false);
+        setQuoteError('The approval failed on-chain. Try again.');
       } else {
+        settleApproval(hash, true);
         showToast(`${fromToken.symbol} approved`, 'success');
         await checkAllowance();
       }
     } catch (error: any) {
-      handlePinFailure(error);
+      if (hash) {
+        // Broadcast went out; we just couldn't watch it. Activity re-checks pending items.
+        setQuoteError(friendlyTxError(error, nativeSymbol));
+      } else {
+        handlePinFailure(error);
+      }
     } finally {
       setIsApproving(false);
-      setCurrentOperation(null);
     }
   };
 
@@ -380,45 +488,72 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
     if (!quote || !address || !rpcUrl || !keySlot || !fromToken || !toToken) return;
     if (isExecuting) return; // double-submit guard
 
+    // The PIN sheet can sit open; past twice the button's limit the quote is
+    // refreshed before anything is signed.
+    if (!quoteAt || Date.now() - quoteAt > QUOTE_TTL_MS * 2) {
+      setPinMode(null);
+      setExpired(true);
+      return;
+    }
+
     setIsExecuting(true);
     setPinError(null);
     try {
       const provider = getProvider(chainId, rpcUrl);
       let currentQuote: SwapQuote = quote;
 
-      if (settings.autoApprove && allowanceInfo?.needsApproval) {
-        setCurrentOperation('Approving token allowance');
+      // Read fresh: a retry after a confirmed approval must not approve again.
+      const allowance = useSwapStore.getState().allowanceInfo;
+      if (settings.autoApprove && allowance?.needsApproval) {
+        setStep('approve');
         const approvalTx = await buildInfiniteApprovalTransaction(fromToken.address, quote.allowanceTarget, address, provider);
-        const approvalResponse = await signAndBroadcast(approvalTx, enteredPin);
-        setCurrentOperation('Waiting for approval to confirm');
+        const signedApproval = await signWithCard(approvalTx, enteredPin, 'approve');
+        const approvalResponse = await provider.broadcastTransaction(signedApproval);
+        trackApproval(approvalResponse.hash, fromToken.symbol);
+        setStep('approve-wait');
         const approvalReceipt = await approvalResponse.wait();
-        if (approvalReceipt?.status === 0) throw new Error('The approval transaction failed on-chain.');
+        settleApproval(approvalResponse.hash, approvalReceipt?.status !== 0);
+        if (approvalReceipt?.status === 0) throw new Error('The approval failed on-chain.');
+        setAllowanceInfo(null);
 
-        // Re-quote so the swap uses a fresh nonce/route after the approval.
-        setCurrentOperation('Refreshing quote');
-        const params = quoteParams();
-        if (params) {
-          currentQuote = await getSwapQuote(params);
-          setQuote(currentQuote);
+        // Re-quote so the swap uses a fresh route after the approval.
+        setStep('requote');
+        if (sellWei && sellWei > 0n) {
+          const fresh = await getSwapQuote({
+            sellToken: fromToken.address,
+            buyToken: toToken.address,
+            sellAmount: sellWei.toString(),
+            slippagePercentage: settings.slippagePercentage,
+            takerAddress: address,
+            chainId,
+          });
+          if (!validateSwapQuote(fresh, sellWei.toString())) throw new Error("Couldn't refresh the quote after approval. Try again.");
+          setQuote(fresh);
+          setToAmount(ethers.formatUnits(fresh.buyAmount, toDecimals));
+          setQuoteAt(Date.now());
+          // The user agreed to the old minimum; a worse price needs a fresh look.
+          if (quote.minBuyAmount && fresh.minBuyAmount && BigInt(fresh.minBuyAmount) < BigInt(quote.minBuyAmount)) {
+            throw new Error('Approved. The price moved while it confirmed — check the new quote, then swap.');
+          }
+          currentQuote = fresh;
         }
       }
 
-      setCurrentOperation('Signing swap transaction');
+      setStep('prepare');
       const swapTx = await buildSwapTransaction(currentQuote, address, provider, chainId);
-      setCurrentOperation('Broadcasting swap transaction');
-      const txResponse = await signAndBroadcast(swapTx, enteredPin);
+      const signed = await signWithCard(swapTx, enteredPin, 'sign');
+      setStep('send');
+      const txResponse = await provider.broadcastTransaction(signed);
 
       setPinMode(null);
-      setCurrentOperation(null);
 
-      const toDecimals = toToken.address === 'native' ? 18 : toToken.decimals;
       onTransactionSubmitted?.({
         kind: 'swap',
         txHash: txResponse.hash,
         chainId,
         fromToken: fromToken.symbol,
         toToken: toToken.symbol,
-        fromAmount: fromAmount || ethers.formatUnits(currentQuote.sellAmount, fromToken.address === 'native' ? 18 : fromToken.decimals),
+        fromAmount: fromAmount || ethers.formatUnits(currentQuote.sellAmount, fromDecimals),
         toAmount: formatSwapBalance(ethers.formatUnits(currentQuote.buyAmount, toDecimals)),
       });
       onSuccess();
@@ -426,256 +561,343 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
       handlePinFailure(error);
     } finally {
       setIsExecuting(false);
-      setCurrentOperation(null);
     }
   };
 
-  const priceImpactWarning = quote && quote.priceImpact ? getPriceImpactWarning(quote.priceImpact) : 'none';
-  const toDecimals = toToken ? (toToken.address === 'native' ? 18 : toToken.decimals) : 18;
-  const fromDecimals = fromToken ? (fromToken.address === 'native' ? 18 : fromToken.decimals) : 18;
+  // ─── Derived display values ─────────────────────────────────────────────
+  const fromPrice = fromToken ? tokenPrices[fromToken.symbol] : undefined;
+  const toPrice = toToken ? tokenPrices[toToken.symbol] : undefined;
+  const fromUsd = pricingEnabled && fromPrice && amountValid ? parseFloat(fromAmount) * fromPrice : null;
+  const toUsd = pricingEnabled && toPrice && quote && toAmount ? parseFloat(toAmount) * toPrice : null;
 
-  // Integrator fee is charged in the sell token; show its share of the sell amount.
+  let rateLabel: string | null = null;
   let feeLabel: string | null = null;
-  if (quote?.fees?.integratorFee?.amount && quote.sellAmount) {
+  let networkFeeLabel: string | null = null;
+  let minReceived: string | null = null;
+  let sources: string | null = null;
+  let impact: number | null = null;
+  let impactEstimated = false;
+  if (quote && fromToken && toToken) {
     try {
-      const feeAmount = BigInt(quote.fees.integratorFee.amount);
-      const sell = BigInt(quote.sellAmount);
-      const pct = sell > 0n ? Number((feeAmount * 1000000n) / sell) / 10000 : null;
-      feeLabel = `${formatSwapBalance(ethers.formatUnits(feeAmount, fromDecimals))} ${fromToken?.symbol ?? ''}${pct !== null ? ` (${pct.toFixed(2)}%)` : ''}`;
+      const sell = parseFloat(ethers.formatUnits(quote.sellAmount, fromDecimals));
+      const buy = parseFloat(ethers.formatUnits(quote.buyAmount, toDecimals));
+      rateLabel = `1 ${fromToken.symbol} = ${formatRate(buy / sell)} ${toToken.symbol}`;
     } catch {
-      feeLabel = null;
+      rateLabel = null;
+    }
+    // Integrator fee is charged in the sell token; show its share of the sell amount.
+    if (quote.fees?.integratorFee?.amount && quote.sellAmount) {
+      try {
+        const feeAmount = BigInt(quote.fees.integratorFee.amount);
+        const sell = BigInt(quote.sellAmount);
+        const pct = sell > 0n ? Number((feeAmount * 1000000n) / sell) / 10000 : null;
+        feeLabel = `${formatSwapBalance(ethers.formatUnits(feeAmount, fromDecimals))} ${fromToken.symbol}${pct !== null ? ` (${pct.toFixed(2)}%)` : ''}`;
+      } catch {
+        feeLabel = null;
+      }
+    }
+    if (quote.totalNetworkFee) {
+      try {
+        const fee = ethers.formatEther(BigInt(quote.totalNetworkFee));
+        const nativePrice = tokenPrices[nativeSymbol];
+        networkFeeLabel = `≈ ${formatSwapBalance(fee)} ${nativeSymbol}${pricingEnabled && nativePrice ? ` (${usd(parseFloat(fee) * nativePrice)})` : ''}`;
+      } catch {
+        networkFeeLabel = null;
+      }
+    }
+    if (quote.minBuyAmount) {
+      minReceived = `${formatSwapBalance(ethers.formatUnits(quote.minBuyAmount, toDecimals), STABLES.has(toToken.symbol.toUpperCase()))} ${toToken.symbol}`;
+    }
+    const names = Array.from(new Set((quote.route?.fills ?? []).map((f) => f.source).filter(Boolean)));
+    if (names.length) sources = names.map((n) => n.replace(/_/g, ' ')).join(' + ');
+    if (quote.priceImpact !== undefined && quote.priceImpact !== null && !isNaN(parseFloat(quote.priceImpact))) {
+      impact = parseFloat(quote.priceImpact);
+    } else if (fromUsd && toUsd && fromUsd > 0) {
+      // No impact from the API: estimate from market prices (includes fees).
+      impact = Math.max(0, (1 - toUsd / fromUsd) * 100);
+      impactEstimated = true;
     }
   }
+  const impactLevel = impact !== null ? getPriceImpactWarning(String(impact)) : 'none';
+  const autoApproveNeeded = !!(settings.autoApprove && allowanceInfo?.needsApproval && quote);
 
-  const minReceived = quote?.minBuyAmount
-    ? formatSwapBalance(ethers.formatUnits(quote.minBuyAmount, toDecimals))
-    : null;
+  // ─── Primary button: always visible, says what's needed next ────────────
+  let cta: { label: React.ReactNode; onClick?: () => void; disabled: boolean };
+  if (isApproving) {
+    cta = { label: <Busy text={`Approving ${fromToken?.symbol ?? ''}…`} />, disabled: true };
+  } else if (isExecuting) {
+    cta = { label: <Busy text="Swapping…" />, disabled: true };
+  } else if (!fromToken || !toToken) {
+    cta = { label: 'Select a token', disabled: true };
+  } else if (sameToken(fromToken, toToken)) {
+    cta = { label: 'Select a different token', disabled: true };
+  } else if (!amountValid) {
+    cta = { label: 'Enter an amount', disabled: true };
+  } else if (insufficient) {
+    cta = { label: `Not enough ${fromToken.symbol}`, disabled: true };
+  } else if (noGas) {
+    cta = { label: `Need ${nativeSymbol} for network fee`, disabled: true };
+  } else if (isLoadingQuote) {
+    cta = { label: <Busy text="Getting quote…" />, disabled: true };
+  } else if (noRoute) {
+    cta = { label: 'No route found', disabled: true };
+  } else if (quoteError) {
+    cta = { label: 'Try again', onClick: fetchQuote, disabled: false };
+  } else if (!quote) {
+    // Normally the auto-quote is about to run; if it isn't, let the user ask.
+    cta = { label: 'Get quote', onClick: fetchQuote, disabled: false };
+  } else if (expired) {
+    cta = { label: 'Refresh quote', onClick: fetchQuote, disabled: false };
+  } else if (needsApproval) {
+    cta = { label: `Approve ${fromToken.symbol}`, onClick: () => openPin('approve'), disabled: false };
+  } else {
+    cta = { label: 'Swap', onClick: () => openPin('swap'), disabled: false };
+  }
+
+  const steps: ProgressStep[] =
+    pinFlow === 'approve'
+      ? [
+          { key: 'prepare', label: 'Prepare approval' },
+          { key: 'approve', label: `Approve ${fromToken?.symbol ?? ''}`, card: true },
+          { key: 'send-approval', label: `Send approval to ${network}` },
+        ]
+      : [
+          ...(pinFlow === 'auto-approve'
+            ? [
+                { key: 'approve', label: `Approve ${fromToken?.symbol ?? ''}`, card: true },
+                { key: 'approve-wait', label: 'Wait for approval' },
+                { key: 'requote', label: 'Refresh quote' },
+              ]
+            : []),
+          { key: 'prepare', label: 'Prepare swap' },
+          { key: 'sign', label: 'Sign with your Burner', card: true },
+          { key: 'send', label: `Send to ${network}` },
+        ];
+
+  const slippageIsPreset = SLIPPAGE_PRESETS.includes(settings.slippagePercentage);
 
   return (
     <Modal
       onClose={() => !busy && onClose()}
       labelledBy="swap-title"
       closeOnBackdrop={!busy}
+      closeOnEscape={!busy}
       className="sw-surface w-full max-w-md max-h-[90dvh] rounded-xl border border-[var(--sw-line)] overflow-hidden flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)] flex-shrink-0">
-        <h2 id="swap-title" className="sw-uplabel">Swap {chainName}</h2>
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-3 flex-shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <h2 id="swap-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">
+            Swap
+          </h2>
+          <span className="sw-chip pl-1 pr-2.5 py-1 text-xs min-w-0">
+            <ChainLogo chainId={chainId} name={chainName} className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{network}</span>
+          </span>
+        </div>
+        <div className="flex items-center -mr-2">
           <button
-            onClick={() => setShowSettings(true)}
-            className="p-1 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
+            onClick={() => {
+              setCustomSlippage(SLIPPAGE_PRESETS.includes(settings.slippagePercentage) ? '' : String(settings.slippagePercentage));
+              setShowSettings(true);
+            }}
+            disabled={busy}
+            className="sw-icon-btn p-2 disabled:opacity-40"
             aria-label="Swap settings"
           >
-            <Settings className="w-5 h-5" />
+            <Settings2 className="w-5 h-5" />
           </button>
-          <button
-            onClick={onClose}
-            disabled={busy}
-            className="p-1 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
-            aria-label="Close swap"
-          >
+          <button onClick={onClose} disabled={busy} className="sw-icon-btn p-2 disabled:opacity-40" aria-label="Close swap">
             <X className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Scrollable body keeps the action button reachable with the keyboard open */}
-      <div className="px-5 py-5 space-y-3 overflow-y-auto overscroll-contain min-h-0 flex-auto">
-        {/* From Token */}
-        <div className="space-y-1.5">
-          <label htmlFor="swap-from-amount" className="sw-uplabel">You pay</label>
-          <div className="rounded-xl p-3 border border-[var(--sw-line)]">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowTokenSelector('from')}
-                className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-[var(--sw-line)] text-[var(--sw-ink)] hover:bg-[color-mix(in_srgb,var(--sw-ink)_6%,transparent)] transition-colors min-w-0 flex-shrink-0"
-                aria-label={fromToken ? `Change token to pay, currently ${fromToken.symbol}` : 'Select token to pay'}
-              >
-                {fromToken ? (
-                  <>
-                    <div className="w-5 h-5 sw-mark rounded flex items-center justify-center" aria-hidden="true">
-                      <span className="text-xs font-bold">{fromToken.symbol.charAt(0)}</span>
-                    </div>
-                    <span className="font-medium">{fromToken.symbol}</span>
-                  </>
-                ) : (
-                  <span className="text-[var(--sw-muted)]">Select token</span>
-                )}
-                <ArrowUpDown className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
-              </button>
-              <div className="flex-1 flex items-center justify-between min-w-0">
-                <input
-                  id="swap-from-amount"
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={fromAmount}
-                  onChange={(e) => handleAmountChange(e.target.value.replace(',', '.'), 'from')}
-                  placeholder="0.0"
-                  className="sw-mono text-xl font-bold bg-transparent text-[var(--sw-ink)] placeholder-[var(--sw-muted)] w-full outline-none min-w-0"
-                />
-                <div className="text-right ml-2">
-                  <UsdValue amount={fromAmount} symbol={fromToken?.symbol} prices={tokenPrices} />
-                </div>
-              </div>
-              <button
-                onClick={handleMaxAmount}
-                disabled={!fromToken || isMaxLoading}
-                className="sw-uplabel px-2 py-1 text-[var(--sw-accent)] hover:text-[var(--sw-accent-press)] transition-colors flex-shrink-0"
-                aria-label={fromToken?.address === 'native' ? 'Use maximum amount, keeping enough for the network fee' : 'Use maximum amount'}
-              >
-                {isMaxLoading ? '…' : 'Max'}
-              </button>
-            </div>
-            <div className="mt-2 sw-mono text-xs text-[var(--sw-muted)]">
-              {fromToken ? `Balance ${formatSwapBalance(fromToken.balance)}` : ''}
-            </div>
+      <div className="px-5 pb-2 overflow-y-auto overscroll-contain min-h-0 flex-auto">
+        {/* You pay */}
+        <div className="rounded-2xl border border-transparent bg-[var(--sw-fill)] p-4 transition-colors focus-within:border-[var(--sw-accent)]">
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="swap-from-amount" className="sw-label">
+              You pay
+            </label>
+            {fromToken && (
+              <span className="text-xs text-[var(--sw-muted)] sw-num flex items-center gap-2">
+                <span>Balance {formatSwapBalance(fromBalance, STABLES.has(fromToken.symbol.toUpperCase()))}</span>
+                <button
+                  onClick={handleMaxAmount}
+                  disabled={isMaxLoading || fromBalanceWei === 0n || busy}
+                  className="sw-link text-xs"
+                  aria-label={fromToken.address === 'native' ? 'Use maximum amount, keeping enough for the network fee' : 'Use maximum amount'}
+                >
+                  {isMaxLoading ? '…' : 'Max'}
+                </button>
+              </span>
+            )}
           </div>
+          <div className="flex items-center gap-3 mt-2">
+            <input
+              id="swap-from-amount"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={fromAmount}
+              onChange={(e) => handleAmountChange(e.target.value)}
+              disabled={busy}
+              placeholder="0"
+              aria-invalid={insufficient || undefined}
+              className={`sw-amount-input text-3xl flex-1 ${insufficient ? '!text-[var(--sw-down)]' : ''}`}
+            />
+            <TokenChip
+              token={fromToken}
+              image={fromToken ? images[fromToken.symbol.toUpperCase()] : undefined}
+              onClick={() => setShowTokenSelector('from')}
+              disabled={busy}
+              label={fromToken ? `Change token to pay, currently ${fromToken.symbol}` : 'Select token to pay'}
+            />
+          </div>
+          <div className="text-xs text-[var(--sw-muted)] sw-num mt-1.5 min-h-[1rem]">{fromUsd !== null ? usd(fromUsd) : ''}</div>
         </div>
 
-        {/* Swap Direction Toggle */}
-        <div className="flex justify-center -my-1">
+        {/* Flip */}
+        <div className="flex justify-center -my-[14px] relative z-10">
           <button
             onClick={() => swapTokens()}
-            className="p-2 rounded-lg border border-[var(--sw-line)] bg-[var(--sw-surface)] text-[var(--sw-ink)] hover:bg-[color-mix(in_srgb,var(--sw-ink)_6%,transparent)] transition-colors"
+            disabled={busy}
+            className="w-9 h-9 rounded-xl bg-[var(--sw-surface)] ring-4 ring-[var(--sw-surface)] border border-[var(--sw-line)] text-[var(--sw-ink)] flex items-center justify-center hover:bg-[var(--sw-fill-strong)] transition-colors"
             aria-label="Switch pay and receive tokens"
           >
-            <ArrowUpDown className="w-4 h-4" />
+            <ArrowDownUp className="w-4 h-4" />
           </button>
         </div>
 
-        {/* To Token */}
-        <div className="space-y-1.5">
-          <label htmlFor="swap-to-amount" className="sw-uplabel">You receive</label>
-          <div className="rounded-xl p-3 border border-[var(--sw-line)]">
-            <div className="flex items-center gap-3">
+        {/* You receive (read-only: quotes are exact-in) */}
+        <div className="rounded-2xl bg-[var(--sw-fill)] p-4">
+          <div className="flex items-center justify-between gap-2">
+            <span id="swap-to-label" className="sw-label">
+              You receive
+            </span>
+            {toToken && (
+              <span className="text-xs text-[var(--sw-muted)] sw-num">
+                Balance {formatSwapBalance(balanceOf(toToken), STABLES.has(toToken.symbol.toUpperCase()))}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 mt-2">
+            <div className="flex-1 min-w-0" aria-labelledby="swap-to-label" aria-live="polite">
+              {isLoadingQuote ? (
+                <span className="sw-skeleton block h-8 w-32" aria-label="Getting quote" />
+              ) : (
+                <output
+                  className={`sw-amount-input text-3xl block truncate ${quote && toAmount ? '' : 'text-[var(--sw-muted)] opacity-60'}`}
+                  title={toAmount || undefined}
+                >
+                  {quote && toAmount ? formatSwapBalance(toAmount, STABLES.has(toToken?.symbol.toUpperCase() ?? '')) : '0'}
+                </output>
+              )}
+            </div>
+            <TokenChip
+              token={toToken}
+              image={toToken ? images[toToken.symbol.toUpperCase()] : undefined}
+              onClick={() => setShowTokenSelector('to')}
+              disabled={busy}
+              label={toToken ? `Change token to receive, currently ${toToken.symbol}` : 'Select token to receive'}
+            />
+          </div>
+          <div className="text-xs text-[var(--sw-muted)] sw-num mt-1.5 min-h-[1rem]">{toUsd !== null ? usd(toUsd) : ''}</div>
+        </div>
+
+        {/* Summary: rate, expandable details */}
+        {quote && rateLabel && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between gap-2 py-2">
               <button
-                onClick={() => setShowTokenSelector('to')}
-                className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-[var(--sw-line)] text-[var(--sw-ink)] hover:bg-[color-mix(in_srgb,var(--sw-ink)_6%,transparent)] transition-colors min-w-0 flex-shrink-0"
-                aria-label={toToken ? `Change token to receive, currently ${toToken.symbol}` : 'Select token to receive'}
+                onClick={() => setShowDetails((v) => !v)}
+                aria-expanded={showDetails}
+                aria-controls="swap-details"
+                className="flex items-center gap-1.5 text-sm text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] sw-num min-w-0"
               >
-                {toToken ? (
-                  <>
-                    <div className="w-5 h-5 sw-mark rounded flex items-center justify-center" aria-hidden="true">
-                      <span className="text-xs font-bold">{toToken.symbol.charAt(0)}</span>
-                    </div>
-                    <span className="font-medium">{toToken.symbol}</span>
-                  </>
-                ) : (
-                  <span className="text-[var(--sw-muted)]">Select token</span>
-                )}
-                <ArrowUpDown className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
+                <span className="truncate">{rateLabel}</span>
+                <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${showDetails ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
-              <div className="flex-1 flex items-center justify-between min-w-0">
-                <input
-                  id="swap-to-amount"
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={toAmount ? (quote ? formatSwapBalance(toAmount) : toAmount) : ''}
-                  onChange={(e) => handleAmountChange(e.target.value.replace(',', '.'), 'to')}
-                  placeholder="0.0"
-                  className="sw-mono text-xl font-bold bg-transparent text-[var(--sw-ink)] placeholder-[var(--sw-muted)] w-full outline-none min-w-0"
-                />
-                <div className="text-right ml-2">
-                  <UsdValue amount={toAmount} symbol={toToken?.symbol} prices={tokenPrices} />
-                </div>
-              </div>
-            </div>
-            <div className="mt-2 sw-mono text-xs text-[var(--sw-muted)]">
-              {toToken ? `Balance ${formatSwapBalance(toToken.balance)}` : ''}
-            </div>
-          </div>
-        </div>
-
-        {/* Quote Information */}
-        {quote && (
-          <div className="pt-1">
-            <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
-              <span className="text-[var(--sw-muted)]">Rate</span>
-              <span className="sw-mono text-[var(--sw-ink)]">
-                {formatExchangeRate(quote, fromToken?.symbol, toToken?.symbol, fromDecimals, toDecimals)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
-              <span className="text-[var(--sw-muted)]">Price impact</span>
-              <span
-                className={`sw-mono ${
-                  priceImpactWarning === 'high'
-                    ? 'text-[var(--sw-down)]'
-                    : priceImpactWarning === 'medium'
-                      ? 'text-[var(--sw-accent)]'
-                      : 'text-[var(--sw-ink)]'
-                }`}
-              >
-                {formatPriceImpact(quote.priceImpact)}
-              </span>
-            </div>
-            {minReceived && (
-              <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
-                <span className="text-[var(--sw-muted)]">Minimum received</span>
-                <span className="sw-mono text-[var(--sw-ink)]">
-                  {minReceived} {toToken?.symbol}
+              {expired && (
+                <span className="text-xs text-[var(--sw-muted)] flex-shrink-0">
+                  Quote expired ·{' '}
+                  <button onClick={fetchQuote} className="sw-link text-xs">
+                    Refresh
+                  </button>
                 </span>
-              </div>
-            )}
-            {feeLabel && (
-              <div className="flex items-center justify-between py-2 text-sm border-t border-[var(--sw-line-soft)]">
-                <span className="text-[var(--sw-muted)]">Platform fee</span>
-                <span className="sw-mono text-[var(--sw-ink)]">{feeLabel}</span>
-              </div>
+              )}
+            </div>
+            {showDetails && (
+              <dl id="swap-details" className="sw-list text-sm ob-fade-in">
+                {impact !== null && (
+                  <DetailRow
+                    label={impactEstimated ? 'Price impact (est.)' : 'Price impact'}
+                    value={`${impact.toFixed(2)}%`}
+                    tone={impactLevel === 'high' ? 'down' : impactLevel === 'medium' ? 'warn' : undefined}
+                  />
+                )}
+                {minReceived && <DetailRow label="Minimum received" value={minReceived} />}
+                {networkFeeLabel && <DetailRow label="Network fee" value={networkFeeLabel} />}
+                {feeLabel && <DetailRow label="OpenBurner fee" value={feeLabel} />}
+                <DetailRow label="Max slippage" value={`${settings.slippagePercentage}%`} />
+                {sources && <DetailRow label="Route" value={sources} />}
+              </dl>
             )}
           </div>
         )}
 
-        {quoteError && (
-          <div role="alert" className="flex items-center gap-2 text-[var(--sw-down)]">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-            <span className="text-sm font-medium">{quoteError}</span>
-          </div>
-        )}
+        <div className="space-y-2 mt-3">
+          {maxError && (
+            <div role="alert" className="sw-callout sw-callout-danger">
+              {maxError}
+            </div>
+          )}
+          {quoteError && (
+            <div role="alert" className="sw-callout sw-callout-danger">
+              {quoteError}
+            </div>
+          )}
+          {quote && impactLevel === 'high' && (
+            <div role="alert" className="sw-callout sw-callout-danger">
+              Price impact is {impact!.toFixed(2)}%. You&apos;ll get much less than the market value. Try a smaller amount.
+            </div>
+          )}
+          {quote && impactLevel === 'medium' && (
+            <div className="sw-callout sw-callout-warn">
+              Price impact is {impact!.toFixed(2)}%. You&apos;ll get noticeably less than the market value.
+            </div>
+          )}
+          {needsApproval && !isApproving && (
+            <div className="sw-callout sw-callout-info">
+              First swap of {fromToken?.symbol}: approve it once, then swap. Each step is one tap of your Burner.
+            </div>
+          )}
+          {autoApproveNeeded && (
+            <div className="sw-callout sw-callout-info">
+              This swap includes a one-time approval for {fromToken?.symbol}, so you&apos;ll tap your Burner twice.
+            </div>
+          )}
+        </div>
+      </div>
 
-        {needsApproval && (
-          <div className="flex items-center gap-2 text-[var(--sw-accent)] mb-2">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-            <span className="text-sm font-medium">Approve {fromToken?.symbol} before swapping</span>
-          </div>
-        )}
-
-        {fromToken && toToken && (fromAmount || toAmount) && (
-          <button
-            onClick={isLoadingQuote ? undefined : quote ? () => openPin(needsApproval ? 'approve' : 'swap') : fetchQuote}
-            disabled={isLoadingQuote || busy}
-            className={quote ? 'sw-btn-primary w-full py-3 text-sm' : 'sw-btn-ghost w-full py-3 text-sm'}
-          >
-            {isLoadingQuote ? (
-              <span className="flex items-center justify-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
-                <span>Getting quote…</span>
-              </span>
-            ) : isApproving ? (
-              'Approving…'
-            ) : quote ? (
-              needsApproval ? 'Approve token' : 'Swap'
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <RefreshCw className="w-4 h-4" aria-hidden="true" />
-                <span>Get quote</span>
-              </span>
-            )}
-          </button>
-        )}
+      {/* Primary action: always visible */}
+      <div className="px-5 pt-3 pb-5 flex-shrink-0 border-t border-[var(--sw-line-soft)]">
+        <button onClick={cta.onClick} disabled={cta.disabled} className="sw-btn-primary w-full py-3.5 text-sm">
+          {cta.label}
+        </button>
       </div>
 
       {showTokenSelector && (
         <TokenSelector
-          tokens={availableTokens}
+          tokens={showTokenSelector === 'to' ? receiveTokens : availableTokens}
           onSelectToken={handleTokenSelect}
           onClose={() => setShowTokenSelector(null)}
-          tokenImages={tokenImages}
+          tokenImages={images}
           tokenPrices={tokenPrices}
-          title={showTokenSelector === 'from' ? 'Select Token to Sell' : 'Select Token to Buy'}
+          title={showTokenSelector === 'from' ? 'You pay with' : 'You receive'}
+          selectedAddress={showTokenSelector === 'from' ? fromToken?.address : toToken?.address}
           onAddToken={() => {
             setAddTokenContext(showTokenSelector);
             setShowTokenSelector(null);
@@ -692,8 +914,9 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
         onCancel={closePin}
         isVisible={pinMode !== null}
         error={pinError}
-        isLoading={busy}
-        loadingMessage={currentOperation || 'Processing...'}
+        isLoading={busy && pinMode !== null}
+        title={pinMode === 'approve' ? `Approve ${fromToken?.symbol ?? ''}` : 'Confirm swap'}
+        progress={{ steps, current: step }}
       />
 
       {showAddToken && (
@@ -703,30 +926,45 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
             setAddTokenError(null);
           }}
           labelledBy="swap-add-token-title"
-          className="sw-surface rounded-xl border border-[var(--sw-line)] p-6 w-full max-w-sm"
+          className="sw-surface rounded-xl border border-[var(--sw-line)] w-full max-w-sm overflow-hidden"
         >
-          <h3 id="swap-add-token-title" className="text-lg font-bold text-[var(--sw-ink)] mb-2">
-            Add custom token
-          </h3>
-          <label htmlFor="swap-add-token-address" className="block text-sm text-[var(--sw-ink-soft)] mb-4">
-            Enter the token contract address.
-          </label>
-          <input
-            id="swap-add-token-address"
-            type="text"
-            value={newTokenAddress}
-            onChange={(e) => setNewTokenAddress(e.target.value)}
-            placeholder="0x…"
-            autoComplete="off"
-            spellCheck={false}
-            className="sw-input sw-mono w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm mb-4"
-          />
-          {addTokenError && (
-            <p role="alert" className="text-[var(--sw-down)] text-sm mb-4 px-1 font-medium">
-              {addTokenError}
+          <div className="px-5 pt-5 pb-5">
+            <h3 id="swap-add-token-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">
+              Add a token
+            </h3>
+            <p className="text-sm text-[var(--sw-ink-soft)] mt-1 mb-4">
+              Paste the token&apos;s contract address on {network}.
             </p>
-          )}
-          <div className="flex gap-3">
+            <label htmlFor="swap-add-token-address" className="sw-label block mb-1.5">
+              Contract address
+            </label>
+            <div className="sw-field px-3 py-2.5">
+              <input
+                id="swap-add-token-address"
+                type="text"
+                value={newTokenAddress}
+                onChange={(e) => setNewTokenAddress(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddToken();
+                }}
+                placeholder="0x…"
+                autoComplete="off"
+                spellCheck={false}
+                className="sw-field-input sw-mono text-sm"
+              />
+            </div>
+            {addTokenError && (
+              <div role="alert" className="sw-callout sw-callout-danger mt-3">
+                {addTokenError}
+              </div>
+            )}
+            <button
+              onClick={handleAddToken}
+              disabled={!newTokenAddress.trim() || isAddingToken}
+              className="sw-btn-primary w-full py-3.5 text-sm mt-5"
+            >
+              {isAddingToken ? <Busy text="Checking token…" /> : 'Add token'}
+            </button>
             <button
               onClick={() => {
                 setShowAddToken(false);
@@ -735,16 +973,9 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
                 if (addTokenContext) setShowTokenSelector(addTokenContext);
                 setAddTokenContext(null);
               }}
-              className="sw-btn-ghost flex-1 py-3 text-sm"
+              className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)]"
             >
               Cancel
-            </button>
-            <button
-              onClick={handleAddToken}
-              disabled={!newTokenAddress || isAddingToken}
-              className="sw-btn-primary flex-1 py-3 text-sm"
-            >
-              {isAddingToken ? 'Adding…' : 'Add token'}
             </button>
           </div>
         </Modal>
@@ -754,48 +985,155 @@ export function SwapToken({ onClose, onSuccess, onTransactionSubmitted, availabl
         <Modal
           onClose={() => setShowSettings(false)}
           labelledBy="swap-settings-title"
-          className="sw-surface rounded-xl border border-[var(--sw-line)] p-6 w-full max-w-sm"
+          className="sw-surface rounded-xl border border-[var(--sw-line)] w-full max-w-sm overflow-hidden"
         >
-          <h3 id="swap-settings-title" className="text-lg font-bold text-[var(--sw-ink)] mb-4">
-            Swap settings
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="swap-slippage" className="sw-uplabel block mb-2">
-                Slippage tolerance (%)
-              </label>
-              <input
-                id="swap-slippage"
-                type="number"
-                value={settings.slippagePercentage}
-                onChange={(e) => updateSettings({ slippagePercentage: parseFloat(e.target.value) || 0.5 })}
-                min="0.1"
-                max="50"
-                step="0.1"
-                className="sw-input sw-mono w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm"
-              />
-              <p className="text-xs text-[var(--sw-muted)] mt-1">
-                The swap reverts if the price moves against you by more than this.
+          <div className="px-5 pt-5 pb-5">
+            <h3 id="swap-settings-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight mb-4">
+              Swap settings
+            </h3>
+
+            <fieldset>
+              <legend className="sw-label mb-2">Max slippage</legend>
+              <div className="flex items-center gap-2 flex-wrap">
+                {SLIPPAGE_PRESETS.map((p) => {
+                  const active = settings.slippagePercentage === p;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => {
+                        updateSettings({ slippagePercentage: p });
+                        setCustomSlippage('');
+                      }}
+                      aria-pressed={active}
+                      className={`sw-chip px-3.5 py-2 text-sm ${active ? '!bg-[var(--sw-ink)] !text-[var(--sw-paper)]' : ''}`}
+                    >
+                      {p}%
+                    </button>
+                  );
+                })}
+                <div
+                  className={`sw-field flex items-center px-3 py-1.5 w-24 ${!slippageIsPreset ? '!border-[var(--sw-ink)]' : ''}`}
+                >
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    aria-label="Custom slippage percent"
+                    value={customSlippage}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(',', '.');
+                      if (v !== '' && !/^\d*\.?\d*$/.test(v)) return;
+                      setCustomSlippage(v);
+                      const n = parseFloat(v);
+                      if (isFinite(n) && n >= 0.1 && n <= 50) updateSettings({ slippagePercentage: n });
+                    }}
+                    placeholder="Custom"
+                    className="sw-field-input text-sm sw-num"
+                  />
+                  <span className="text-sm text-[var(--sw-muted)]">%</span>
+                </div>
+              </div>
+              <p className="text-xs text-[var(--sw-muted)] mt-2 leading-relaxed">
+                The swap cancels if the price moves against you by more than this.
               </p>
+              {settings.slippagePercentage > 5 && (
+                <div className="sw-callout sw-callout-warn mt-2">High slippage: you may get a much worse price.</div>
+              )}
+              {customSlippage !== '' && (parseFloat(customSlippage) < 0.1 || parseFloat(customSlippage) > 50) && (
+                <p className="text-xs text-[var(--sw-down)] mt-2">Enter a value from 0.1 to 50.</p>
+              )}
+            </fieldset>
+
+            <div className="flex items-start justify-between gap-4 mt-6 pt-5 border-t border-[var(--sw-line-soft)]">
+              <div>
+                <p id="swap-auto-approve-label" className="text-sm font-semibold text-[var(--sw-ink)]">
+                  Approve automatically
+                </p>
+                <p className="text-xs text-[var(--sw-muted)] mt-1 leading-relaxed">
+                  {settings.autoApprove
+                    ? 'Grants an unlimited allowance the first time you swap a token, so later swaps need one tap.'
+                    : 'Approves only the exact amount, before each swap that needs it.'}
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={settings.autoApprove}
+                aria-labelledby="swap-auto-approve-label"
+                onClick={() => updateSettings({ autoApprove: !settings.autoApprove })}
+                className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${
+                  settings.autoApprove ? 'bg-[var(--sw-ink)]' : 'bg-[var(--sw-fill-strong)]'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--sw-surface)] shadow-sm transition-transform ${
+                    settings.autoApprove ? 'translate-x-5' : ''
+                  }`}
+                />
+              </button>
             </div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="swap-auto-approve" className="sw-uplabel">
-                Auto-approve tokens
-              </label>
-              <input
-                id="swap-auto-approve"
-                type="checkbox"
-                checked={settings.autoApprove}
-                onChange={(e) => updateSettings({ autoApprove: e.target.checked })}
-                className="w-4 h-4 accent-[var(--sw-accent)]"
-              />
-            </div>
+
+            <button onClick={() => setShowSettings(false)} className="sw-btn-primary w-full mt-6 py-3.5 text-sm">
+              Done
+            </button>
           </div>
-          <button onClick={() => setShowSettings(false)} className="sw-btn-primary w-full mt-6 py-3 text-sm">
-            Save
-          </button>
         </Modal>
       )}
     </Modal>
+  );
+}
+
+function Busy({ text }: { text: string }) {
+  return (
+    <span className="flex items-center justify-center gap-2">
+      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+      <span>{text}</span>
+    </span>
+  );
+}
+
+function TokenChip({
+  token,
+  image,
+  onClick,
+  disabled,
+  label,
+}: {
+  token: SwapTokenInfo | null;
+  image?: string;
+  onClick: () => void;
+  disabled?: boolean;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className={`sw-chip py-1.5 text-sm flex-shrink-0 disabled:opacity-60 ${token ? 'pl-1.5 pr-2.5' : 'px-3.5'}`}
+    >
+      {token ? (
+        <>
+          <TokenIcon symbol={token.symbol} url={image} size="sm" />
+          <span className="max-w-[6rem] truncate">{token.symbol}</span>
+        </>
+      ) : (
+        <span>Select token</span>
+      )}
+      <ChevronDown className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
+    </button>
+  );
+}
+
+function DetailRow({ label, value, tone }: { label: string; value: string; tone?: 'warn' | 'down' }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <dt className="text-[var(--sw-muted)]">{label}</dt>
+      <dd
+        className={`sw-num text-right break-all ${
+          tone === 'down' ? 'text-[var(--sw-down)] font-semibold' : tone === 'warn' ? 'text-[var(--sw-warn)] font-semibold' : 'text-[var(--sw-ink)]'
+        }`}
+      >
+        {value}
+      </dd>
+    </div>
   );
 }
