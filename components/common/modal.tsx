@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -12,6 +12,8 @@ import { createPortal } from "react-dom";
  * - Escape closes the top-most modal only; backdrop click closes (opt-out).
  * - Focus moves into the dialog, is trapped while open, and is restored after.
  * - Body scroll is locked while any modal is open.
+ * - On phones it opens as a bottom sheet (align="center"), lifted above the
+ *   on-screen keyboard so inputs and the main button stay visible.
  */
 
 const stack: string[] = [];
@@ -46,8 +48,26 @@ export interface ModalProps {
   closeOnEscape?: boolean;
   /** Element to focus first; defaults to the first focusable element. */
   initialFocusRef?: RefObject<HTMLElement | null>;
-  /** Vertical alignment on small screens. */
+  /** Small screens: "center" opens as a bottom sheet, "top" pins to the top. */
   align?: "center" | "top";
+}
+
+/** Height of the on-screen keyboard (visual viewport inset), 0 when closed. */
+function useKeyboardInset(active: boolean): number {
+  const [inset, setInset] = useState(0);
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!active || !vv) return;
+    const update = () => setInset(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [active]);
+  return inset;
 }
 
 export function Modal({
@@ -66,6 +86,8 @@ export function Modal({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const [mounted, setMounted] = useState(false);
+  const sheet = align === "center";
+  const keyboardInset = useKeyboardInset(mounted && sheet);
 
   useEffect(() => {
     setMounted(true);
@@ -132,8 +154,9 @@ export function Modal({
   return createPortal(
     <div
       className={`ob-modal-backdrop fixed inset-0 z-[1000] flex justify-center bg-black/50 backdrop-blur-sm p-3 ${
-        align === "top" ? "items-start sm:items-center pt-[max(0.75rem,env(safe-area-inset-top))]" : "items-center"
+        align === "top" ? "items-start sm:items-center pt-[max(0.75rem,env(safe-area-inset-top))]" : "items-center ob-sheet-host"
       }`}
+      style={keyboardInset ? ({ "--ob-kb": `${keyboardInset}px`, paddingBottom: keyboardInset } as CSSProperties) : undefined}
       onMouseDown={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) onCloseRef.current();
       }}
@@ -145,7 +168,7 @@ export function Modal({
         aria-label={labelledBy ? undefined : ariaLabel}
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        className={`ob-modal-panel outline-none ${className}`}
+        className={`ob-modal-panel outline-none ${sheet ? "ob-sheet" : ""} ${className}`}
       >
         {children}
       </div>

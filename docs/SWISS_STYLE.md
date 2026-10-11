@@ -53,3 +53,50 @@ Keep text **clear, concise, direct**. Sentence case for body; UPPERCASE only via
   props, handlers, state, or exported signatures.
 - Reference implementations already in Swiss: `components/walletconnect/*.tsx`.
 - Keep token images/Q\R/functionality intact.
+
+## v1.5 additions — calmer, clearer, built for the card
+
+These rules sit on top of everything above. Where they disagree, these win.
+
+### Hierarchy
+- **One primary action per screen.** It uses `sw-btn-primary` and stays visible at all
+  times. When it can't run yet, it's disabled and its label says what's missing
+  ("Enter an amount", "Select a token", "Not enough ETH"). Never hide it.
+- **Orange is for action, not decoration.** Don't color headings, token symbols, the "$"
+  sign or sort toggles orange. Small accent text (Max, Paste, links) uses `sw-link`
+  (contrast-tuned). Tab underlines and focus rings may stay orange.
+- **Field labels are sentence case** with `sw-label`. `sw-uplabel` is only for an
+  occasional section kicker, not every field.
+
+### Building blocks
+| Need | Use |
+|---|---|
+| Token logo | `TokenIcon` (`components/common/token-icon.tsx`): always a circle, letter fallback, optional `chainId` badge |
+| Network logo | `ChainLogo` (same file) |
+| Address someone must verify | `AddressText` (`components/common/address-text.tsx`): full address, grouped, ends emphasized |
+| Short address | `shortAddress()` (same file) |
+| Wallet / recipient identity | `Identicon` (`components/common/identicon.tsx`) |
+| Text field | `.sw-field` box with a `.sw-field-input` inside (the box gets the focus ring) |
+| Big amount | `.sw-amount-input` (e.g. `text-4xl`) |
+| Token / network picker button | `.sw-chip` |
+| Quiet icon button | `.sw-icon-btn p-2` |
+| Warning / error / note | `.sw-callout` + `sw-callout-warn` / `sw-callout-danger` / `sw-callout-info` |
+| Loading placeholder | `.sw-skeleton` with a width and height |
+| Quiet fills | `bg-[var(--sw-fill)]`, `bg-[var(--sw-fill-strong)]` |
+
+### Signing
+- PIN entry and the card tap are one sheet: `PinInput` with `progress={{ steps, current }}`.
+  Mark the step that waits on the card with `card: true`. Its copy ("Tap your Burner",
+  plus a hint for phone, gateway or USB reader) follows the live card phase from
+  `store/signing-store.ts`, which `lib/smart-signer.ts` updates.
+- Typical steps: Prepare → Sign with your Burner (card) → Send to {network}.
+
+### Phones
+- `Modal` opens as a bottom sheet under 640px and lifts above the on-screen keyboard.
+  Put the primary button at the bottom of the sheet, full width.
+- Touch targets are at least 44px tall.
+
+### Motion
+- Use the `ob-*` animation classes in `globals.css`. Animate to explain a change
+  (a sheet arriving, a balance updating, a step completing), never for decoration.
+  Reduced-motion users get none (handled globally).

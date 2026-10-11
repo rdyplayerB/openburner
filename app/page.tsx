@@ -59,17 +59,14 @@ export default function Home() {
   return (
     <main className="sw-screen min-h-screen">
       {!isConnected ? (
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
-            {isHosted && isMobile ? (
-              <HostedMobileConnect />
-            ) : isHosted && !isMobile ? (
-              <HostedDesktopConnect />
-            ) : (
-              <WalletConnect />
-            )}
-          </div>
-        </div>
+        // Connect screens own their full-screen layout.
+        isHosted && isMobile ? (
+          <HostedMobileConnect />
+        ) : isHosted && !isMobile ? (
+          <HostedDesktopConnect />
+        ) : (
+          <WalletConnect />
+        )
       ) : (
         <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="max-w-2xl mx-auto pt-4 pb-8">

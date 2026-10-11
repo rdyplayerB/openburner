@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Lock } from "lucide-react";
 import { Modal } from "./common/modal";
+import { SigningProgress, type ProgressStep } from "./signing/signing-progress";
+import { setCardPhase } from "@/store/signing-store";
 
 interface PinInputProps {
   onSubmit: (pin: string) => void;
@@ -9,10 +12,24 @@ interface PinInputProps {
   isVisible: boolean;
   error?: string | null;
   isLoading?: boolean;
+  /** Fallback progress text when no `progress` steps are given. */
   loadingMessage?: string;
+  /** While loading: the flow's steps and the current one (shows the card-tap screen). */
+  progress?: { steps: ProgressStep[]; current: string };
+  /** Heading above the PIN boxes, e.g. "Confirm with your PIN". */
+  title?: string;
 }
 
-export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = false, loadingMessage = "Processing..." }: PinInputProps) {
+export function PinInput({
+  onSubmit,
+  onCancel,
+  isVisible,
+  error,
+  isLoading = false,
+  loadingMessage = "Processing...",
+  progress,
+  title = "Enter your PIN",
+}: PinInputProps) {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -22,8 +39,17 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
       inputRefs.current[0]?.focus();
       // Reset digits
       setDigits(["", "", "", "", "", ""]);
+      setCardPhase("idle");
     }
   }, [isVisible]);
+
+  // After a failed attempt the boxes come back: clear them for the retry.
+  useEffect(() => {
+    if (error && !isLoading) {
+      setDigits(["", "", "", "", "", ""]);
+      setTimeout(() => inputRefs.current[0]?.focus(), 0);
+    }
+  }, [error, isLoading]);
 
   const handleChange = (index: number, value: string) => {
     // Only allow digits
@@ -76,6 +102,9 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
 
   if (!isVisible) return null;
 
+  const steps: ProgressStep[] = progress?.steps ?? [{ key: "work", label: loadingMessage.replace(/[.…]+$/, ""), card: /sign|burner/i.test(loadingMessage) }];
+  const current = progress?.current ?? "work";
+
   return (
     <Modal
       onClose={() => {
@@ -83,27 +112,28 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
       }}
       labelledBy="pin-title"
       closeOnBackdrop={false}
+      closeOnEscape={!isLoading}
     >
-        <div className="px-5 pt-5 pb-3 border-b border-[var(--sw-line)] text-center">
-          <h3 id="pin-title" className="text-lg font-bold text-[var(--sw-ink)]">Enter PIN</h3>
-          <p className="text-sm text-[var(--sw-ink-soft)] mt-1">
-            6-digit Burner PIN to authorize
-          </p>
-        </div>
+      {isLoading ? (
+        <>
+          <h3 id="pin-title" className="sr-only">Signing</h3>
+          <SigningProgress steps={steps} current={current} />
+        </>
+      ) : (
+        <div className="px-5 pt-6 pb-5">
+          <div className="text-center mb-5">
+            <span className="mx-auto mb-3 w-10 h-10 rounded-full bg-[var(--sw-fill-strong)] text-[var(--sw-ink)] flex items-center justify-center">
+              <Lock className="w-4 h-4" aria-hidden="true" />
+            </span>
+            <h3 id="pin-title" className="text-xl font-bold text-[var(--sw-ink)] tracking-tight">
+              {title}
+            </h3>
+            <p className="text-sm text-[var(--sw-ink-soft)] mt-1">Then tap your Burner to sign.</p>
+          </div>
 
-        <div className="px-5 py-5">
           {error && (
-            <div role="alert" className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]">
-              <p className="text-sm text-[var(--sw-down)]">{error}</p>
-            </div>
-          )}
-
-          {isLoading && (
-            <div className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]" role="status" aria-live="polite">
-              <div className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--sw-accent)]"></div>
-                <p className="text-sm text-[var(--sw-ink-soft)]">{loadingMessage}</p>
-              </div>
+            <div role="alert" className="sw-callout sw-callout-danger mb-4 text-center">
+              {error}
             </div>
           )}
 
@@ -114,7 +144,7 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
                 ref={(el) => {
                   inputRefs.current[index] = el;
                 }}
-                type="text"
+                type="password"
                 inputMode="numeric"
                 pattern="[0-9]*"
                 autoComplete="off"
@@ -124,36 +154,23 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={index === 0 ? handlePaste : undefined}
-                disabled={isLoading}
-                className={`w-11 h-14 text-center text-2xl font-bold sw-mono bg-transparent text-[var(--sw-ink)] rounded-lg border focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                  digit ? "border-[var(--sw-accent)]" : "border-[var(--sw-line)]"
+                className={`w-11 h-14 text-center text-2xl font-bold sw-mono bg-[var(--sw-fill)] text-[var(--sw-ink)] rounded-xl border-2 focus:outline-none transition-colors ${
+                  digit ? "border-[var(--sw-ink)]" : "border-transparent"
                 } focus:border-[var(--sw-accent)]`}
               />
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={onCancel}
-              disabled={isLoading}
-              className="sw-btn-ghost py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={!isComplete || isLoading}
-              className="sw-btn-primary py-3 text-sm"
-            >
-              Submit
-            </button>
-          </div>
+          <button onClick={handleSubmit} disabled={!isComplete} className="sw-btn-primary w-full py-3.5 text-sm">
+            Continue
+          </button>
+          <button onClick={onCancel} className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)]">
+            Cancel
+          </button>
 
-          <p className="text-xs text-center text-[var(--sw-muted)] mt-4">
-            Sent directly to your Burner, never stored
-          </p>
+          <p className="text-xs text-center text-[var(--sw-muted)] mt-2">Sent directly to your Burner, never stored.</p>
         </div>
+      )}
     </Modal>
   );
 }
-

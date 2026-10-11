@@ -19,6 +19,18 @@
   --sw-accent-press: #C94A26;
   --sw-up: #1F9D57;
   --sw-down: #D8442B;
+  /* Button fill / small accent text tuned for 4.5:1 contrast (WCAG AA). */
+  --sw-accent-fill: #CC4A22;
+  --sw-accent-fill-hover: #B9431E;
+  --sw-accent-ink: #C8431D;
+  --sw-on-accent: #FFFFFF;
+  /* Quiet fills for chips, inputs and disabled controls. */
+  --sw-fill: rgba(17, 17, 20, 0.04);
+  --sw-fill-strong: rgba(17, 17, 20, 0.08);
+  --sw-warn: #A86A12;
+  --sw-warn-bg: rgba(225, 163, 30, 0.12);
+  --sw-down-bg: rgba(216, 68, 43, 0.08);
+  --sw-up-bg: rgba(31, 157, 87, 0.10);
 }
 
 .dark {
@@ -37,6 +49,16 @@
   --sw-accent-press: #E4572E;
   --sw-up: #34D27B;
   --sw-down: #FF6B57;
+  --sw-accent-fill: #CC4A22;
+  --sw-accent-fill-hover: #B9431E;
+  --sw-accent-ink: #FF6B35;
+  --sw-on-accent: #FFFFFF;
+  --sw-fill: rgba(255, 255, 255, 0.05);
+  --sw-fill-strong: rgba(255, 255, 255, 0.09);
+  --sw-warn: #F2B13C;
+  --sw-warn-bg: rgba(242, 177, 60, 0.12);
+  --sw-down-bg: rgba(255, 107, 87, 0.10);
+  --sw-up-bg: rgba(52, 210, 123, 0.10);
 }
 
 html,
@@ -101,13 +123,18 @@ body {
 
 /* Buttons — Swiss = minimal radius, uppercase, single accent */
 .sw-btn-primary {
-  background: var(--sw-accent); color: #fff; border: none; border-radius: 3px;
+  background: var(--sw-accent-fill); color: var(--sw-on-accent); border: none; border-radius: 3px;
   font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-  transition: filter 0.15s, transform 0.1s;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
 }
-.sw-btn-primary:hover { filter: brightness(1.06); }
+.sw-btn-primary:hover { background: var(--sw-accent-fill-hover); }
 .sw-btn-primary:active { transform: scale(0.985); }
-.sw-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+/* Disabled reads as "not yet", not as a washed-out orange. */
+.sw-btn-primary:disabled,
+.sw-btn-primary:disabled:hover {
+  background: var(--sw-fill-strong); color: var(--sw-muted);
+  opacity: 1; cursor: not-allowed; transform: none;
+}
 
 .sw-btn-ghost {
   background: transparent; color: var(--sw-ink); border: 1px solid var(--sw-ink);
@@ -130,6 +157,63 @@ body {
 }
 .sw-input::placeholder { color: var(--sw-muted); }
 .sw-input:focus { outline: none; border-bottom-color: var(--sw-accent); }
+
+/* Field label: sentence case. Uppercase sw-uplabel is for section kickers only. */
+.sw-label { font-size: 0.75rem; font-weight: 500; color: var(--sw-ink-soft); }
+
+/* Accent text links ("Max", "Paste") at a readable contrast. */
+.sw-link { color: var(--sw-accent-ink); font-weight: 600; transition: opacity 0.15s; }
+.sw-link:hover { opacity: 0.8; }
+.sw-link:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Boxed field: the whole box takes focus. */
+.sw-field {
+  border: 1px solid var(--sw-line); border-radius: 12px; background: transparent;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.sw-field:focus-within {
+  border-color: var(--sw-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sw-accent) 18%, transparent);
+}
+.sw-field-input { background: transparent; color: var(--sw-ink); border: 0; outline: none; width: 100%; min-width: 0; }
+.sw-field-input::placeholder { color: var(--sw-muted); }
+
+/* Large amount entry */
+.sw-amount-input {
+  background: transparent; border: 0; outline: none; color: var(--sw-ink);
+  font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  min-width: 0; width: 100%;
+}
+.sw-amount-input::placeholder { color: var(--sw-muted); opacity: 0.6; }
+
+/* Token / network chip */
+.sw-chip {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  border-radius: 999px; background: var(--sw-fill-strong); color: var(--sw-ink);
+  font-weight: 600; transition: background 0.15s;
+}
+.sw-chip:hover { background: color-mix(in srgb, var(--sw-ink) 12%, transparent); }
+
+/* Quiet icon button */
+.sw-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px; color: var(--sw-ink-soft); transition: background 0.15s, color 0.15s;
+}
+.sw-icon-btn:hover { background: var(--sw-fill-strong); color: var(--sw-ink); }
+
+/* Callouts */
+.sw-callout { border-radius: 10px; padding: 0.625rem 0.75rem; font-size: 0.75rem; line-height: 1.45; }
+.sw-callout-warn { background: var(--sw-warn-bg); color: var(--sw-ink); }
+.sw-callout-danger { background: var(--sw-down-bg); color: var(--sw-ink); }
+.sw-callout-info { background: var(--sw-fill); color: var(--sw-ink-soft); }
+
+/* Loading placeholder */
+.sw-skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--sw-fill-strong) 0%, var(--sw-fill) 50%, var(--sw-fill-strong) 100%);
+  background-size: 200% 100%;
+  animation: obShimmer 1.4s ease-in-out infinite;
+}
 
 /* Token / chain mark (squared) */
 .sw-mark { border-radius: 7px; background: var(--sw-mark, var(--sw-ink)); color: var(--sw-paper); }
@@ -200,8 +284,50 @@ body {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
+@keyframes obSheetIn {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+@keyframes obShimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+/* Card-tap illustration: the card eases toward the reader, waves pulse out. */
+@keyframes obTapCard {
+  0%, 100% { transform: translate(0, 0); }
+  45%, 60% { transform: translate(12px, -4px); }
+}
+@keyframes obWave {
+  0% { opacity: 0; transform: scale(0.6); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+@keyframes obDraw {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+.ob-tap-card { animation: obTapCard 2.4s ease-in-out infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+.ob-wave { animation: obWave 2.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+.ob-wave-2 { animation-delay: 0.35s; }
+.ob-wave-3 { animation-delay: 0.7s; }
+.ob-draw { stroke-dasharray: 24; animation: obDraw 0.4s ease-out both; }
+
 .ob-modal-backdrop { animation: obFadeIn 0.15s ease-out; }
 .ob-modal-panel { animation: obPop 0.18s ease-out; }
+
+/* Phones: dialogs open as bottom sheets, actions within thumb reach. */
+@media (max-width: 639px) {
+  .ob-modal-backdrop.ob-sheet-host { padding: 0; align-items: flex-end; }
+  .ob-modal-panel.ob-sheet {
+    width: 100% !important; max-width: none !important; margin: 0 !important;
+    border-left-width: 0 !important; border-right-width: 0 !important; border-bottom-width: 0 !important;
+    border-radius: 18px 18px 0 0 !important;
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - var(--ob-kb, 0px)) !important;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: obSheetIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
 .ob-fade-in { animation: obFadeIn 0.2s ease-out both; }
 .ob-pop-in { animation: obPop 0.18s ease-out both; }
 .ob-rise-in { animation: obRise 0.3s ease-out both; }

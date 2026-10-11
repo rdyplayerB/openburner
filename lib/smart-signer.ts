@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { getAppConfig, AppConfig } from "./config/environment";
 import { useWalletStore } from "../store/wallet-store";
+import { setCardPhase } from "../store/signing-store";
 import { buildUnsignedTx, signCommand, signatureFromResult } from "./card/tx";
 import { assertTxSignedBy, assertDigestSignedBy, SignerMismatchError } from "./card/verify";
 import { log } from "./log";
@@ -90,12 +91,15 @@ export async function signTransactionSmart(
       const { address, keySlot } = connectedWallet();
       const exec = await getExec(config);
       const tx = buildUnsignedTx(transaction);
+      setCardPhase("tap");
       const result = await exec(signCommand(tx.unsignedHash, keySlot, pin));
       tx.signature = signatureFromResult(result);
       const serialized = tx.serialized;
       assertTxSignedBy(serialized, address);
+      setCardPhase("signed");
       return serialized;
     } catch (error) {
+      setCardPhase("idle");
       log.warn("[Signer] Transaction signing failed");
       throw friendlyError(error, "Failed to sign transaction");
     }
@@ -115,11 +119,14 @@ export async function signDigestSmart(
     try {
       const { address, keySlot } = connectedWallet();
       const exec = await getExec(config);
+      setCardPhase("tap");
       const result = await exec(signCommand(digest, keySlot, pin));
       const signature = signatureFromResult(result);
       assertDigestSignedBy(digest, signature, address);
+      setCardPhase("signed");
       return signature;
     } catch (error) {
+      setCardPhase("idle");
       log.warn("[Signer] Message signing failed");
       throw friendlyError(error, "Failed to sign message");
     }
