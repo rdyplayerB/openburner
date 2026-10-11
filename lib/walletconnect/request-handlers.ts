@@ -18,7 +18,9 @@ import {
   getRpcForChain,
   getChainInfo,
   parseCaipChainId,
+  requiresSigning,
 } from "./chains";
+import { getProvider } from "../provider";
 
 export class RpcError extends Error {
   code: number;
@@ -28,18 +30,7 @@ export class RpcError extends Error {
   }
 }
 
-/** Signing methods require a PIN + Burner tap; switch/add only need confirmation. */
-export function requiresSigning(method: string): boolean {
-  return [
-    "eth_sendTransaction",
-    "eth_signTransaction",
-    "personal_sign",
-    "eth_sign",
-    "eth_signTypedData",
-    "eth_signTypedData_v3",
-    "eth_signTypedData_v4",
-  ].includes(method);
-}
+export { requiresSigning };
 
 /** Auto-switch the app's active chain to `chainId` when we can serve it. */
 function autoSwitchActiveChain(chainId: number) {
@@ -97,7 +88,7 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
       autoSwitchActiveChain(requestChainId);
 
       const txParam = params[0];
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const provider = getProvider(requestChainId, rpcUrl);
       const from: string = txParam.from;
       const isBaseNetwork = requestChainId === 8453;
 
@@ -169,8 +160,10 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
       if (!rpcUrl) throw new RpcError(4001, "No RPC URL provided by dApp.");
 
       // Validate the provided RPC actually serves the claimed chain id.
-      const probe = new ethers.JsonRpcProvider(rpcUrl);
+      // staticNetwork: true => one eth_chainId probe, no endless retry loop on a bad URL.
+      const probe = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
       const net = await probe.getNetwork().catch(() => null);
+      probe.destroy();
       if (!net || Number(net.chainId) !== target) {
         throw new RpcError(4001, "The dApp-provided RPC did not match the requested chain.");
       }

@@ -6,6 +6,7 @@ import { X, ExternalLink, Send, Copy, CheckCircle } from "lucide-react";
 import { NftMedia } from "./nft-media";
 import { SendNft } from "./send-nft";
 import { getMarketplaceUrl, type NftItem } from "@/lib/nft";
+import { Modal } from "@/components/common/modal";
 
 export function NftDetailModal({
   nft,
@@ -16,7 +17,7 @@ export function NftDetailModal({
   onClose: () => void;
   onSent: () => void;
 }) {
-  const { chainId } = useWalletStore();
+  const chainId = useWalletStore((s) => s.chainId);
   const [showSend, setShowSend] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -46,22 +47,20 @@ export function NftDetailModal({
   }
 
   return (
-    <div
-      className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50"
-      onClick={onClose}
+    <Modal
+      onClose={onClose}
+      labelledBy="nft-detail-title"
+      className="sw-surface rounded-xl border border-[var(--sw-line)] max-w-sm sm:max-w-md w-full mx-2 max-h-[90dvh] overflow-y-auto overscroll-contain"
     >
-      <div
-        className="sw-surface rounded-xl border border-[var(--sw-line)] max-w-sm sm:max-w-md w-full mx-2 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-4 sw-surface border-b border-[var(--sw-line)]">
-          <h2 className="text-lg font-bold text-[var(--sw-ink)] truncate pr-2">
+          <h2 id="nft-detail-title" className="text-lg font-bold text-[var(--sw-ink)] truncate pr-2">
             {nft.name}
           </h2>
           <button
             onClick={onClose}
             className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] flex-shrink-0"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -133,6 +132,7 @@ export function NftDetailModal({
             <p className="sw-uplabel mb-1">Contract</p>
             <button
               onClick={copyContract}
+              aria-label={copied ? "Contract address copied" : "Copy contract address"}
               className="flex items-center gap-2 text-xs sw-mono text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
             >
               <span className="break-all text-left">{nft.contractAddress}</span>
@@ -164,7 +164,6 @@ export function NftDetailModal({
             </a>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

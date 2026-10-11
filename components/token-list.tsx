@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ethers } from "ethers";
 import { useWalletStore } from "@/store/wallet-store";
-import { rpcRateLimiter } from "@/lib/rpc-rate-limiter";
-import { Plus, Send, RefreshCw, X, Trash2, Search, SortAsc, DollarSign } from "lucide-react";
+import { Plus, Send, RefreshCw, X, Trash2, Search, SortAsc, AlertTriangle } from "lucide-react";
 import { getTokenListForChain } from "@/lib/token-lists";
 import { batchGetBalances, batchGetTokenMetadata } from "@/lib/multicall";
-import { getTokenPrices, getTokenPricesWithAddresses, clearPriceCache, getOldestPriceTimestamp, batchFetchTokenDataByContract, fetchTokenDataByContract } from "@/lib/price-oracle";
-import { batchGetTokenImages, getTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
+import { getTokenPricesWithAddresses, clearPriceCache, fetchTokenDataByContract } from "@/lib/price-oracle";
+import { batchGetTokenImages, getCachedTokenImage, preloadCommonTokenImages } from "@/lib/token-icons";
 import { formatTokenBalance } from "@/lib/format-utils";
 import { getAppConfig } from "@/lib/config/environment";
-import { motion } from "framer-motion";
+import { getProvider } from "@/lib/provider";
+import { getNativeName, getNativeSymbol } from "@/lib/supported-chains";
+import { friendlyTxError } from "@/lib/tx-errors";
+import { log } from "@/lib/log";
+import { Modal } from "./common/modal";
 
-interface Token {
+export interface Token {
   address: string;
   symbol: string;
   name: string;
@@ -22,714 +25,520 @@ interface Token {
   usdPrice?: number;
 }
 
-const ERC20_ABI = [
-  "function balanceOf(address) view returns (uint256)",
-  "function symbol() view returns (string)",
-  "function name() view returns (string)",
-  "function decimals() view returns (uint8)",
-];
+type PriceMap = { [symbol: string]: number };
+type ImageMap = { [symbol: string]: string };
 
-// Cache token data indefinitely until manual refresh
-const tokenCache = new Map<string, Token[]>();
+export interface TokenListStatus {
+  loading: boolean;
+  error: string | null;
+  /** True once balances for the current chain/address are on screen (fresh or cached). */
+  hasData: boolean;
+}
 
-function getNativeTokenInfo(chainId: number): { symbol: string; name: string } {
-  switch (chainId) {
-    case 1: // Ethereum
-    case 8453: // Base
-    case 42161: // Arbitrum
-    case 10: // Optimism
-    case 81457: // Blast
-    case 534352: // Scroll
-    case 59144: // Linea
-    case 324: // zkSync Era
-      return { symbol: "ETH", name: "Ethereum" };
-    case 137: // Polygon
-      return { symbol: "POL", name: "Polygon" };
-    default:
-      return { symbol: "ETH", name: "Ethereum" };
+// ─── Per chain:address cache (module scope: survives remounts / tab and chain switches) ──
+interface CacheEntry {
+  tokens: Token[];
+  prices: PriceMap;
+  images: ImageMap;
+  loadedAt: number;
+}
+const listCache = new Map<string, CacheEntry>();
+const REVALIDATE_AFTER_MS = 60_000;
+
+function cacheKey(chainId: number, address: string) {
+  return `${chainId}:${address.toLowerCase()}`;
+}
+
+function readStoredTokenAddresses(chainId: number): string[] {
+  try {
+    const stored = localStorage.getItem(`tokens_${chainId}`);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
   }
 }
 
-export function TokenList({ 
-  onSendToken, 
-  onSwapToken,
-  onRefresh,
-  onTokensLoaded,
-  onTokenRemoved
-}: { 
+function writeStoredTokenAddresses(chainId: number, addresses: string[]) {
+  try {
+    localStorage.setItem(`tokens_${chainId}`, JSON.stringify(addresses));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+interface StoredMeta {
+  symbol: string;
+  name: string;
+  decimals: number;
+}
+
+function readStoredMetadata(chainId: number, address: string): StoredMeta | null {
+  try {
+    const raw = localStorage.getItem(`token_metadata_${chainId}_${address.toLowerCase()}`);
+    if (!raw) return null;
+    const meta = JSON.parse(raw);
+    if (!meta?.symbol || String(meta.symbol).startsWith("TOKEN_")) return null;
+    return { symbol: meta.symbol, name: meta.name || meta.symbol, decimals: Number(meta.decimals ?? 18) };
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredMetadata(chainId: number, address: string, meta: StoredMeta) {
+  try {
+    localStorage.setItem(
+      `token_metadata_${chainId}_${address.toLowerCase()}`,
+      JSON.stringify({ ...meta, timestamp: Date.now() })
+    );
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Fetch balances (native + ERC-20, one multicall) and build the visible token list. */
+async function fetchTokenBalances(chainId: number, rpcUrl: string, address: string): Promise<Token[]> {
+  const provider = getProvider(chainId, rpcUrl);
+  const popular = getTokenListForChain(chainId);
+  const popularSet = new Set(popular.map((t) => t.address.toLowerCase()));
+  const custom = readStoredTokenAddresses(chainId).filter((a) => !popularSet.has(a.toLowerCase()));
+
+  const { native, tokens: balances } = await batchGetBalances(
+    provider,
+    [...popular.map((t) => t.address), ...custom],
+    address,
+    { includeNative: true }
+  );
+  if (native === undefined) throw new Error("Couldn't read your balance from the network.");
+
+  const list: Token[] = [
+    {
+      address: "native",
+      symbol: getNativeSymbol(chainId),
+      name: getNativeName(chainId),
+      decimals: 18,
+      balance: ethers.formatEther(native),
+    },
+  ];
+
+  for (const info of popular) {
+    const bal = balances.get(info.address.toLowerCase());
+    if (bal && bal > 0n) {
+      list.push({ ...info, balance: ethers.formatUnits(bal, info.decimals) });
+    }
+  }
+
+  // Custom tokens: use remembered metadata; only hit the chain for unknown ones.
+  const metas = new Map<string, StoredMeta>();
+  const unknown: string[] = [];
+  for (const addr of custom) {
+    const m = readStoredMetadata(chainId, addr);
+    if (m) metas.set(addr.toLowerCase(), m);
+    else unknown.push(addr);
+  }
+  if (unknown.length > 0) {
+    try {
+      const fetched = await batchGetTokenMetadata(provider, unknown);
+      fetched.forEach((m, addr) => {
+        const meta = { symbol: m.symbol, name: m.name, decimals: m.decimals };
+        metas.set(addr, meta);
+        writeStoredMetadata(chainId, addr, meta);
+      });
+    } catch (err) {
+      log.warn("[tokens] custom token metadata failed:", (err as Error)?.message);
+    }
+  }
+  for (const addr of custom) {
+    const bal = balances.get(addr.toLowerCase());
+    const meta = metas.get(addr.toLowerCase()) ?? {
+      symbol: `TOKEN_${addr.slice(2, 8).toUpperCase()}`,
+      name: `Custom Token ${addr.slice(0, 6)}...${addr.slice(-4)}`,
+      decimals: 18,
+    };
+    // Custom tokens are listed even at zero balance (so they can be bought/swapped into).
+    list.push({ address: addr, ...meta, balance: bal ? ethers.formatUnits(bal, meta.decimals) : "0" });
+  }
+  return list;
+}
+
+function TokenIcon({ symbol, url }: { symbol: string; url?: string }) {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [url]);
+  if (url && !broken) {
+    return (
+      <div className="w-8 h-8 rounded-lg overflow-hidden border border-[var(--sw-line)]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt=""
+          width={32}
+          height={32}
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="w-8 h-8 sw-mark rounded-lg flex items-center justify-center" aria-hidden="true">
+      <span className="text-sm font-bold">{symbol[0]}</span>
+    </div>
+  );
+}
+
+interface TokenListProps {
   onSendToken: (token: Token) => void;
   onSwapToken?: (token: Token) => void;
-  onRefresh?: () => void;
-  onTokensLoaded?: (tokens: Token[], images: { [symbol: string]: string }, prices: { [symbol: string]: number }) => void;
+  /** Bump to force a fresh reload of balances + prices (e.g. after a send/swap). */
+  refreshSignal?: number;
+  /** Called whenever tokens, icons or prices change (balances first; icons/prices as they arrive). */
+  onTokensLoaded?: (tokens: Token[], images: ImageMap, prices: PriceMap) => void;
+  onStatusChange?: (status: TokenListStatus) => void;
   onTokenRemoved?: (tokenAddress: string) => void;
-}) {
+}
+
+function TokenListImpl({
+  onSendToken,
+  refreshSignal = 0,
+  onTokensLoaded,
+  onStatusChange,
+  onTokenRemoved,
+}: TokenListProps) {
   const { pricingEnabled } = getAppConfig();
-  const { address, rpcUrl, chainId } = useWalletStore();
+  const address = useWalletStore((s) => s.address);
+  const rpcUrl = useWalletStore((s) => s.rpcUrl);
+  const chainId = useWalletStore((s) => s.chainId);
+
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [tokenPrices, setTokenPrices] = useState<PriceMap>({});
+  const [tokenImages, setTokenImages] = useState<ImageMap>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [hasData, setHasData] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [animateRows, setAnimateRows] = useState(true);
+
   const [newTokenAddress, setNewTokenAddress] = useState("");
   const [showAddToken, setShowAddToken] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tokenPrices, setTokenPrices] = useState<{ [symbol: string]: number }>({});
-  const [tokenImages, setTokenImages] = useState<{ [symbol: string]: string }>({});
-  const [isActuallyRefreshing, setIsActuallyRefreshing] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState<string | null>(null);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<'alphabetical' | 'value' | 'none'>('value');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<"alphabetical" | "value">("value");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [customVersion, setCustomVersion] = useState(0);
 
+  const requestId = useRef(0);
+  const onTokensLoadedRef = useRef(onTokensLoaded);
+  onTokensLoadedRef.current = onTokensLoaded;
+  const onStatusChangeRef = useRef(onStatusChange);
+  onStatusChangeRef.current = onStatusChange;
 
-  // Check if user has disabled the confirmation dialog
-  function shouldShowConfirmation(): boolean {
-    return localStorage.getItem('hideRemoveTokenConfirmation') !== 'true';
-  }
-
-  // Remove token from wallet
-  function handleRemoveToken(tokenAddress: string) {
-    try {
-      // Save the "don't show again" preference
-      if (dontShowAgain) {
-        localStorage.setItem('hideRemoveTokenConfirmation', 'true');
-      }
-
-      const storedAddresses = getStoredTokenAddresses();
-      const updatedAddresses = storedAddresses.filter(addr => addr.toLowerCase() !== tokenAddress.toLowerCase());
-      localStorage.setItem(`tokens_${chainId}`, JSON.stringify(updatedAddresses));
-      
-      // Remove from cache
-      const cacheKey = `${chainId}_${address}`;
-      const cached = tokenCache.get(cacheKey);
-      if (cached) {
-        const updatedTokens = cached.filter(token => token.address.toLowerCase() !== tokenAddress.toLowerCase());
-        tokenCache.set(cacheKey, updatedTokens);
-        setTokens(updatedTokens);
-      }
-      
-      // Also remove persistent metadata
-      const persistentKey = `token_metadata_${chainId}_${tokenAddress.toLowerCase()}`;
-      localStorage.removeItem(persistentKey);
-      
-      console.log(`🗑️ [Token] Removed ${tokenAddress} from wallet`);
-      
-      // Notify parent component about token removal
-      if (onTokenRemoved) {
-        onTokenRemoved(tokenAddress);
-      }
-      
-      setShowRemoveConfirm(null);
-      setDontShowAgain(false);
-    } catch (error) {
-      console.error('❌ [Token] Failed to remove token:', error);
-    }
-  }
-
-  // Handle remove token click - check if we should show confirmation
-  function handleRemoveTokenClick(tokenAddress: string) {
-    if (shouldShowConfirmation()) {
-      setShowRemoveConfirm(tokenAddress);
-    } else {
-      handleRemoveToken(tokenAddress);
-    }
-  }
-  const loadingRef = useRef(false);
-  
-  // Preload common token images on first mount (runs once)
   useEffect(() => {
     preloadCommonTokenImages();
   }, []);
 
+  // Report to the parent: balances as soon as they land, then icons/prices as they arrive.
+  useEffect(() => {
+    if (hasData) onTokensLoadedRef.current?.(tokens, tokenImages, tokenPrices);
+  }, [tokens, tokenImages, tokenPrices, hasData]);
 
   useEffect(() => {
-    // Always reload from localStorage when the component mounts or key changes
-    // This ensures custom tokens added via swap are immediately available
-    loadingRef.current = false;
-    
-    // Reset sort to default on mount/refresh
-    setSortBy('value');
-    setSortDirection('desc');
-    
-    // Clear tokens state to ensure fresh load
-    setTokens([]);
-    
-    loadTokens();
-  }, [address, rpcUrl, chainId]);
+    onStatusChangeRef.current?.({ loading: isLoading, error, hasData });
+  }, [isLoading, error, hasData]);
 
-  async function loadPricesForTokens(tokenList: Token[], forceRefresh: boolean = false) {
-    try {
-      const symbols = tokenList.map(t => t.symbol);
-      
-      // If not forcing refresh, check if we have fresh cached data
-      if (!forceRefresh) {
-        const timestamp = getOldestPriceTimestamp(symbols);
-        if (timestamp) {
-          const now = Date.now();
-          const isFresh = (now - timestamp) < (30 * 60 * 1000); // 30 minutes
-          if (isFresh) {
-            console.log("📦 Using fresh cached prices");
-            // Use the enhanced function with contract address support
-            const tokenData = tokenList.map(t => ({
-              symbol: t.symbol,
-              address: t.address,
-              chainId: chainId
-            }));
-            const cachedPrices = await getTokenPricesWithAddresses(tokenData);
-            setTokenPrices(cachedPrices);
-            return cachedPrices;
-          }
-        }
+  const loadPrices = useCallback(
+    (list: Token[], key: string, req: number, force: boolean) => {
+      if (!getAppConfig().pricingEnabled) return;
+      getTokenPricesWithAddresses(
+        list.map((t) => ({ symbol: t.symbol, address: t.address, chainId })),
+        { force }
+      )
+        .then((prices) => {
+          if (req !== requestId.current) return;
+          setTokenPrices(prices);
+          const entry = listCache.get(key);
+          if (entry) entry.prices = prices;
+        })
+        .catch((err) => log.warn("[tokens] prices failed:", err?.message));
+    },
+    [chainId]
+  );
+
+  const loadImages = useCallback(
+    (list: Token[], key: string, req: number) => {
+      const known: ImageMap = {};
+      const missing: Token[] = [];
+      for (const t of list) {
+        const url = getCachedTokenImage(t.symbol, t.address, chainId);
+        if (url) known[t.symbol.toUpperCase()] = url;
+        else missing.push(t);
       }
-      
-      // Actually fetch from API using enhanced function with contract support
-      setIsActuallyRefreshing(true);
-      const tokenData = tokenList.map(t => ({
-        symbol: t.symbol,
-        address: t.address,
-        chainId: chainId
-      }));
-      const prices = await getTokenPricesWithAddresses(tokenData);
-      setTokenPrices(prices);
-      
-      
-      return prices;
-    } catch (err) {
-      console.error("Error loading prices:", err);
-      return {};
-    } finally {
-      setIsActuallyRefreshing(false);
-    }
-  }
-
-  async function loadImagesForTokens(tokenList: Token[]) {
-    try {
-      const tokensToFetch = tokenList.map(t => ({ 
-        symbol: t.symbol, 
-        address: t.address,
-        chainId: chainId 
-      }));
-      console.log(`🖼️ [Token List] Starting to fetch images for ${tokensToFetch.length} tokens on chain ${chainId}`);
-      console.log(`🖼️ [Token List] Tokens to fetch:`, tokensToFetch.map(t => `${t.symbol} (${t.address})`).join(', '));
-      
-      const images = await batchGetTokenImages(tokensToFetch);
-      
-      // Convert Map to object for state
-      const imagesObj: { [symbol: string]: string } = {};
-      images.forEach((url, symbol) => {
-        imagesObj[symbol] = url;
-        console.log(`📝 [Token List] Storing image for ${symbol}: ${url}`);
-      });
-      
-      console.log(`✅ [Token List] Loaded ${Object.keys(imagesObj).length} out of ${tokensToFetch.length} token images`);
-      console.log(`📊 [Token List] Success rate: ${Math.round((Object.keys(imagesObj).length / tokensToFetch.length) * 100)}%`);
-      setTokenImages(imagesObj);
-      console.log(`💾 [Token List] Token images state updated`);
-      return imagesObj;
-    } catch (err) {
-      console.error("❌ [Token List] Error loading token images:", err);
-      return {};
-    }
-  }
-
-  // Clear placeholder tokens from cache to start fresh
-  function clearPlaceholderTokens() {
-    const cacheKey = `${chainId}_${address}`;
-    const cached = tokenCache.get(cacheKey);
-    if (cached) {
-      const realTokens = cached.filter(token => 
-        !token.symbol.startsWith('TOKEN_') && 
-        !token.name.includes('Custom Token')
-      );
-      tokenCache.set(cacheKey, realTokens);
-      console.log(`🧹 [Token List] Cleared ${cached.length - realTokens.length} placeholder tokens from cache`);
-    }
-  }
-
-  async function loadTokens() {
-    if (!address || !rpcUrl) {
-      return;
-    }
-    
-    // Prevent concurrent loading
-    if (loadingRef.current) {
-      return;
-    }
-
-    // Prevent unnecessary refreshes if tokens are already loaded and RPC is having issues
-    // But allow refresh if we're in refresh mode or if this is the initial load
-    if (tokens.length > 0 && !isActuallyRefreshing) {
-      console.log(`🔄 [Token List] Skipping load - tokens already loaded and not in refresh mode`);
-      return;
-    }
-    
-    // If we have tokens but no prices, try to load prices without full refresh
-    if (tokens.length > 0 && Object.keys(tokenPrices).length === 0) {
-      console.log(`💰 [Token List] Loading prices for existing tokens without full refresh`);
-      loadPricesForTokens(tokens, true);
-      return;
-    }
-
-    loadingRef.current = true;
-    setIsLoading(true);
-    setError(null);
-    
-    // Clear placeholder tokens from cache before loading
-    clearPlaceholderTokens();
-    
-    // If we have existing tokens and RPC is having issues, be more conservative
-    if (tokens.length > 0) {
-      console.log(`🔄 [Token List] Preserving existing tokens during load`);
-    }
-    
-    try {
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
-      
-      // Test RPC connection with rate limiting
-      try {
-        await rpcRateLimiter.makeRequest(async () => {
-          return await provider.getBlockNumber();
-        });
-      } catch (rpcErr) {
-        console.error("❌ RPC connection failed:", rpcErr);
-        setError("Failed to connect to RPC. Please check your network connection.");
-        setIsLoading(false);
+      setTokenImages((prev) => ({ ...prev, ...known }));
+      if (missing.length === 0) {
+        const entry = listCache.get(key);
+        if (entry) entry.images = { ...entry.images, ...known };
         return;
       }
-
-      const tokenData: Token[] = [];
-      
-      // Add native token as the first token (ETH, MATIC, etc.)
-      try {
-        const nativeBalance = await rpcRateLimiter.makeRequest(async () => {
-          return await provider.getBalance(address);
-        });
-        const formattedBalance = ethers.formatEther(nativeBalance);
-        const nativeToken = getNativeTokenInfo(chainId);
-        
-        tokenData.push({
-          address: "native",
-          symbol: nativeToken.symbol,
-          name: nativeToken.name,
-          decimals: 18,
-          balance: formattedBalance,
-        });
-      } catch (err: any) {
-        console.error("Error loading native token balance:", err);
-      }
-
-      // Get popular tokens for this chain
-      const popularTokens = getTokenListForChain(chainId);
-      
-      // Get custom tokens from localStorage
-      const customTokenAddresses = getStoredTokenAddresses();
-      
-      // Collect all token addresses to check
-      const allTokenAddresses = popularTokens.map(t => t.address);
-      const customTokensToCheck = customTokenAddresses.filter(
-        addr => !allTokenAddresses.some(a => a.toLowerCase() === addr.toLowerCase())
-      );
-      
-      // Batch check all balances using Multicall3 (single RPC call!)
-      const allAddresses = [...allTokenAddresses, ...customTokensToCheck];
-      const balances = await batchGetBalances(provider, allAddresses, address);
-      
-      // Process popular tokens with their known metadata
-      for (const tokenInfo of popularTokens) {
-        const balance = balances.get(tokenInfo.address.toLowerCase());
-        if (balance && balance > 0n) {
-          const formattedBalance = ethers.formatUnits(balance, tokenInfo.decimals);
-          
-          tokenData.push({
-            address: tokenInfo.address,
-            symbol: tokenInfo.symbol,
-            name: tokenInfo.name,
-            decimals: tokenInfo.decimals,
-            balance: formattedBalance,
+      batchGetTokenImages(missing.map((t) => ({ symbol: t.symbol, address: t.address, chainId })))
+        .then((found) => {
+          if (req !== requestId.current) return;
+          const fetched: ImageMap = {};
+          found.forEach((url, sym) => (fetched[sym] = url));
+          setTokenImages((prev) => {
+            const next = { ...prev, ...known, ...fetched };
+            const entry = listCache.get(key);
+            if (entry) entry.images = next;
+            return next;
           });
-        }
-      }
-      
-      // For custom tokens, use blockchain metadata only (faster, no CORS issues)
-      if (customTokensToCheck.length > 0) {
-        try {
-          const metadata = await batchGetTokenMetadata(provider, customTokensToCheck);
-          
-          for (const tokenAddr of customTokensToCheck) {
-            const balance = balances.get(tokenAddr.toLowerCase());
-            const meta = metadata.get(tokenAddr.toLowerCase());
-            
-            if (meta && meta.success) {
-              // Add custom tokens regardless of balance (allow zero balance for buying)
-              const formattedBalance = balance ? ethers.formatUnits(balance, meta.decimals) : "0";
-              
-              // Store the real metadata persistently for future fallback use
-              const persistentKey = `token_metadata_${chainId}_${tokenAddr.toLowerCase()}`;
-              const metadataToStore = {
-                symbol: meta.symbol,
-                name: meta.name,
-                decimals: meta.decimals,
-                timestamp: Date.now()
-              };
-              localStorage.setItem(persistentKey, JSON.stringify(metadataToStore));
-              console.log(`💾 [Token List] Stored persistent metadata for ${meta.symbol} (${tokenAddr})`);
-              
-              tokenData.push({
-                address: tokenAddr,
-                symbol: meta.symbol,
-                name: meta.name,
-                decimals: meta.decimals,
-                balance: formattedBalance,
-              });
-            } else {
-              // Fallback: If metadata fetching failed, try to use cached data or create placeholder
-              console.warn(`⚠️ [Token List] Metadata fetch failed for ${tokenAddr}, attempting fallback`);
-              
-              // Try to get cached token data from previous loads, but avoid placeholder tokens
-              const cacheKey = `${chainId}_${address}`;
-              const cachedTokens = tokenCache.get(cacheKey);
-              const cachedToken = cachedTokens?.find(token => 
-                token.address.toLowerCase() === tokenAddr.toLowerCase() && 
-                !token.symbol.startsWith('TOKEN_') && // Avoid placeholder tokens
-                !token.name.includes('Custom Token') // Avoid placeholder names
-              );
-              
-              if (cachedToken) {
-                // Use cached data as fallback (only if it's not a placeholder)
-                console.log(`🔄 [Token List] Using cached data for ${cachedToken.symbol} (${tokenAddr})`);
-                const formattedBalance = balance ? ethers.formatUnits(balance, cachedToken.decimals) : "0";
-                
-                tokenData.push({
-                  address: tokenAddr,
-                  symbol: cachedToken.symbol,
-                  name: cachedToken.name,
-                  decimals: cachedToken.decimals,
-                  balance: formattedBalance,
-                });
-              } else {
-                // Try to get real token data from localStorage (persistent storage)
-                const persistentKey = `token_metadata_${chainId}_${tokenAddr.toLowerCase()}`;
-                const storedMetadata = localStorage.getItem(persistentKey);
-                
-                if (storedMetadata) {
-                  try {
-                    const metadata = JSON.parse(storedMetadata);
-                    if (metadata.symbol && !metadata.symbol.startsWith('TOKEN_')) {
-                      console.log(`💾 [Token List] Using persistent metadata for ${metadata.symbol} (${tokenAddr})`);
-                      const formattedBalance = balance ? ethers.formatUnits(balance, metadata.decimals || 18) : "0";
-                      
-                      tokenData.push({
-                        address: tokenAddr,
-                        symbol: metadata.symbol,
-                        name: metadata.name,
-                        decimals: metadata.decimals || 18,
-                        balance: formattedBalance,
-                      });
-                    } else {
-                      throw new Error('Invalid stored metadata');
-                    }
-                  } catch (err) {
-                    console.warn(`⚠️ [Token List] Invalid stored metadata for ${tokenAddr}, creating placeholder`);
-                    // Fall through to placeholder creation
-                  }
-                }
-                
-                // If no valid cached or stored data, create placeholder token
-                if (!tokenData.some(token => token.address.toLowerCase() === tokenAddr.toLowerCase())) {
-                  console.log(`🆘 [Token List] Creating placeholder token for ${tokenAddr}`);
-                  const formattedBalance = balance ? ethers.formatUnits(balance, 18) : "0"; // Default to 18 decimals
-                  
-                  tokenData.push({
-                    address: tokenAddr,
-                    symbol: `TOKEN_${tokenAddr.slice(2, 8).toUpperCase()}`,
-                    name: `Custom Token ${tokenAddr.slice(0, 6)}...${tokenAddr.slice(-4)}`,
-                    decimals: 18,
-                    balance: formattedBalance,
-                  });
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error(`❌ [Token List] Critical error in custom token processing:`, error);
-          // If there's a critical error, try to preserve existing tokens from cache
-          const cacheKey = `${chainId}_${address}`;
-          const cachedTokens = tokenCache.get(cacheKey);
-          if (cachedTokens) {
-            console.log(`🔄 [Token List] Using cached tokens due to critical error`);
-            for (const tokenAddr of customTokensToCheck) {
-              const cachedToken = cachedTokens.find(token => 
-                token.address.toLowerCase() === tokenAddr.toLowerCase() && 
-                !token.symbol.startsWith('TOKEN_') && 
-                !token.name.includes('Custom Token')
-              );
-              
-              if (cachedToken) {
-                const balance = balances.get(tokenAddr.toLowerCase());
-                const formattedBalance = balance ? ethers.formatUnits(balance, cachedToken.decimals) : "0";
-                
-                tokenData.push({
-                  address: tokenAddr,
-                  symbol: cachedToken.symbol,
-                  name: cachedToken.name,
-                  decimals: cachedToken.decimals,
-                  balance: formattedBalance,
-                });
-              }
-            }
-          }
-        }
-      }
+        })
+        .catch(() => {});
+    },
+    [chainId]
+  );
 
-      setTokens(tokenData);
-      
-      // Update cache (no expiration)
-      const cacheKey = `${chainId}_${address}`;
-      tokenCache.set(cacheKey, tokenData);
-      
-      // Load prices and images for all tokens
-      const [prices, images] = await Promise.all([
-        loadPricesForTokens(tokenData, false), // Don't force refresh on initial load
-        loadImagesForTokens(tokenData)
-      ]);
-      
-      
-      // Report loaded data to parent
-      if (onTokensLoaded) {
-        onTokensLoaded(tokenData, images, prices);
-      }
-      
+  const loadTokens = useCallback(
+    async ({ force = false }: { force?: boolean } = {}) => {
+      if (!address || !rpcUrl) return;
+      const key = cacheKey(chainId, address);
+      const req = ++requestId.current;
+      setIsLoading(true);
       setError(null);
-    } catch (err: any) {
-      console.error("Error loading tokens:", err);
-      
-      // If we have existing tokens, don't clear them on error
-      if (tokens.length > 0) {
-        console.log(`🔄 [Token List] Preserving existing tokens despite error`);
-        setError('Some tokens may not have loaded properly. Please try refreshing.');
-      } else {
-        setError(err.message || "Failed to load tokens");
+      try {
+        const list = await fetchTokenBalances(chainId, rpcUrl, address);
+        if (req !== requestId.current) return;
+        const prev = listCache.get(key);
+        listCache.set(key, {
+          tokens: list,
+          prices: prev?.prices ?? {},
+          images: prev?.images ?? {},
+          loadedAt: Date.now(),
+        });
+        setTokens(list);
+        setHasData(true);
+        setIsLoading(false);
+        loadPrices(list, key, req, force);
+        loadImages(list, key, req);
+      } catch (err: any) {
+        if (req !== requestId.current) return;
+        log.warn("[tokens] load failed:", err?.message);
+        // Keep whatever is on screen (last known values) and surface the error.
+        setError(friendlyTxError(err));
+        setIsLoading(false);
       }
-    } finally {
+    },
+    [address, rpcUrl, chainId, loadPrices, loadImages]
+  );
+
+  // Chain / account change: paint cached data instantly, revalidate if stale.
+  useEffect(() => {
+    if (!address || !rpcUrl) return;
+    const cached = listCache.get(cacheKey(chainId, address));
+    requestId.current++; // drop any in-flight load for the previous chain/account
+    setError(null);
+    setSearchQuery("");
+    if (cached) {
+      setTokens(cached.tokens);
+      setTokenPrices(cached.prices);
+      setTokenImages(cached.images);
+      setHasData(true);
+      setAnimateRows(false);
       setIsLoading(false);
-      loadingRef.current = false;
+      if (Date.now() - cached.loadedAt > REVALIDATE_AFTER_MS) loadTokens();
+    } else {
+      setTokens([]);
+      setTokenPrices({});
+      setTokenImages({});
+      setHasData(false);
+      setAnimateRows(true);
+      loadTokens();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, rpcUrl, chainId]);
+
+  // Parent-requested refresh (after send/swap, manual refresh in the header).
+  const firstSignal = useRef(refreshSignal);
+  useEffect(() => {
+    if (refreshSignal === firstSignal.current) return;
+    loadTokens({ force: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshSignal]);
+
+  // Rows animate in only on the first load for a chain, never on refresh.
+  useEffect(() => {
+    if (!animateRows || !hasData) return;
+    const t = setTimeout(() => setAnimateRows(false), 800);
+    return () => clearTimeout(t);
+  }, [animateRows, hasData]);
+
+  function handleManualRefresh() {
+    clearPriceCache();
+    loadTokens({ force: true });
   }
 
-  function getStoredTokenAddresses(): string[] {
-    const key = `tokens_${chainId}`;
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
-  }
+  const customSet = useMemo(
+    () => new Set(readStoredTokenAddresses(chainId).map((a) => a.toLowerCase())),
+    // customVersion bumps when the user adds/removes a token
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chainId, customVersion, tokens]
+  );
+  const popularSet = useMemo(
+    () => new Set(getTokenListForChain(chainId).map((t) => t.address.toLowerCase())),
+    [chainId]
+  );
 
-  function storeTokenAddress(tokenAddr: string) {
-    const key = `tokens_${chainId}`;
-    const current = getStoredTokenAddresses();
-    if (!current.includes(tokenAddr.toLowerCase())) {
-      current.push(tokenAddr.toLowerCase());
-      localStorage.setItem(key, JSON.stringify(current));
+  const visibleTokens = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    const filtered = q
+      ? tokens.filter(
+          (t) =>
+            t.symbol.toLowerCase().includes(q) ||
+            t.name.toLowerCase().includes(q) ||
+            t.address.toLowerCase().includes(q)
+        )
+      : tokens;
+    const value = (t: Token) => parseFloat(t.balance) * (tokenPrices[t.symbol] || 0);
+    return [...filtered].sort((a, b) => {
+      // Native token always first.
+      if (a.address === "native") return -1;
+      if (b.address === "native") return 1;
+      if (sortBy === "alphabetical") {
+        const c = a.symbol.localeCompare(b.symbol);
+        return sortDirection === "asc" ? c : -c;
+      }
+      const av = value(a);
+      const bv = value(b);
+      if (av > 0 && bv > 0) return sortDirection === "desc" ? bv - av : av - bv;
+      if (av === 0 && bv === 0) return a.symbol.localeCompare(b.symbol);
+      return bv - av;
+    });
+  }, [tokens, tokenPrices, searchQuery, sortBy, sortDirection]);
+
+  function removeToken(tokenAddress: string) {
+    if (dontShowAgain) {
+      try {
+        localStorage.setItem("hideRemoveTokenConfirmation", "true");
+      } catch {
+        /* ignore */
+      }
     }
+    const updated = readStoredTokenAddresses(chainId).filter(
+      (a) => a.toLowerCase() !== tokenAddress.toLowerCase()
+    );
+    writeStoredTokenAddresses(chainId, updated);
+    try {
+      localStorage.removeItem(`token_metadata_${chainId}_${tokenAddress.toLowerCase()}`);
+    } catch {
+      /* ignore */
+    }
+    const next = tokens.filter((t) => t.address.toLowerCase() !== tokenAddress.toLowerCase());
+    setTokens(next);
+    if (address) {
+      const entry = listCache.get(cacheKey(chainId, address));
+      if (entry) entry.tokens = next;
+    }
+    setCustomVersion((v) => v + 1);
+    onTokenRemoved?.(tokenAddress);
+    setShowRemoveConfirm(null);
+    setDontShowAgain(false);
   }
 
-  function removeTokenAddress(tokenAddr: string) {
-    const key = `tokens_${chainId}`;
-    const current = getStoredTokenAddresses();
-    const updated = current.filter(addr => addr !== tokenAddr.toLowerCase());
-    localStorage.setItem(key, JSON.stringify(updated));
+  function handleRemoveTokenClick(tokenAddress: string) {
+    let hide = false;
+    try {
+      hide = localStorage.getItem("hideRemoveTokenConfirmation") === "true";
+    } catch {
+      /* ignore */
+    }
+    if (hide) removeToken(tokenAddress);
+    else setShowRemoveConfirm(tokenAddress);
   }
 
   async function handleAddToken() {
-    if (!newTokenAddress || !address || !rpcUrl) return;
-
-    setError(null);
-    setIsLoading(true);
-
+    const tokenAddr = newTokenAddress.trim();
+    if (!tokenAddr || !address || !rpcUrl) return;
+    if (!ethers.isAddress(tokenAddr)) {
+      setAddError("That isn't a valid contract address.");
+      return;
+    }
+    setAddError(null);
+    setIsAdding(true);
     try {
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
-      const contract = new ethers.Contract(newTokenAddress, ERC20_ABI, provider);
-
-      let balance = "0";
-      let symbol = "";
-      let name = "";
-      let decimals = 18;
-
-      // Try to get token metadata with fallback mechanisms
-      try {
-        console.log(`🔍 [Add Token] Attempting to fetch metadata for ${newTokenAddress}`);
-        
-        // Try to get balance first (most important)
-        balance = await rpcRateLimiter.makeRequest(async () => {
-          return await contract.balanceOf(address);
-        });
-        
-        // Try to get metadata with individual calls and fallbacks
-        try {
-          symbol = await rpcRateLimiter.makeRequest(async () => {
-            return await contract.symbol();
-          });
-        } catch (err) {
-          console.warn(`⚠️ [Add Token] Failed to get symbol for ${newTokenAddress}:`, err);
-          symbol = `TOKEN_${newTokenAddress.slice(2, 8).toUpperCase()}`;
-        }
-
-        try {
-          name = await rpcRateLimiter.makeRequest(async () => {
-            return await contract.name();
-          });
-        } catch (err) {
-          console.warn(`⚠️ [Add Token] Failed to get name for ${newTokenAddress}:`, err);
-          name = `Token ${newTokenAddress.slice(2, 8)}`;
-        }
-
-        try {
-          decimals = await rpcRateLimiter.makeRequest(async () => {
-            return await contract.decimals();
-          });
-        } catch (err) {
-          console.warn(`⚠️ [Add Token] Failed to get decimals for ${newTokenAddress}:`, err);
-          decimals = 18; // Default to 18 decimals
-        }
-
-        // If we got placeholder values, try to get real metadata from CoinGecko
-        if (symbol.startsWith('TOKEN_') || name.startsWith('Token ')) {
-          console.log(`🔍 [Add Token] Attempting to get real metadata from CoinGecko for ${newTokenAddress}`);
-          try {
-            const coinGeckoData = await fetchTokenDataByContract(newTokenAddress, chainId);
-            if (coinGeckoData) {
-              if (coinGeckoData.symbol && !coinGeckoData.symbol.startsWith('TOKEN_')) {
-                symbol = coinGeckoData.symbol;
-                console.log(`✅ [Add Token] Got symbol from CoinGecko: ${symbol}`);
-              }
-              if (coinGeckoData.name && !coinGeckoData.name.startsWith('Token ')) {
-                name = coinGeckoData.name;
-                console.log(`✅ [Add Token] Got name from CoinGecko: ${name}`);
-              }
-              if (coinGeckoData.decimals && coinGeckoData.decimals !== 18) {
-                decimals = coinGeckoData.decimals;
-                console.log(`✅ [Add Token] Got decimals from CoinGecko: ${decimals}`);
-              }
-            }
-          } catch (err) {
-            console.warn(`⚠️ [Add Token] CoinGecko fallback failed:`, err);
-          }
-        }
-
-      } catch (err) {
-        console.error(`❌ [Add Token] Failed to get balance for ${newTokenAddress}:`, err);
-        throw new Error("Unable to fetch token data. The contract may not be a valid ERC20 token or the RPC is experiencing issues.");
+      const provider = getProvider(chainId, rpcUrl);
+      const [{ tokens: bals }, metas] = await Promise.all([
+        batchGetBalances(provider, [tokenAddr], address),
+        batchGetTokenMetadata(provider, [tokenAddr]),
+      ]);
+      let meta: StoredMeta | null = null;
+      const onChain = metas.get(tokenAddr.toLowerCase());
+      if (onChain) meta = { symbol: onChain.symbol, name: onChain.name, decimals: onChain.decimals };
+      if (!meta) {
+        const cg = await fetchTokenDataByContract(tokenAddr, chainId);
+        if (cg) meta = { symbol: cg.symbol, name: cg.name, decimals: cg.decimals };
+      }
+      const bal = bals.get(tokenAddr.toLowerCase());
+      if (!meta || bal === undefined) {
+        throw new Error("This contract doesn't look like an ERC-20 token on this network.");
       }
 
-      console.log(`✅ Valid token found: ${symbol} (${name})`);
+      const stored = readStoredTokenAddresses(chainId);
+      if (!stored.includes(tokenAddr.toLowerCase())) {
+        writeStoredTokenAddresses(chainId, [...stored, tokenAddr.toLowerCase()]);
+      }
+      writeStoredMetadata(chainId, tokenAddr, meta);
 
-      // Store the token address in localStorage (allow zero balance for buying tokens)
-      storeTokenAddress(newTokenAddress);
-      
-      // Add the token to the current list directly (no reload)
-      const formattedBalance = ethers.formatUnits(balance, decimals);
-      const newToken: Token = {
-        address: newTokenAddress,
-        symbol,
-        name,
-        decimals: Number(decimals),
-        balance: formattedBalance,
-      };
-      
-      const updatedTokens = [...tokens, newToken];
-      setTokens(updatedTokens);
-      
-      // Update cache with the new token included
-      const cacheKey = `${chainId}_${address}`;
-      tokenCache.set(cacheKey, updatedTokens);
-      
-      // Fetch image for the new token
-      getTokenImage(symbol, newTokenAddress, chainId).then(imageUrl => {
-        const updatedImages = { ...tokenImages };
-        if (imageUrl) {
-          updatedImages[symbol.toUpperCase()] = imageUrl;
-          setTokenImages(updatedImages);
-        }
-        // Report updated data to parent
-        if (onTokensLoaded) {
-          onTokensLoaded(updatedTokens, updatedImages, tokenPrices);
-        }
-      }).catch(err => {
-        console.warn("Could not load image for new token:", err);
-        // Report updated data to parent even without image
-        if (onTokensLoaded) {
-          onTokensLoaded(updatedTokens, tokenImages, tokenPrices);
-        }
-      });
-      
-      // Clear form
+      if (!tokens.some((t) => t.address.toLowerCase() === tokenAddr.toLowerCase())) {
+        const next = [...tokens, { address: tokenAddr, ...meta, balance: ethers.formatUnits(bal, meta.decimals) }];
+        setTokens(next);
+        const entry = listCache.get(cacheKey(chainId, address));
+        if (entry) entry.tokens = next;
+        const req = requestId.current;
+        loadImages(next, cacheKey(chainId, address), req);
+        loadPrices(next, cacheKey(chainId, address), req, false);
+      }
+      setCustomVersion((v) => v + 1);
       setNewTokenAddress("");
       setShowAddToken(false);
-      
-      console.log(`💾 Token ${symbol} added to list (balance: ${formattedBalance})`);
     } catch (err: any) {
-      console.error(`❌ [Add Token] Error adding token:`, err);
-      setError(err.message || "Invalid token address");
+      setAddError(err?.message?.startsWith("This contract") ? err.message : friendlyTxError(err));
     } finally {
-      setIsLoading(false);
+      setIsAdding(false);
     }
   }
 
-  
-  async function handleManualRefresh() {
-    // Clear token list cache and force reload (but keep image cache)
-    const cacheKey = `${chainId}_${address}`;
-    tokenCache.delete(cacheKey);
-    clearPriceCache(); // Clear price cache to get fresh prices
-    // Note: We keep the image cache since token logos don't change
-    console.log("🔄 Manual refresh: token list and price cache cleared, loading fresh data...");
-    
-    // Set refresh flag to allow loading even if tokens are already loaded
-    setIsActuallyRefreshing(true);
-    
-    // Force refresh prices for current tokens
-    if (tokens.length > 0) {
-      await loadPricesForTokens(tokens, true); // Force refresh
-    }
-    
-    // Reload tokens (balances)
-    await loadTokens();
-    
-    // Reset refresh flag
-    setIsActuallyRefreshing(false);
-    
-    // Also refresh main balance
-    if (onRefresh) {
-      onRefresh();
-    }
-  }
-
+  const showSkeleton = !hasData && (isLoading || !error);
 
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--sw-line)]">
         <h2 className="sw-seclabel !border-b-0 !pb-0">Assets</h2>
         <div className="flex items-center gap-4">
-          <div className="relative group">
-            <button
-              onClick={handleManualRefresh}
-              disabled={isLoading}
-              className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isActuallyRefreshing ? "animate-spin" : ""}`} />
-            </button>
-            <div className="absolute top-full right-0 mt-2 px-3 py-2 sw-surface border border-[var(--sw-line)] text-[var(--sw-ink)] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-              Refresh balances & prices
-            </div>
-          </div>
           <button
-            onClick={() => setShowAddToken(!showAddToken)}
+            onClick={handleManualRefresh}
+            disabled={isLoading}
+            className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors disabled:opacity-50"
+            aria-label="Refresh balances and prices"
+            title="Refresh balances & prices"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => {
+              setShowAddToken(!showAddToken);
+              setAddError(null);
+            }}
+            aria-expanded={showAddToken}
             className="text-xs sw-accent hover:opacity-80 font-semibold flex items-center gap-1 transition-opacity group"
           >
             {showAddToken ? (
               <>
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
                 Cancel
               </>
             ) : (
               <>
-                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
+                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" aria-hidden="true" />
                 Add token
               </>
             )}
@@ -737,105 +546,120 @@ export function TokenList({
         </div>
       </div>
 
+      {/* RPC error while we still have last-known values on screen */}
+      {error && hasData && (
+        <div
+          role="alert"
+          className="mb-3 flex items-start gap-2.5 rounded-lg border border-[var(--sw-down)]/40 bg-[color-mix(in_srgb,var(--sw-down)_8%,transparent)] px-3 py-2.5"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--sw-down)]" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[var(--sw-ink)]">Couldn&apos;t refresh balances</p>
+            <p className="text-[11px] text-[var(--sw-muted)] leading-relaxed">{error} Showing last known values.</p>
+          </div>
+          <button
+            onClick={() => loadTokens({ force: true })}
+            className="text-xs font-semibold text-[var(--sw-accent)] hover:opacity-80 flex-shrink-0"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Search and Sort Controls */}
       <div className="flex items-center gap-3 mb-3">
-        {/* Search Input */}
         <div className="relative flex-1">
-          <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--sw-muted)]" />
+          <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search name, symbol, or address"
+            aria-label="Search tokens"
             className="sw-input w-full pl-6 pr-2 py-2 text-sm"
           />
         </div>
 
-        {/* Sort Controls */}
         <div className="flex items-center gap-3">
-          <span className="sw-uplabel">Sort</span>
-          <div className="flex gap-3">
+          <span className="sw-uplabel" aria-hidden="true">Sort</span>
+          <div className="flex gap-3" role="group" aria-label="Sort tokens">
             <button
               onClick={() => {
-                if (sortBy === 'alphabetical') {
-                  // Toggle direction if already alphabetical
-                  setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                } else {
-                  // Set to alphabetical with default ascending
-                  setSortBy('alphabetical');
-                  setSortDirection('asc');
+                if (sortBy === "alphabetical") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                else {
+                  setSortBy("alphabetical");
+                  setSortDirection("asc");
                 }
               }}
+              aria-pressed={sortBy === "alphabetical"}
               className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
-                sortBy === 'alphabetical'
-                  ? 'sw-accent'
-                  : 'text-[var(--sw-muted)] hover:text-[var(--sw-ink)]'
+                sortBy === "alphabetical" ? "sw-accent" : "text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
               }`}
             >
-              {sortBy === 'alphabetical' && sortDirection === 'desc' ? (
-                <SortAsc className="w-3 h-3 rotate-180" />
-              ) : (
-                <SortAsc className="w-3 h-3" />
-              )}
-              {sortBy === 'alphabetical' && sortDirection === 'desc' ? 'Z-A' : 'A-Z'}
+              <SortAsc
+                className={`w-3 h-3 ${sortBy === "alphabetical" && sortDirection === "desc" ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+              {sortBy === "alphabetical" && sortDirection === "desc" ? "Z-A" : "A-Z"}
             </button>
             <button
               onClick={() => {
-                if (sortBy === 'value') {
-                  // Toggle direction if already value
-                  setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
-                } else {
-                  // Set to value with default descending
-                  setSortBy('value');
-                  setSortDirection('desc');
+                if (sortBy === "value") setSortDirection(sortDirection === "desc" ? "asc" : "desc");
+                else {
+                  setSortBy("value");
+                  setSortDirection("desc");
                 }
               }}
+              aria-pressed={sortBy === "value"}
               className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
-                sortBy === 'value'
-                  ? 'sw-accent'
-                  : 'text-[var(--sw-muted)] hover:text-[var(--sw-ink)]'
+                sortBy === "value" ? "sw-accent" : "text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
               }`}
             >
-              {sortBy === 'value' && sortDirection === 'asc' ? (
-                <SortAsc className="w-3 h-3 rotate-180" />
-              ) : (
-                <SortAsc className="w-3 h-3" />
-              )}
+              <SortAsc
+                className={`w-3 h-3 ${sortBy === "value" && sortDirection === "asc" ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
               Value
             </button>
           </div>
         </div>
       </div>
 
-      {/* Legend for custom tokens */}
-
       {showAddToken && (
         <div className="mb-3 p-4 sw-surface rounded-xl border border-[var(--sw-line)]">
-          <label className="block sw-uplabel mb-2">
+          <label htmlFor="add-token-address" className="block sw-uplabel mb-2">
             Token contract address
           </label>
           <input
+            id="add-token-address"
             type="text"
             value={newTokenAddress}
             onChange={(e) => setNewTokenAddress(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAddToken();
+            }}
             placeholder="0x..."
+            autoComplete="off"
+            spellCheck={false}
             className="sw-input sw-mono w-full px-0 py-2 text-sm mb-3"
           />
-          {error && (
-            <p className="text-xs text-[var(--sw-down)] mb-3 font-medium">{error}</p>
+          {addError && (
+            <p role="alert" className="text-xs text-[var(--sw-down)] mb-3 font-medium">
+              {addError}
+            </p>
           )}
           <button
             onClick={handleAddToken}
-            disabled={!newTokenAddress || isLoading}
+            disabled={!newTokenAddress || isAdding}
             className="sw-btn-primary w-full text-sm py-2.5 px-3"
           >
-            {isLoading ? "Adding..." : "Add token"}
+            {isAdding ? "Adding..." : "Add token"}
           </button>
         </div>
       )}
 
-      {isLoading && tokens.length === 0 ? (
-        <div className="sw-list">
+      {showSkeleton ? (
+        <div className="sw-list" aria-busy="true" aria-label="Loading assets">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
               <div className="w-8 h-8 rounded-lg bg-[var(--sw-line-soft)] flex-shrink-0" />
@@ -847,148 +671,76 @@ export function TokenList({
             </div>
           ))}
         </div>
+      ) : !hasData && error ? (
+        <div className="text-center py-12" role="alert">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-lg border border-[var(--sw-line)] flex items-center justify-center">
+            <AlertTriangle className="w-6 h-6 text-[var(--sw-down)]" aria-hidden="true" />
+          </div>
+          <p className="text-[var(--sw-ink)] text-sm font-semibold mb-1">Couldn&apos;t load your assets</p>
+          <p className="text-[var(--sw-muted)] text-xs mb-4 max-w-xs mx-auto">{error}</p>
+          <button onClick={() => loadTokens({ force: true })} className="sw-btn-ghost py-2.5 px-5 text-sm">
+            Retry
+          </button>
+        </div>
       ) : tokens.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-12 h-12 mx-auto mb-4 rounded-lg border border-[var(--sw-line)] flex items-center justify-center">
-            <Plus className="w-6 h-6 text-[var(--sw-muted)]" />
+            <Plus className="w-6 h-6 text-[var(--sw-muted)]" aria-hidden="true" />
           </div>
           <p className="text-[var(--sw-ink)] text-sm font-semibold mb-1">No assets found</p>
           <p className="text-[var(--sw-muted)] text-xs">Popular tokens are auto-detected</p>
         </div>
       ) : (
-        <div className="sw-list">
-          {tokens
-            .filter((token) => {
-              // Apply search filter
-              if (!searchQuery.trim()) return true;
-              
-              const query = searchQuery.toLowerCase().trim();
-              const matchesSymbol = token.symbol.toLowerCase().includes(query);
-              const matchesName = token.name.toLowerCase().includes(query);
-              const matchesAddress = token.address.toLowerCase().includes(query);
-              
-              return matchesSymbol || matchesName || matchesAddress;
-            })
-            .sort((a, b) => {
-              // Always keep native token (ETH, BNB, etc.) at the top
-              const aIsNative = a.address === "native";
-              const bIsNative = b.address === "native";
-              
-              if (aIsNative && !bIsNative) return -1;
-              if (!aIsNative && bIsNative) return 1;
-              
-              // If both are native or both are not native, apply normal sorting
-              if (sortBy === 'alphabetical') {
-                const comparison = a.symbol.localeCompare(b.symbol);
-                return sortDirection === 'asc' ? comparison : -comparison;
-              } else if (sortBy === 'value') {
-                const aValue = parseFloat(a.balance) * (tokenPrices[a.symbol] || 0);
-                const bValue = parseFloat(b.balance) * (tokenPrices[b.symbol] || 0);
-                
-                // If both have value, sort by value (direction based on sortDirection)
-                if (aValue > 0 && bValue > 0) {
-                  return sortDirection === 'desc' ? bValue - aValue : aValue - bValue;
-                }
-                
-                // If both are zero, always sort alphabetically (A-Z) regardless of main sort direction
-                if (aValue === 0 && bValue === 0) {
-                  return a.symbol.localeCompare(b.symbol);
-                }
-                
-                // If one has value and one doesn't, value comes first
-                return bValue - aValue;
-              }
-              return 0; // No sorting
-            })
-            .map((token, index) => {
+        <ul className="sw-list">
+          {visibleTokens.map((token, index) => {
             const isNative = token.address === "native";
-            const isCustomToken = !isNative && getStoredTokenAddresses().includes(token.address.toLowerCase());
-            const popularTokens = getTokenListForChain(chainId);
-            const isPopularToken = popularTokens.some(t => t.address.toLowerCase() === token.address.toLowerCase());
+            const lower = token.address.toLowerCase();
+            const isCustomToken = !isNative && customSet.has(lower) && !popularSet.has(lower);
+            const hasBalance = parseFloat(token.balance) > 0;
+            const price = tokenPrices[token.symbol];
 
             return (
-              <React.Fragment key={token.address}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: index * 0.05,
-                    ease: "easeOut"
-                  }}
-                  className="flex items-center justify-between py-3 transition-colors hover:bg-[color-mix(in_srgb,var(--sw-ink)_4%,transparent)] border-t border-[var(--sw-line-soft)] first:border-t-0 group"
-                >
+              <li
+                key={token.address}
+                className={`flex items-center justify-between py-3 transition-colors hover:bg-[color-mix(in_srgb,var(--sw-ink)_4%,transparent)] group ${
+                  animateRows ? "ob-rise-in" : ""
+                }`}
+                style={animateRows ? { animationDelay: `${Math.min(index, 10) * 40}ms` } : undefined}
+              >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {/* Token Icon */}
                   <div className="flex-shrink-0">
-                    {tokenImages[token.symbol.toUpperCase()] ? (
-                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-[var(--sw-line)]">
-                        <img
-                          src={tokenImages[token.symbol.toUpperCase()]}
-                          alt={token.symbol}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Fallback to letter avatar on image load error
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.className = 'w-8 h-8 sw-mark rounded-lg flex items-center justify-center';
-                              parent.innerHTML = `<span class="text-sm font-bold">${token.symbol[0]}</span>`;
-                            }
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 sw-mark rounded-lg flex items-center justify-center">
-                        <span className="text-sm font-bold">{token.symbol[0]}</span>
-                      </div>
-                    )}
+                    <TokenIcon symbol={token.symbol} url={tokenImages[token.symbol.toUpperCase()]} />
                   </div>
 
-                  {/* Token Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="font-semibold text-[var(--sw-ink)] token-opacity">{token.symbol}</p>
-                      {/* Reserve space for custom token indicator to maintain consistent alignment */}
-                      <div className="flex-shrink-0 flex items-center">
-                        {isCustomToken && !isPopularToken && (
-                          <span className="sw-uplabel">
-                            Custom
-                          </span>
-                        )}
-                      </div>
+                      {isCustomToken && <span className="sw-uplabel">Custom</span>}
                     </div>
                     <p className="text-xs text-[var(--sw-muted)] truncate leading-tight">{token.name}</p>
                   </div>
 
-                  {/* Balance - Right aligned */}
                   <div className="text-right flex-shrink-0">
-                    {parseFloat(token.balance) > 0 && (
+                    {hasBalance && (
                       <>
                         <p className="text-sm font-semibold text-[var(--sw-ink)] sw-num balance-number">
-                          {formatTokenBalance(token.balance, token.symbol === 'USDC' || token.symbol === 'USDT')}
+                          {formatTokenBalance(token.balance, token.symbol === "USDC" || token.symbol === "USDT")}
                         </p>
                         <p className="text-xs text-[var(--sw-muted)] sw-num leading-tight">
-                          {pricingEnabled ? (
-                            tokenPrices[token.symbol] !== undefined ? (
-                              `≈ $${(parseFloat(token.balance) * tokenPrices[token.symbol]).toFixed(2)}`
-                            ) : (
-                              <span className="text-[var(--sw-muted)]">Refresh for price</span>
-                            )
-                          ) : (
-                            <span className="text-[var(--sw-muted)]">-</span>
-                          )}
+                          {pricingEnabled
+                            ? price !== undefined
+                              ? `≈ $${(parseFloat(token.balance) * price).toFixed(2)}`
+                              : "—"
+                            : "-"}
                         </p>
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Action buttons on hover */}
-                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                  {/* Send button - only show if balance > 0 */}
-                  {parseFloat(token.balance) > 0 && (
+                {/* Row actions: on hover/focus (pointer) and always on touch screens */}
+                <div className="ml-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity flex items-center gap-1">
+                  {hasBalance && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -996,13 +748,12 @@ export function TokenList({
                       }}
                       className="p-2 sw-accent hover:bg-[color-mix(in_srgb,var(--sw-accent)_12%,transparent)] rounded-lg transition-colors"
                       title="Send"
+                      aria-label={`Send ${token.symbol}`}
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4" aria-hidden="true" />
                     </button>
                   )}
-
-                  {/* Remove button for custom tokens - always reserve space for consistent alignment */}
-                  {isCustomToken && !isPopularToken ? (
+                  {isCustomToken ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1010,64 +761,53 @@ export function TokenList({
                       }}
                       className="p-2 text-[var(--sw-down)] hover:bg-[color-mix(in_srgb,var(--sw-down)_12%,transparent)] rounded-lg transition-colors"
                       title="Remove from wallet"
+                      aria-label={`Remove ${token.symbol} from wallet`}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
                   ) : (
                     <div className="w-8 h-8" />
                   )}
                 </div>
-              </motion.div>
-              </React.Fragment>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
 
-      {/* Remove Token Confirmation Modal */}
       {showRemoveConfirm && (
-        <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden p-6"
-          >
-            <h3 className="text-lg font-bold text-[var(--sw-ink)] mb-2">
-              Remove token
-            </h3>
-            <p className="text-sm text-[var(--sw-ink-soft)] mb-4">
-              Remove this token from your wallet?
-            </p>
-            <div className="flex items-center gap-2 mb-6">
-              <input
-                type="checkbox"
-                id="dontShowAgain"
-                checked={dontShowAgain}
-                onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="w-4 h-4 accent-[var(--sw-accent)] rounded"
-              />
-              <label htmlFor="dontShowAgain" className="text-sm text-[var(--sw-muted)] cursor-pointer">
-                Don't show this again
-              </label>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowRemoveConfirm(null)}
-                className="sw-btn-ghost flex-1 text-sm py-2.5 px-4"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleRemoveToken(showRemoveConfirm)}
-                className="flex-1 text-sm font-semibold py-2.5 px-4 rounded-[3px] uppercase tracking-[0.05em] text-white bg-[var(--sw-down)] hover:brightness-105 transition-all"
-              >
-                Remove
-              </button>
-            </div>
-          </motion.div>
-        </div>
+        <Modal onClose={() => setShowRemoveConfirm(null)} labelledBy="remove-token-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden p-6">
+          <h3 id="remove-token-title" className="text-lg font-bold text-[var(--sw-ink)] mb-2">
+            Remove token
+          </h3>
+          <p className="text-sm text-[var(--sw-ink-soft)] mb-4">Remove this token from your wallet?</p>
+          <div className="flex items-center gap-2 mb-6">
+            <input
+              type="checkbox"
+              id="dontShowAgain"
+              checked={dontShowAgain}
+              onChange={(e) => setDontShowAgain(e.target.checked)}
+              className="w-4 h-4 accent-[var(--sw-accent)] rounded"
+            />
+            <label htmlFor="dontShowAgain" className="text-sm text-[var(--sw-muted)] cursor-pointer">
+              Don&apos;t show this again
+            </label>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setShowRemoveConfirm(null)} className="sw-btn-ghost flex-1 text-sm py-2.5 px-4">
+              Cancel
+            </button>
+            <button
+              onClick={() => removeToken(showRemoveConfirm)}
+              className="flex-1 text-sm font-semibold py-2.5 px-4 rounded-[3px] uppercase tracking-[0.05em] text-white bg-[var(--sw-down)] hover:brightness-105 transition-all"
+            >
+              Remove
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
 }
+
+export const TokenList = memo(TokenListImpl);

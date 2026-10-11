@@ -54,19 +54,13 @@ body {
   text-size-adjust: 100%;
 }
 
-/* Ensure modal overlays cover everything */
+/* Layering: page < dropdowns (50) < modals (1000, components/common/modal.tsx)
+   < toasts (2000). Legacy overlays use .modal-overlay at the modal tier. */
 .modal-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  z-index: 9999 !important;
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  z-index: 1000;
 }
 
 body {
@@ -145,40 +139,6 @@ body {
 .sw-list > * + * { border-top: 1px solid var(--sw-line-soft); }
 
 @layer utilities {
-
-  .glass-card {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  .gradient-border {
-    position: relative;
-    background: linear-gradient(white, white) padding-box,
-                linear-gradient(135deg, #667eea 0%, #764ba2 100%) border-box;
-    border: 2px solid transparent;
-  }
-
-  .orange-glow-line {
-    position: relative;
-  }
-  
-  .orange-glow-line::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #E4572E, #FF8C61, #E4572E);
-    border-radius: 2px;
-    box-shadow: 0 2px 12px rgba(228, 87, 46, 0.4);
-  }
-
-  .pulse-orange {
-    animation: pulseOrange 3s ease-in-out infinite;
-  }
-
   .balance-number {
     font-feature-settings: 'tnum' 1, 'lnum' 1;
     letter-spacing: -0.01em;
@@ -188,36 +148,12 @@ body {
     opacity: 0.8;
   }
 
-  .pulse-nfc {
-    animation: pulseNFC 2s ease-in-out infinite;
-  }
-
   .toast-slide-in {
     animation: toastSlideIn 0.3s ease-out;
   }
 
   .toast-slide-out {
     animation: toastSlideOut 0.3s ease-in;
-  }
-}
-
-@keyframes pulseOrange {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-@keyframes pulseNFC {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.8;
   }
 }
 
@@ -243,239 +179,40 @@ body {
   }
 }
 
-/* Connected state background animation */
-.bg-connected {
-  position: relative;
-  overflow: hidden;
-}
-
-.bg-connected::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle at center,
-    rgba(228, 87, 46, 0.08) 0%,
-    rgba(228, 87, 46, 0.04) 25%,
-    transparent 50%
-  );
-  animation: rotateGlow 20s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes rotateGlow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+/* iOS zooms into focused fields under 16px. Bump only the small-text fields, and
+   only on small touch screens, so desktop and large PIN/amount inputs keep their size. */
+@media (max-width: 640px) and (pointer: coarse) {
+  :is(input, textarea, select):is(.text-xs, .text-sm) {
+    font-size: 16px;
   }
 }
 
-@keyframes glowPulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(228, 87, 46, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(228, 87, 46, 0.5), 0 0 40px rgba(228, 87, 46, 0.3);
-  }
+/* Modal / list entrance animations (CSS replaces framer-motion) */
+@keyframes obFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-
-/* ===== DREAD SPLASH EFFECTS ===== */
-
-/* Rising Ember Particles */
-@keyframes ember-rise {
-  0% {
-    transform: translateY(0) translateX(0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(var(--drift, 20px)) scale(0);
-    opacity: 0;
-  }
+@keyframes obPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
 }
-
-/* Slow Fire Pulse - ominous breathing */
-@keyframes fire-pulse {
-  0%, 100% {
-    opacity: 0.3;
-    filter: blur(80px);
-  }
-  50% {
-    opacity: 0.5;
-    filter: blur(100px);
-  }
+@keyframes obRise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
 }
+.ob-modal-backdrop { animation: obFadeIn 0.15s ease-out; }
+.ob-modal-panel { animation: obPop 0.18s ease-out; }
+.ob-fade-in { animation: obFadeIn 0.2s ease-out both; }
+.ob-pop-in { animation: obPop 0.18s ease-out both; }
+.ob-rise-in { animation: obRise 0.3s ease-out both; }
 
-/* Vignette Pulse */
-@keyframes vignette-pulse {
-  0%, 100% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 0.9;
-  }
-}
-
-/* Subtle Flicker */
-@keyframes flicker {
-  0%, 100% { opacity: 1; }
-  92% { opacity: 1; }
-  93% { opacity: 0.8; }
-  94% { opacity: 1; }
-  96% { opacity: 0.9; }
-  97% { opacity: 1; }
-}
-
-/* Chromatic Aberration */
-@keyframes chromatic-shift {
-  0%, 100% {
-    text-shadow: -1px 0 rgba(255,0,0,0.3), 1px 0 rgba(0,255,255,0.3);
-  }
-  50% {
-    text-shadow: -2px 0 rgba(255,0,0,0.4), 2px 0 rgba(0,255,255,0.4);
-  }
-}
-
-/* Card Entrance - slower, more ominous */
-@keyframes dread-entrance {
-  0% {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-    filter: blur(4px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-/* Ember Glow Pulse */
-@keyframes ember-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 30px rgba(255, 107, 53, 0.2),
-      0 0 60px rgba(139, 0, 0, 0.1);
-  }
-  50% {
-    box-shadow:
-      0 0 40px rgba(255, 107, 53, 0.3),
-      0 0 80px rgba(139, 0, 0, 0.15);
-  }
-}
-
-/* Dark Apocalyptic Background */
-.dread-bg {
-  background: radial-gradient(ellipse at center, #1a0a0a 0%, #0a0505 50%, #000 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Vignette Overlay */
-.vignette::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.8) 100%);
-  pointer-events: none;
-  z-index: 1;
-  animation: vignette-pulse 8s ease-in-out infinite;
-}
-
-/* Fire Glow - ambient light source */
-.fire-glow::before {
-  content: '';
-  position: fixed;
-  bottom: -50%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200%;
-  height: 100%;
-  background: radial-gradient(ellipse at center bottom,
-    rgba(255, 107, 53, 0.15) 0%,
-    rgba(139, 0, 0, 0.08) 30%,
-    transparent 60%);
-  animation: fire-pulse 6s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Heavy Noise/Grain */
-.grain-overlay::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  opacity: 0.08;
-  pointer-events: none;
-  z-index: 2;
-  mix-blend-mode: overlay;
-}
-
-/* Dark Glass Card */
-.glass-card-dark {
-  background: rgba(10, 5, 5, 0.8);
-  backdrop-filter: blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
-  border: 1px solid rgba(255, 107, 53, 0.1);
-  animation: ember-glow 4s ease-in-out infinite;
-}
-
-/* Chromatic Text */
-.text-chromatic {
-  animation: chromatic-shift 4s ease-in-out infinite;
-}
-
-/* Flicker Effect */
-.flicker {
-  animation: flicker 8s infinite;
-}
-
-/* Dread Entrance */
-.dread-entrance {
-  animation: dread-entrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .dread-entrance,
-  .flicker,
-  .text-chromatic,
-  .glass-card-dark,
-  .vignette::after,
-  .fire-glow::before {
-    animation: none !important;
-  }
-
-  .dread-entrance {
-    opacity: 1;
-    transform: none;
-    filter: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
-
-/* Prevent mobile zoom on input fields */
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-textarea,
-select {
-  font-size: 16px !important;
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-/* Ensure buttons don't trigger zoom */
-button {
-  font-size: 16px !important;
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-

@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { rpcRateLimiter } from "./rpc-rate-limiter";
+import { getProvider } from "./provider";
 import { getUserKey } from "./user-keys";
 
 /**
@@ -233,7 +234,8 @@ export async function fetchNftOnChain(
   rpcUrl: string,
   contractAddress: string,
   tokenId: string,
-  owner: string
+  owner: string,
+  chainId?: number
 ): Promise<NftItem> {
   if (!ethers.isAddress(contractAddress)) {
     throw new Error("Invalid contract address");
@@ -242,7 +244,7 @@ export async function fetchNftOnChain(
     throw new Error("Token ID must be a number");
   }
 
-  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  const provider = chainId ? getProvider(chainId, rpcUrl) : new ethers.JsonRpcProvider(rpcUrl);
   const id = tokenId.trim();
 
   // Detect token type via ERC-165.

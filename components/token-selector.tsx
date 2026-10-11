@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { X, Search, Plus } from "lucide-react";
-import { motion } from "framer-motion";
+import { Modal } from "./common/modal";
 import { getAppConfig } from "@/lib/config/environment";
 import { formatTokenBalance } from "@/lib/format-utils";
 
@@ -38,7 +38,7 @@ export function TokenSelector({
   const { pricingEnabled } = getAppConfig();
 
   // Filter and sort tokens
-  const filteredTokens = tokens
+  const filteredTokens = useMemo(() => tokens
     .filter((token) => {
       if (!searchQuery.trim()) return true;
       
@@ -61,14 +61,18 @@ export function TokenSelector({
       const aValue = parseFloat(a.balance) * (tokenPrices[a.symbol] || 0);
       const bValue = parseFloat(b.balance) * (tokenPrices[b.symbol] || 0);
       return bValue - aValue;
-    });
+    }), [tokens, searchQuery, tokenPrices]);
 
   return (
-    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50" onClick={onClose}>
-      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+    <Modal
+      onClose={onClose}
+      labelledBy="token-selector-title"
+      align="top"
+      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[85dvh] flex flex-col"
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <h2 className="text-lg font-bold text-[var(--sw-ink)]">
+          <h2 id="token-selector-title" className="text-lg font-bold text-[var(--sw-ink)]">
             {title}
           </h2>
           <div className="flex items-center gap-3">
@@ -85,6 +89,7 @@ export function TokenSelector({
             <button
               onClick={onClose}
               className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -100,6 +105,7 @@ export function TokenSelector({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search name, symbol, or address"
+            aria-label="Search tokens"
             className="sw-input w-full pl-10 pr-3 py-2.5 text-sm border border-[var(--sw-line)] rounded-lg"
             autoFocus
           />
@@ -123,20 +129,14 @@ export function TokenSelector({
           ) : (
             <div className="sw-divide">
               {filteredTokens.map((token, index) => (
-                <motion.button
+                <button
                   key={token.address}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.2,
-                    delay: index * 0.03,
-                    ease: "easeOut"
-                  }}
+                  style={{ animationDelay: `${Math.min(index, 10) * 30}ms` }}
                   onClick={() => {
                     onSelectToken(token);
                     onClose();
                   }}
-                  className="w-full flex items-center justify-between py-3 group cursor-pointer"
+                  className="ob-rise-in w-full flex items-center justify-between py-3 group cursor-pointer"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Token Icon */}
@@ -145,7 +145,9 @@ export function TokenSelector({
                         <div className="w-8 h-8 rounded-lg overflow-hidden">
                           <img
                             src={tokenImages[token.symbol.toUpperCase()]}
-                            alt={token.symbol}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -182,13 +184,12 @@ export function TokenSelector({
                       )}
                     </div>
                   </div>
-                </motion.button>
+                </button>
               ))}
             </div>
           )}
         </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

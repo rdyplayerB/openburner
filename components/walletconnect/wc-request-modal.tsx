@@ -5,8 +5,8 @@ import { ethers } from "ethers";
 import { X, Globe } from "lucide-react";
 import { useWalletConnectStore } from "@/store/walletconnect-store";
 import { PinInput } from "../pin-input";
-import { requiresSigning } from "@/lib/walletconnect/request-handlers";
-import { getChainName, parseCaipChainId } from "@/lib/walletconnect/chains";
+import { getChainName, getChainInfo, parseCaipChainId, requiresSigning } from "@/lib/walletconnect/chains";
+import { Modal } from "@/components/common/modal";
 
 function decodePersonalSign(hexOrText: string): string {
   try {
@@ -29,7 +29,11 @@ const METHOD_LABEL: Record<string, string> = {
 };
 
 export function WcRequestModal() {
-  const { pendingRequest, sessions, approveRequest, rejectRequest } = useWalletConnectStore();
+  const pendingRequest = useWalletConnectStore((s) => s.pendingRequest);
+  const sessions = useWalletConnectStore((s) => s.sessions);
+  const queued = useWalletConnectStore((s) => s.requestQueue.length);
+  const approveRequest = useWalletConnectStore((s) => s.approveRequest);
+  const rejectRequest = useWalletConnectStore((s) => s.rejectRequest);
   const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +46,10 @@ export function WcRequestModal() {
   const meta = session?.peer?.metadata || {};
   const needsPin = requiresSigning(method);
 
+  const nativeSymbol = getChainInfo(chainId)?.currency || "ETH";
+
   async function submit(pin?: string) {
+    if (busy) return;
     setBusy(true);
     setPinError(null);
     try {
@@ -63,7 +70,7 @@ export function WcRequestModal() {
       return (
         <div className="sw-list">
           <Row k="To" v={tx.to ? `${tx.to.slice(0, 10)}…${tx.to.slice(-8)}` : "—"} mono />
-          <Row k="Value" v={`${value} ETH`} mono />
+          <Row k="Value" v={`${value} ${nativeSymbol}`} mono />
           <Row k="Network" v={getChainName(chainId)} />
           {tx.data && tx.data !== "0x" && <Row k="Data" v={`${(tx.data.length - 2) / 2} bytes`} mono />}
         </div>
@@ -120,11 +127,24 @@ export function WcRequestModal() {
   }
 
   return (
-    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-[10000]">
-      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+    <Modal
+      onClose={() => {
+        if (!busy) rejectRequest();
+      }}
+      labelledBy="wc-request-title"
+      closeOnBackdrop={false}
+    >
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <span className="sw-uplabel">{METHOD_LABEL[method] || "Request"}</span>
-          <button onClick={() => rejectRequest()} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]">
+          <h2 id="wc-request-title" className="sw-uplabel">
+            {METHOD_LABEL[method] || "Request"}
+            {queued > 0 && <span className="ml-2 normal-case tracking-normal">· {queued} more waiting</span>}
+          </h2>
+          <button
+            onClick={() => rejectRequest()}
+            disabled={busy}
+            className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
+            aria-label="Reject request"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -134,7 +154,7 @@ export function WcRequestModal() {
             <div className="w-9 h-9 sw-mark rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
               {meta.icons?.[0] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={meta.icons[0]} alt={meta.name || "dApp"} className="w-full h-full object-cover" />
+                <img src={meta.icons[0]} alt="" className="w-full h-full object-cover" />
               ) : (
                 <Globe className="w-5 h-5" />
               )}
@@ -148,7 +168,7 @@ export function WcRequestModal() {
           <div className="mb-6">{renderDetails()}</div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => rejectRequest()} disabled={busy} className="sw-btn-ghost py-3 text-sm">
+            <button onClick={() => rejectRequest()} disabled={busy} className="sw-btn-ghost py-3 text-sm disabled:opacity-50">
               Reject
             </button>
             <button
@@ -166,7 +186,6 @@ export function WcRequestModal() {
             </p>
           )}
         </div>
-      </div>
 
       <PinInput
         isVisible={showPin}
@@ -179,7 +198,7 @@ export function WcRequestModal() {
         isLoading={busy}
         loadingMessage="Signing with your Burner…"
       />
-    </div>
+    </Modal>
   );
 }
 

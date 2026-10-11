@@ -1,91 +1,57 @@
 /**
- * CoinGecko API Rate Limiter
- * Prevents rate limiting by queuing requests with delays
+ * CoinGecko fetch wrapper.
+ *
+ * The /api/coingecko proxy caches at the edge and rate-limits server-side, so the
+ * client only needs to (a) cap concurrency, (b) de-duplicate identical in-flight
+ * requests and (c) back off briefly after a 429 instead of hammering.
  */
 
-interface QueuedRequest {
-  url: string;
-  options?: RequestInit;
-  resolve: (value: Response) => void;
-  reject: (error: any) => void;
-}
+const MAX_CONCURRENT = 4;
+const BACKOFF_MS = 30_000;
 
-class CoinGeckoRateLimiter {
-  private queue: QueuedRequest[] = [];
-  private processing = false;
-  private readonly delayMs = 3000; // 3 seconds between requests (conservative for API rate limits)
-  private lastRequestTime = 0;
-  private dailyCallCount = 0;
-  private lastResetDate = new Date().toDateString();
+class CoinGeckoLimiter {
+  private active = 0;
+  private waiters: Array<() => void> = [];
+  private inflight = new Map<string, Promise<Response>>();
+  private blockedUntil = 0;
 
-  async fetch(url: string, options?: RequestInit): Promise<Response> {
-    // Check daily limit (conservative: 5000 calls per day vs 10,000 limit)
-    this.resetDailyCountIfNeeded();
-    if (this.dailyCallCount >= 5000) {
-      return Promise.reject(new Error('Daily API limit reached. Please try again tomorrow.'));
-    }
-
-    return new Promise((resolve, reject) => {
-      this.queue.push({ url, options, resolve, reject });
-      this.processQueue();
-    });
-  }
-
-  private resetDailyCountIfNeeded() {
-    const today = new Date().toDateString();
-    if (this.lastResetDate !== today) {
-      this.dailyCallCount = 0;
-      this.lastResetDate = today;
-    }
-  }
-
-  private async processQueue() {
-    if (this.processing || this.queue.length === 0) {
+  private async acquire() {
+    if (this.active < MAX_CONCURRENT) {
+      this.active++;
       return;
     }
+    await new Promise<void>((resolve) => this.waiters.push(resolve));
+    this.active++;
+  }
 
-    this.processing = true;
+  private release() {
+    this.active--;
+    this.waiters.shift()?.();
+  }
 
-    while (this.queue.length > 0) {
-      const now = Date.now();
-      const timeSinceLastRequest = now - this.lastRequestTime;
-      
-      // Wait if we need to respect rate limit
-      if (timeSinceLastRequest < this.delayMs) {
-        const waitTime = this.delayMs - timeSinceLastRequest;
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-      }
-
-      const request = this.queue.shift();
-      if (!request) break;
-
-      try {
-        this.lastRequestTime = Date.now();
-        this.dailyCallCount++;
-        const response = await fetch(request.url, request.options);
-        request.resolve(response);
-      } catch (error) {
-        request.reject(error);
-      }
+  async fetch(url: string, options?: RequestInit): Promise<Response> {
+    if (Date.now() < this.blockedUntil) {
+      throw new Error("Rate limit exceeded. Please try again later.");
     }
+    const key = `${url}|${JSON.stringify(options?.headers ?? {})}`;
+    const existing = this.inflight.get(key);
+    if (existing) return existing.then((r) => r.clone());
 
-    this.processing = false;
-  }
-
-  getQueueLength(): number {
-    return this.queue.length;
-  }
-
-  getDailyCallCount(): number {
-    this.resetDailyCountIfNeeded();
-    return this.dailyCallCount;
-  }
-
-  getRemainingCalls(): number {
-    return Math.max(0, 5000 - this.getDailyCallCount());
+    const p = (async () => {
+      await this.acquire();
+      try {
+        const res = await fetch(url, options);
+        if (res.status === 429) this.blockedUntil = Date.now() + BACKOFF_MS;
+        return res;
+      } finally {
+        this.release();
+      }
+    })();
+    this.inflight.set(key, p);
+    p.finally(() => this.inflight.delete(key)).catch(() => {});
+    return p.then((r) => r.clone());
   }
 }
 
-// Global rate limiter instance - shared across all CoinGecko API calls
-export const coinGeckoLimiter = new CoinGeckoRateLimiter();
-
+// Shared by every CoinGecko call in the app.
+export const coinGeckoLimiter = new CoinGeckoLimiter();

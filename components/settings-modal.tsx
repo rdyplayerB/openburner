@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { X, Moon, Sun, ExternalLink } from "lucide-react";
 import { useThemeStore } from "@/store/theme-store";
 import { getUserKeys, setUserKey, type UserKeyName } from "@/lib/user-keys";
+import { Modal } from "./common/modal";
 
 interface ServerStatus {
   coingecko: boolean;
@@ -49,7 +50,8 @@ export function SettingsModal({
   onClose: () => void;
   initialEdit?: UserKeyName;
 }) {
-  const { isDarkMode, toggleTheme } = useThemeStore();
+  const isDarkMode = useThemeStore((s) => s.isDarkMode);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const isHosted = process.env.NEXT_PUBLIC_APP_MODE === "hosted";
   const [server, setServer] = useState<ServerStatus | null>(null);
   const [saved, setSaved] = useState<Partial<Record<UserKeyName, string>>>({});
@@ -82,17 +84,18 @@ export function SettingsModal({
   }
 
   return (
-    <div
-      className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-[10000]"
-      onClick={onClose}
+    <Modal
+      onClose={() => {
+        // Escape inside an open key editor only closes the editor.
+        if (editing) setEditing(null);
+        else onClose();
+      }}
+      labelledBy="settings-title"
+      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[90dvh] flex flex-col"
     >
-      <div
-        className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line)]">
-          <span className="sw-uplabel">Settings</span>
-          <button onClick={onClose} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors">
+          <h2 id="settings-title" className="sw-uplabel">Settings</h2>
+          <button onClick={onClose} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors" aria-label="Close settings">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -109,6 +112,7 @@ export function SettingsModal({
               onClick={toggleTheme}
               role="switch"
               aria-checked={isDarkMode}
+              aria-label="Dark mode"
               className={`relative w-10 h-6 rounded-full transition-colors ${isDarkMode ? "bg-[var(--sw-accent)]" : "bg-[var(--sw-line)]"}`}
             >
               <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${isDarkMode ? "translate-x-4" : ""}`} />
@@ -154,9 +158,9 @@ export function SettingsModal({
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") save(k.key);
-                          if (e.key === "Escape") setEditing(null);
                         }}
                         placeholder="Paste key"
+                        aria-label={`${k.purpose} API key`}
                         className="sw-input w-full border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm sw-mono"
                       />
                       <div className="flex items-center justify-between mt-2.5">
@@ -244,7 +248,6 @@ export function SettingsModal({
             </a>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

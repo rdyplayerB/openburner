@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { useWalletStore } from "@/store/wallet-store";
 import {
   Images,
@@ -24,8 +23,15 @@ import {
 
 const MANUAL_KEY = (chainId: number) => `nfts_manual_${chainId}`;
 
+// Per chain:address cache so switching tabs/chains back is instant.
+const galleryCache = new Map<string, { nfts: NftItem[]; autoConfigured: boolean; loadedAt: number }>();
+const REVALIDATE_AFTER_MS = 5 * 60_000;
+
 export function NftGallery({ onReceive }: { onReceive?: () => void }) {
-  const { address, rpcUrl, chainId, chainName } = useWalletStore();
+  const address = useWalletStore((s) => s.address);
+  const rpcUrl = useWalletStore((s) => s.rpcUrl);
+  const chainId = useWalletStore((s) => s.chainId);
+  const chainName = useWalletStore((s) => s.chainName);
 
   const [nfts, setNfts] = useState<NftItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,9 +88,13 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
       const seen = new Set(discovered.map((n) => nftKey(n)));
       const merged = [...discovered, ...manual.filter((n) => !seen.has(nftKey(n)))];
       setNfts(merged);
+      galleryCache.set(`${chainId}:${address.toLowerCase()}`, {
+        nfts: merged,
+        autoConfigured: configured && isNftAutoDiscoverySupported(chainId),
+        loadedAt: Date.now(),
+      });
     } catch (err: any) {
       if (myRequest !== requestId.current) return;
-      console.error("[NFT Gallery] load error:", err);
       setError(err.message || "Failed to load NFTs");
       setNfts(manual);
     } finally {
@@ -92,10 +102,22 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
     }
   }, [address, chainId, loadManual]);
 
-  // Reload whenever the active wallet/chain changes (single unified chain control).
+  // Reload whenever the active wallet/chain changes; paint cached results first.
   useEffect(() => {
+    if (!address) return;
+    const cached = galleryCache.get(`${chainId}:${address.toLowerCase()}`);
+    if (cached) {
+      requestId.current++;
+      setNfts(cached.nfts);
+      setAutoConfigured(cached.autoConfigured);
+      setError(null);
+      setIsLoading(false);
+      if (Date.now() - cached.loadedAt < REVALIDATE_AFTER_MS) return;
+    } else {
+      setNfts([]);
+    }
     loadNfts();
-  }, [loadNfts]);
+  }, [loadNfts, address, chainId]);
 
   async function handleManualAdd() {
     if (!address || !rpcUrl) return;
@@ -110,7 +132,8 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
         rpcUrl,
         manualContract.trim(),
         manualTokenId.trim(),
-        address
+        address,
+        chainId
       );
 
       const manual = loadManual();
@@ -138,6 +161,8 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
     if (selected) {
       const manual = loadManual().filter((n) => nftKey(n) !== nftKey(selected));
       saveManual(manual);
+      // Drop it from view right away; the refresh below confirms.
+      setNfts((prev) => prev.filter((n) => nftKey(n) !== nftKey(selected)));
     }
     setSelected(null);
     loadNfts();
@@ -169,6 +194,8 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
             onClick={() => setShowAddForm((s) => !s)}
             className="p-2 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
             title="Add NFT by contract"
+            aria-label="Add NFT by contract"
+            aria-expanded={showAddForm}
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -177,6 +204,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
             disabled={isLoading}
             className="p-2 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors disabled:opacity-50"
             title="Refresh"
+            aria-label="Refresh collectibles"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
@@ -194,6 +222,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
             value={manualContract}
             onChange={(e) => setManualContract(e.target.value)}
             placeholder="Contract address (0x...)"
+            aria-label="NFT contract address"
             className="sw-input w-full text-sm"
           />
           <input
@@ -201,6 +230,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
             value={manualTokenId}
             onChange={(e) => setManualTokenId(e.target.value)}
             placeholder="Token ID"
+            aria-label="Token ID"
             className="sw-input w-full text-sm"
           />
           {addError && <p className="text-xs text-[var(--sw-down)]">{addError}</p>}
@@ -230,6 +260,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search collectibles"
+              aria-label="Search collectibles"
               className="sw-input w-full pl-6 text-sm"
             />
           </div>
@@ -295,13 +326,10 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {filtered.map((nft) => (
-              <motion.button
+              <button
                 key={nftKey(nft)}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
                 onClick={() => setSelected(nft)}
-                className="group text-left rounded-lg overflow-hidden border border-[var(--sw-line)] hover:border-[var(--sw-accent)] transition-colors"
+                className="ob-fade-in group text-left rounded-lg overflow-hidden border border-[var(--sw-line)] hover:border-[var(--sw-accent)] transition-colors"
               >
                 <div className="relative">
                   <NftMedia nft={nft} className="w-full aspect-square" rounded="rounded-none" />
@@ -321,7 +349,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
                     </p>
                   )}
                 </div>
-              </motion.button>
+              </button>
             ))}
           </div>
         )}

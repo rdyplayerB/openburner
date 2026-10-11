@@ -1,148 +1,150 @@
-import React from 'react';
+"use client";
 
-interface TransactionCompletionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onReturnToWallet: () => void;
+import { CheckCircle2, XCircle, Clock, ExternalLink, Wallet, X } from "lucide-react";
+import { Modal } from "./common/modal";
+import { getChainDisplayName, getExplorerTxUrl } from "@/lib/supported-chains";
+
+export type TransactionStatus = "success" | "failed" | "pending";
+export type TransactionKind = "send" | "swap";
+
+export interface TransactionSummary {
+  kind: TransactionKind;
   txHash: string;
   chainId: number;
   fromToken: string;
-  toToken: string;
   fromAmount: string;
-  toAmount: string;
+  /** Swap: token received. Send: unused. */
+  toToken?: string;
+  toAmount?: string;
+  /** Send: recipient address. */
+  recipient?: string;
 }
 
-export function TransactionCompletionModal({
-  isOpen,
-  onClose,
-  onReturnToWallet,
-  txHash,
-  chainId,
-  fromToken,
-  toToken,
-  fromAmount,
-  toAmount,
-}: TransactionCompletionModalProps) {
+interface TransactionCompletionModalProps {
+  isOpen: boolean;
+  status: TransactionStatus;
+  tx: TransactionSummary;
+  chainName?: string;
+  onClose: () => void;
+}
+
+function shortHash(h: string) {
+  return `${h.slice(0, 10)}…${h.slice(-8)}`;
+}
+
+/** Shared detail rows for the waiting and completion modals. */
+export function TransactionDetails({ tx, chainName }: { tx: TransactionSummary; chainName: string }) {
+  return (
+    <div className="sw-list mb-6">
+      {tx.kind === "swap" ? (
+        <>
+          <Row label="From" value={`${tx.fromAmount} ${tx.fromToken}`} mono />
+          <Row label="To" value={`${tx.toAmount ?? "—"} ${tx.toToken ?? ""}`} mono />
+        </>
+      ) : (
+        <>
+          <Row label="Amount" value={`${tx.fromAmount} ${tx.fromToken}`} mono />
+          {tx.recipient && <Row label="Recipient" value={`${tx.recipient.slice(0, 8)}…${tx.recipient.slice(-6)}`} mono />}
+        </>
+      )}
+      <Row label="Network" value={chainName} />
+      <Row label="Transaction" value={shortHash(tx.txHash)} mono />
+    </div>
+  );
+}
+
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-3 text-sm">
+      <span className="text-[var(--sw-muted)]">{label}</span>
+      <span className={`text-[var(--sw-ink)] font-medium text-right break-all ${mono ? "sw-mono text-xs" : ""}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+export function TransactionCompletionModal({ isOpen, status, tx, chainName, onClose }: TransactionCompletionModalProps) {
   if (!isOpen) return null;
 
-  // Get chain scanner URL based on chainId
-  const getChainScannerUrl = (chainId: number, txHash: string): string => {
-    switch (chainId) {
-      case 1: // Ethereum Mainnet
-        return `https://etherscan.io/tx/${txHash}`;
-      case 8453: // Base
-        return `https://basescan.org/tx/${txHash}`;
-      case 137: // Polygon
-        return `https://polygonscan.com/tx/${txHash}`;
-      case 56: // BSC
-        return `https://bscscan.com/tx/${txHash}`;
-      case 42161: // Arbitrum
-        return `https://arbiscan.io/tx/${txHash}`;
-      case 10: // Optimism
-        return `https://optimistic.etherscan.io/tx/${txHash}`;
-      case 250: // Fantom
-        return `https://ftmscan.com/tx/${txHash}`;
-      case 43114: // Avalanche
-        return `https://snowtrace.io/tx/${txHash}`;
-      default:
-        return `https://etherscan.io/tx/${txHash}`; // Default to Etherscan
-    }
-  };
+  const network = getChainDisplayName(tx.chainId, chainName);
+  const explorerUrl = getExplorerTxUrl(tx.chainId, tx.txHash);
+  const noun = tx.kind === "swap" ? "Swap" : "Transfer";
 
-  const getChainName = (chainId: number): string => {
-    switch (chainId) {
-      case 1: return 'Ethereum';
-      case 8453: return 'Base';
-      case 137: return 'Polygon';
-      case 56: return 'BSC';
-      case 42161: return 'Arbitrum';
-      case 10: return 'Optimism';
-      case 250: return 'Fantom';
-      case 43114: return 'Avalanche';
-      default: return 'Ethereum';
-    }
-  };
-
-  const scannerUrl = getChainScannerUrl(chainId, txHash);
-  const chainName = getChainName(chainId);
+  const view = {
+    success: {
+      Icon: CheckCircle2,
+      color: "text-[var(--sw-up)]",
+      title: `${noun} complete`,
+      body:
+        tx.kind === "swap"
+          ? "Confirmed on-chain. Your balances have been refreshed."
+          : "Confirmed on-chain. The recipient has the funds.",
+    },
+    failed: {
+      Icon: XCircle,
+      color: "text-[var(--sw-down)]",
+      title: "Transaction failed",
+      body:
+        tx.kind === "swap"
+          ? "The swap was reverted on-chain, so no tokens were exchanged. A network fee may still have been charged."
+          : "The transfer was reverted on-chain, so nothing was sent. A network fee may still have been charged.",
+    },
+    pending: {
+      Icon: Clock,
+      color: "text-[var(--sw-accent)]",
+      title: "Still pending",
+      body:
+        "Not confirmed yet. It may still go through — check the explorer before trying again, so you don't pay twice.",
+    },
+  }[status];
 
   return (
-    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50">
-      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden relative">
-        <div className="px-5 py-5">
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <Modal onClose={onClose} labelledBy="tx-result-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden relative">
+      <div className="px-5 py-5" role={status === "failed" ? "alert" : "status"}>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[var(--sw-muted)] hover:text-[var(--sw-ink)]"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-          {/* Success Icon */}
-          <div className="flex justify-center mb-4">
-            <svg className="w-12 h-12 text-[var(--sw-up)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+        <div className="flex justify-center mb-4">
+          <view.Icon className={`w-12 h-12 ${view.color}`} strokeWidth={1.75} aria-hidden="true" />
+        </div>
 
-          {/* Title */}
-          <h2 className="text-lg font-bold text-[var(--sw-ink)] text-center mb-6">
-            Swap complete
-          </h2>
+        <h2
+          id="tx-result-title"
+          className={`text-lg font-bold text-center mb-1 ${status === "failed" ? "text-[var(--sw-down)]" : "text-[var(--sw-ink)]"}`}
+        >
+          {view.title}
+        </h2>
+        <p className="text-sm text-[var(--sw-ink-soft)] text-center mb-5 leading-relaxed">{view.body}</p>
 
-          {/* Transaction Details */}
-          <div className="sw-list mb-6">
-            <div className="flex items-center justify-between gap-3 py-3 text-sm">
-              <span className="text-[var(--sw-muted)]">From</span>
-              <span className="text-[var(--sw-ink)] font-medium sw-mono text-xs text-right break-all">{fromAmount} {fromToken}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3 py-3 text-sm">
-              <span className="text-[var(--sw-muted)]">To</span>
-              <span className="text-[var(--sw-ink)] font-medium sw-mono text-xs text-right break-all">{toAmount} {toToken}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3 py-3 text-sm">
-              <span className="text-[var(--sw-muted)]">Network</span>
-              <span className="text-[var(--sw-ink)] font-medium text-right">{chainName}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3 py-3 text-sm">
-              <span className="text-[var(--sw-muted)]">Transaction</span>
-              <span className="sw-mono text-xs text-[var(--sw-ink)] break-all text-right">
-                {txHash.slice(0, 10)}…{txHash.slice(-8)}
-              </span>
-            </div>
-          </div>
+        <TransactionDetails tx={tx} chainName={network} />
 
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            {/* View on Scanner Button */}
+        <div className="space-y-3">
+          {explorerUrl && (
             <a
-              href={scannerUrl}
+              href={explorerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="sw-btn-primary w-full py-3 px-4 text-sm flex items-center justify-center gap-2"
+              className={`${status === "pending" ? "sw-btn-primary" : "sw-btn-ghost"} w-full py-3 px-4 text-sm flex items-center justify-center gap-2`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              <span>View on {chainName} Scanner</span>
+              <ExternalLink className="w-4 h-4" aria-hidden="true" />
+              <span>View on explorer</span>
             </a>
-
-            {/* Return to Wallet Button */}
-            <button
-              onClick={onReturnToWallet}
-              className="sw-btn-ghost w-full py-3 px-4 text-sm flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
-              </svg>
-              <span>Return to Wallet</span>
-            </button>
-          </div>
+          )}
+          <button
+            onClick={onClose}
+            className={`${status === "pending" ? "sw-btn-ghost" : "sw-btn-primary"} w-full py-3 px-4 text-sm flex items-center justify-center gap-2`}
+          >
+            <Wallet className="w-4 h-4" aria-hidden="true" />
+            <span>Return to wallet</span>
+          </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

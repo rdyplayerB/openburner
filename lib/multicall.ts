@@ -1,12 +1,20 @@
 import { ethers } from "ethers";
 import { rpcRateLimiter } from "./rpc-rate-limiter";
+import { log } from "./log";
 
-// Multicall3 contract deployed on most chains at the same address
+// Multicall3 is deployed at the same address on almost every EVM chain.
 const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
 
-const MULTICALL3_ABI = [
-  "function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) returns (tuple(bool success, bytes returnData)[] returnData)",
-];
+const multicallInterface = new ethers.Interface([
+  "function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) payable returns (tuple(bool success, bytes returnData)[] returnData)",
+  "function getEthBalance(address addr) view returns (uint256 balance)",
+]);
+const erc20Interface = new ethers.Interface([
+  "function balanceOf(address) view returns (uint256)",
+  "function symbol() view returns (string)",
+  "function name() view returns (string)",
+  "function decimals() view returns (uint8)",
+]);
 
 interface Call {
   target: string;
@@ -19,297 +27,205 @@ interface Result {
   returnData: string;
 }
 
-/**
- * Batch multiple contract calls into a single RPC request using Multicall3
- * This dramatically reduces RPC load and avoids rate limiting
- */
-export async function multicall3(
-  provider: ethers.JsonRpcProvider,
-  calls: Call[]
-): Promise<Result[]> {
-  return rpcRateLimiter.makeRequest(async () => {
-    const multicall = new ethers.Contract(
-      MULTICALL3_ADDRESS,
-      MULTICALL3_ABI,
-      provider
-    );
+/** Per-chain memo of whether Multicall3 exists (avoids a getCode probe per load). */
+const multicallAvailable = new Map<number, boolean>();
 
-    try {
-      // Use staticCall for read-only operations (ethers v6)
-      const results = await multicall.aggregate3.staticCall(calls);
-      return results.map((r: any) => ({
-        success: r.success,
-        returnData: r.returnData,
-      }));
-    } catch (err) {
-      console.error("Multicall failed:", err);
-      console.error("Multicall contract address used:", MULTICALL3_ADDRESS);
-      console.error("Multicall calls:", calls);
-      throw err;
-    }
-  });
+/** Errors that mean "the RPC itself is unreachable", as opposed to "no multicall here". */
+function isTransportError(err: any): boolean {
+  const code = err?.code;
+  return (
+    code === "NETWORK_ERROR" ||
+    code === "TIMEOUT" ||
+    code === "SERVER_ERROR" ||
+    code === "UNKNOWN_ERROR" ||
+    err instanceof TypeError // fetch failed
+  );
+}
+
+async function chainIdOf(provider: ethers.JsonRpcProvider): Promise<number> {
+  return Number((await provider.getNetwork()).chainId);
 }
 
 /**
- * Test if Multicall3 is available on this network
+ * Run calls through Multicall3.aggregate3 in a single eth_call.
+ * Throws if the RPC is unreachable or Multicall3 is missing.
  */
-async function testMulticallAvailability(provider: ethers.JsonRpcProvider): Promise<boolean> {
-  return rpcRateLimiter.makeRequest(async () => {
-    try {
-      // Check if the Multicall3 contract exists by getting its code
-      const code = await provider.getCode(MULTICALL3_ADDRESS);
-      return code !== "0x";
-    } catch (err) {
-      console.log("Multicall3 not available on this network:", err);
-      return false;
-    }
-  });
+export async function multicall3(provider: ethers.JsonRpcProvider, calls: Call[]): Promise<Result[]> {
+  const data = multicallInterface.encodeFunctionData("aggregate3", [calls]);
+  const raw = await rpcRateLimiter.makeRequest(() =>
+    provider.call({ to: MULTICALL3_ADDRESS, data })
+  );
+  const [results] = multicallInterface.decodeFunctionResult("aggregate3", raw);
+  return results.map((r: any) => ({ success: r.success, returnData: r.returnData }));
 }
 
 /**
- * Batch token balance checks using Multicall3
- * Falls back to individual calls if multicall fails (rate limiting)
+ * Try a multicall; on a chain without Multicall3 return null (and remember it).
+ * Transport errors are re-thrown so callers can surface "RPC unreachable".
+ */
+async function tryMulticall(provider: ethers.JsonRpcProvider, calls: Call[]): Promise<Result[] | null> {
+  const chainId = await chainIdOf(provider);
+  if (multicallAvailable.get(chainId) === false) return null;
+  try {
+    const results = await multicall3(provider, calls);
+    multicallAvailable.set(chainId, true);
+    return results;
+  } catch (err) {
+    if (isTransportError(err)) throw err;
+    // Empty return data / revert => no Multicall3 on this chain.
+    log.debug("[multicall] unavailable on chain", chainId);
+    multicallAvailable.set(chainId, false);
+    return null;
+  }
+}
+
+function decodeUint(result: Result | undefined, fn: "balanceOf" | "getEthBalance"): bigint | undefined {
+  if (!result?.success || !result.returnData || result.returnData === "0x") return undefined;
+  try {
+    const iface = fn === "getEthBalance" ? multicallInterface : erc20Interface;
+    return iface.decodeFunctionResult(fn, result.returnData)[0] as bigint;
+  } catch {
+    return undefined;
+  }
+}
+
+export interface BalanceResult {
+  /** Native balance (only when `includeNative` was set). */
+  native?: bigint;
+  /** ERC-20 balances keyed by lowercase token address. */
+  tokens: Map<string, bigint>;
+}
+
+/**
+ * Fetch the native balance and every ERC-20 balance in one eth_call (Multicall3),
+ * falling back to parallel individual calls on chains without Multicall3.
+ * Throws when the RPC is unreachable so the UI can keep last-known values.
  */
 export async function batchGetBalances(
   provider: ethers.JsonRpcProvider,
   tokenAddresses: string[],
-  walletAddress: string
-): Promise<Map<string, bigint>> {
-  const balanceInterface = new ethers.Interface([
-    "function balanceOf(address) view returns (uint256)",
-  ]);
-
-  // Check if Multicall3 is available on this network first
-  const multicallAvailable = await testMulticallAvailability(provider);
-  
-  if (!multicallAvailable) {
-    console.log("Multicall3 not available, using individual calls directly");
-    // Skip multicall and go straight to individual calls
-    const balances = new Map<string, bigint>();
-    const ERC20_ABI = ["function balanceOf(address) view returns (uint256)"];
-    
-    for (const tokenAddr of tokenAddresses) {
-      try {
-        await rpcRateLimiter.makeRequest(async () => {
-          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
-          const balance = await contract.balanceOf(walletAddress);
-          // Store all balances, including zero (for buying tokens)
-          balances.set(tokenAddr.toLowerCase(), balance);
-        });
-      } catch (err) {
-        console.error(`Failed to check balance for ${tokenAddr}:`, err);
-      }
-    }
-    
-    return balances;
-  }
-
-  // Try multicall first (much faster if it works)
-  try {
-    // Create multicall calls for all token balances
-    const calls: Call[] = tokenAddresses.map((tokenAddr) => ({
-      target: tokenAddr,
+  walletAddress: string,
+  opts: { includeNative?: boolean } = {}
+): Promise<BalanceResult> {
+  const includeNative = !!opts.includeNative;
+  const calls: Call[] = [];
+  if (includeNative) {
+    calls.push({
+      target: MULTICALL3_ADDRESS,
       allowFailure: true,
-      callData: balanceInterface.encodeFunctionData("balanceOf", [walletAddress]),
-    }));
-
-    const results = await multicall3(provider, calls);
-    const balances = new Map<string, bigint>();
-
-    results.forEach((result, index) => {
-      if (result.success && result.returnData !== "0x") {
-        try {
-          const [balance] = balanceInterface.decodeFunctionResult(
-            "balanceOf",
-            result.returnData
-          );
-          balances.set(tokenAddresses[index].toLowerCase(), balance);
-        } catch (err) {
-          console.log(`Failed to decode balance for ${tokenAddresses[index]}`);
-        }
-      }
+      callData: multicallInterface.encodeFunctionData("getEthBalance", [walletAddress]),
     });
+  }
+  for (const token of tokenAddresses) {
+    calls.push({
+      target: token,
+      allowFailure: true,
+      callData: erc20Interface.encodeFunctionData("balanceOf", [walletAddress]),
+    });
+  }
 
-    return balances;
-  } catch (err) {
-    console.warn("Multicall failed, falling back to individual calls:", err);
-    console.error("Multicall contract address used:", MULTICALL3_ADDRESS);
-    
-    // Fallback: Check balances individually with rate limiting
-    const balances = new Map<string, bigint>();
-    const ERC20_ABI = ["function balanceOf(address) view returns (uint256)"];
-    
-    for (const tokenAddr of tokenAddresses) {
-      try {
-        await rpcRateLimiter.makeRequest(async () => {
-          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
-          const balance = await contract.balanceOf(walletAddress);
-          // Store all balances, including zero (for buying tokens)
-          balances.set(tokenAddr.toLowerCase(), balance);
-        });
-      } catch (err) {
-        console.error(`Failed to check balance for ${tokenAddr}:`, err);
+  const out: BalanceResult = { tokens: new Map() };
+  const results = calls.length > 0 ? await tryMulticall(provider, calls) : [];
+
+  if (results) {
+    let i = 0;
+    if (includeNative) {
+      out.native = decodeUint(results[i++], "getEthBalance");
+      // Some chains' Multicall3 deployments lack getEthBalance — fall back.
+      if (out.native === undefined) {
+        out.native = await rpcRateLimiter.makeRequest(() => provider.getBalance(walletAddress));
       }
     }
-    
-    return balances;
+    tokenAddresses.forEach((token) => {
+      const bal = decodeUint(results[i++], "balanceOf");
+      if (bal !== undefined) out.tokens.set(token.toLowerCase(), bal);
+    });
+    return out;
   }
+
+  // Fallback: individual calls in parallel (bounded by the RPC limiter).
+  const nativePromise = includeNative
+    ? rpcRateLimiter.makeRequest(() => provider.getBalance(walletAddress))
+    : Promise.resolve(undefined);
+  const tokenPromises = tokenAddresses.map(async (token) => {
+    try {
+      const raw = await rpcRateLimiter.makeRequest(() =>
+        provider.call({ to: token, data: erc20Interface.encodeFunctionData("balanceOf", [walletAddress]) })
+      );
+      const bal = decodeUint({ success: true, returnData: raw }, "balanceOf");
+      if (bal !== undefined) out.tokens.set(token.toLowerCase(), bal);
+    } catch (err) {
+      if (isTransportError(err)) throw err;
+    }
+  });
+  const [native] = await Promise.all([nativePromise, ...tokenPromises]);
+  out.native = native as bigint | undefined;
+  return out;
+}
+
+export interface TokenMetadata {
+  symbol: string;
+  name: string;
+  decimals: number;
+  success: boolean;
 }
 
 /**
- * Batch token metadata checks (symbol, name, decimals) using Multicall3
- * Falls back to individual calls if multicall fails (rate limiting)
+ * Batch token metadata (symbol, name, decimals) via Multicall3, with an
+ * individual-call fallback. Missing/undecodable tokens are simply absent.
  */
 export async function batchGetTokenMetadata(
   provider: ethers.JsonRpcProvider,
   tokenAddresses: string[]
-): Promise<
-  Map<
-    string,
-    { symbol: string; name: string; decimals: number; success: boolean }
-  >
-> {
-  const tokenInterface = new ethers.Interface([
-    "function symbol() view returns (string)",
-    "function name() view returns (string)",
-    "function decimals() view returns (uint8)",
-  ]);
+): Promise<Map<string, TokenMetadata>> {
+  const metadata = new Map<string, TokenMetadata>();
+  if (tokenAddresses.length === 0) return metadata;
 
-  // Check if Multicall3 is available on this network first
-  const multicallAvailable = await testMulticallAvailability(provider);
-  
-  if (!multicallAvailable) {
-    console.log("Multicall3 not available for metadata, using individual calls directly");
-    // Skip multicall and go straight to individual calls
-    const metadata = new Map();
-    const ERC20_ABI = [
-      "function symbol() view returns (string)",
-      "function name() view returns (string)",
-      "function decimals() view returns (uint8)",
-    ];
-    
-    for (const tokenAddr of tokenAddresses) {
-      try {
-        await rpcRateLimiter.makeRequest(async () => {
-          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
-          const [symbol, name, decimals] = await Promise.all([
-            contract.symbol(),
-            contract.name(),
-            contract.decimals(),
-          ]);
-          
-          metadata.set(tokenAddr.toLowerCase(), {
-            symbol,
-            name,
-            decimals: Number(decimals),
-            success: true,
-          });
-        });
-      } catch (err) {
-        console.error(`Failed to fetch metadata for ${tokenAddr}:`, err);
-      }
+  const fns = ["symbol", "name", "decimals"] as const;
+  const calls: Call[] = tokenAddresses.flatMap((target) =>
+    fns.map((fn) => ({ target, allowFailure: true, callData: erc20Interface.encodeFunctionData(fn) }))
+  );
+
+  const decode = (fn: (typeof fns)[number], r: Result | undefined) => {
+    if (!r?.success || !r.returnData || r.returnData === "0x") return undefined;
+    try {
+      return erc20Interface.decodeFunctionResult(fn, r.returnData)[0];
+    } catch {
+      return undefined;
     }
-    
-    return metadata;
-  }
+  };
 
-  // Try multicall first (much faster if it works)
-  try {
-    // Create calls for all metadata
-    const calls: Call[] = [];
-    tokenAddresses.forEach((tokenAddr) => {
-      calls.push({
-        target: tokenAddr,
-        allowFailure: true,
-        callData: tokenInterface.encodeFunctionData("symbol"),
-      });
-      calls.push({
-        target: tokenAddr,
-        allowFailure: true,
-        callData: tokenInterface.encodeFunctionData("name"),
-      });
-      calls.push({
-        target: tokenAddr,
-        allowFailure: true,
-        callData: tokenInterface.encodeFunctionData("decimals"),
-      });
+  const results = await tryMulticall(provider, calls);
+  if (results) {
+    tokenAddresses.forEach((token, i) => {
+      const symbol = decode("symbol", results[i * 3]);
+      const name = decode("name", results[i * 3 + 1]);
+      const decimals = decode("decimals", results[i * 3 + 2]);
+      if (symbol !== undefined && name !== undefined && decimals !== undefined) {
+        metadata.set(token.toLowerCase(), { symbol, name, decimals: Number(decimals), success: true });
+      }
     });
-
-    const results = await multicall3(provider, calls);
-    const metadata = new Map();
-
-    for (let i = 0; i < tokenAddresses.length; i++) {
-      const symbolResult = results[i * 3];
-      const nameResult = results[i * 3 + 1];
-      const decimalsResult = results[i * 3 + 2];
-
-      if (
-        symbolResult.success &&
-        nameResult.success &&
-        decimalsResult.success
-      ) {
-        try {
-          const [symbol] = tokenInterface.decodeFunctionResult(
-            "symbol",
-            symbolResult.returnData
-          );
-          const [name] = tokenInterface.decodeFunctionResult(
-            "name",
-            nameResult.returnData
-          );
-          const [decimals] = tokenInterface.decodeFunctionResult(
-            "decimals",
-            decimalsResult.returnData
-          );
-
-          metadata.set(tokenAddresses[i].toLowerCase(), {
-            symbol,
-            name,
-            decimals: Number(decimals),
-            success: true,
-          });
-        } catch (err) {
-          console.log(`Failed to decode metadata for ${tokenAddresses[i]}`);
-        }
-      }
-    }
-
-    return metadata;
-  } catch (err) {
-    console.warn("Multicall metadata failed, falling back to individual calls:", err);
-    console.error("Multicall contract address used:", MULTICALL3_ADDRESS);
-    
-    // Fallback: Fetch metadata individually with rate limiting
-    const metadata = new Map();
-    const ERC20_ABI = [
-      "function symbol() view returns (string)",
-      "function name() view returns (string)",
-      "function decimals() view returns (uint8)",
-    ];
-    
-    for (const tokenAddr of tokenAddresses) {
-      try {
-        await rpcRateLimiter.makeRequest(async () => {
-          const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
-          const [symbol, name, decimals] = await Promise.all([
-            contract.symbol(),
-            contract.name(),
-            contract.decimals(),
-          ]);
-          
-          metadata.set(tokenAddr.toLowerCase(), {
-            symbol,
-            name,
-            decimals: Number(decimals),
-            success: true,
-          });
-        });
-      } catch (err) {
-        console.error(`Failed to fetch metadata for ${tokenAddr}:`, err);
-      }
-    }
-    
     return metadata;
   }
-}
 
+  await Promise.all(
+    tokenAddresses.map(async (token) => {
+      try {
+        const raws = await Promise.all(
+          fns.map((fn) =>
+            rpcRateLimiter.makeRequest(() =>
+              provider.call({ to: token, data: erc20Interface.encodeFunctionData(fn) })
+            )
+          )
+        );
+        const [symbol, name, decimals] = fns.map((fn, i) => decode(fn, { success: true, returnData: raws[i] }));
+        if (symbol !== undefined && name !== undefined && decimals !== undefined) {
+          metadata.set(token.toLowerCase(), { symbol, name, decimals: Number(decimals), success: true });
+        }
+      } catch {
+        /* skip this token */
+      }
+    })
+  );
+  return metadata;
+}

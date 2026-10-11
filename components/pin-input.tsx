@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Modal } from "./common/modal";
 
 interface PinInputProps {
   onSubmit: (pin: string) => void;
@@ -64,6 +65,7 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
   };
 
   const handleSubmit = () => {
+    if (isLoading) return; // double-submit guard
     const pin = digits.join("");
     if (pin.length === 6) {
       onSubmit(pin);
@@ -75,10 +77,15 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
   if (!isVisible) return null;
 
   return (
-    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-[10001]">
-      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+    <Modal
+      onClose={() => {
+        if (!isLoading) onCancel();
+      }}
+      labelledBy="pin-title"
+      closeOnBackdrop={false}
+    >
         <div className="px-5 pt-5 pb-3 border-b border-[var(--sw-line)] text-center">
-          <h3 className="text-lg font-bold text-[var(--sw-ink)]">Enter PIN</h3>
+          <h3 id="pin-title" className="text-lg font-bold text-[var(--sw-ink)]">Enter PIN</h3>
           <p className="text-sm text-[var(--sw-ink-soft)] mt-1">
             6-digit Burner PIN to authorize
           </p>
@@ -86,13 +93,13 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
 
         <div className="px-5 py-5">
           {error && (
-            <div className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]">
+            <div role="alert" className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]">
               <p className="text-sm text-[var(--sw-down)]">{error}</p>
             </div>
           )}
 
           {isLoading && (
-            <div className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]">
+            <div className="mb-4 p-3 rounded-lg border border-[var(--sw-line)]" role="status" aria-live="polite">
               <div className="flex items-center justify-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--sw-accent)]"></div>
                 <p className="text-sm text-[var(--sw-ink-soft)]">{loadingMessage}</p>
@@ -109,6 +116,9 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
                 }}
                 type="text"
                 inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                aria-label={`PIN digit ${index + 1}`}
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}
@@ -143,8 +153,7 @@ export function PinInput({ onSubmit, onCancel, isVisible, error, isLoading = fal
             Sent directly to your Burner, never stored
           </p>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

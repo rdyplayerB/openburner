@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface TooltipProps {
   children: React.ReactNode;
@@ -99,15 +98,11 @@ export function Tooltip({ children, content, className = '' }: TooltipProps) {
         {children}
       </div>
 
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
+      {isVisible && (
+          <div
             ref={tooltipRef}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="fixed z-50"
+            role="tooltip"
+            className="ob-pop-in fixed z-50"
             style={{
               top: position.top,
               left: position.left,
@@ -120,9 +115,8 @@ export function Tooltip({ children, content, className = '' }: TooltipProps) {
               {/* Arrow */}
               <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#1a1a1d] border-l border-t border-white/10 rotate-45"></div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      )}
     </>
   );
 }
