@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { connectWithMobileNFC } from "@/lib/mobile/nfc";
@@ -8,60 +8,25 @@ import { useWalletStore } from "@/store/wallet-store";
 import { Nfc, Loader2, X, ExternalLink, Download } from "lucide-react";
 import { MobileErrorModal } from "./mobile-error-modal";
 import { usePWA } from "@/hooks/use-pwa";
+import { Modal } from "@/components/common/modal";
 
 export function HostedMobileConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
   const [showInstallCard, setShowInstallCard] = useState(true);
-  const { setWallet } = useWalletStore();
-  const { isInstallable, isInstalled, installApp, shouldEnablePWA } = usePWA();
-
-  // Debug PWA state (only on client side to avoid hydration issues)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      console.log('🔍 [PWA Debug] State:', {
-        shouldEnablePWA,
-        isInstallable,
-        isInstalled,
-        isHosted: process.env.NEXT_PUBLIC_APP_MODE === 'hosted',
-        userAgent: navigator.userAgent
-      });
-    }
-  }, [shouldEnablePWA, isInstallable, isInstalled]);
+  const setWallet = useWalletStore((s) => s.setWallet);
+  const { isInstalled, shouldEnablePWA } = usePWA();
 
   // No auto-show install message - only show when user taps card
 
   const handleConnect = async () => {
-    console.log("\n═══════════════════════════════════════════════════════");
-    console.log("📱 [Hosted Mobile] CONNECT BUTTON CLICKED");
-    console.log("═══════════════════════════════════════════════════════");
-    console.log("⏰ [Hosted Mobile] Timestamp:", new Date().toISOString());
-    
     setIsConnecting(true);
     setError(null);
-
     try {
       const { address, publicKey, keySlot } = await connectWithMobileNFC();
-      
-      console.log("\n═══════════════════════════════════════════════════════");
-      console.log(`✅ [Hosted Mobile] Connection successful!`);
-      console.log("═══════════════════════════════════════════════════════");
-      console.log(`   Address: ${address}`);
-      console.log(`   Public Key: ${publicKey.substring(0, 40)}...`);
-      console.log(`   Key Slot: ${keySlot}`);
-      
       setWallet(address, publicKey, keySlot);
-      
-      console.log("\n═══════════════════════════════════════════════════════");
-      console.log("🎉 [Hosted Mobile] WALLET CONNECTED SUCCESSFULLY!");
-      console.log("═══════════════════════════════════════════════════════\n");
     } catch (err: any) {
-      console.log("\n═══════════════════════════════════════════════════════");
-      console.error("❌ [Hosted Mobile] CONNECTION FAILED!");
-      console.log("═══════════════════════════════════════════════════════");
-      console.error("Error:", err);
-      
       setError(err.message || "Failed to connect with your Burner card");
     } finally {
       setIsConnecting(false);
@@ -72,13 +37,11 @@ export function HostedMobileConnect() {
     setShowInstructions(true);
   };
 
-  const handleCloseInstallCard = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCloseInstallCard = () => {
     setShowInstallCard(false);
   };
 
   const handleCancel = () => {
-    console.log("🛑 [Hosted Mobile] Connection cancelled by user");
     setIsConnecting(false);
     setError(null);
   };
@@ -168,29 +131,26 @@ export function HostedMobileConnect() {
       {shouldEnablePWA && !isInstalled && showInstallCard && (
         <div className="w-full px-4 pb-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-sm w-full mx-auto">
-            <div
-              onClick={handleInstallCardClick}
-              className="sw-surface rounded-xl border border-[var(--sw-line)] transition-all duration-200 p-4 cursor-pointer active:scale-[0.98] transform"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sw-mark rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="sw-surface rounded-xl border border-[var(--sw-line)] transition-all duration-200 flex items-center">
+              <button
+                onClick={handleInstallCardClick}
+                className="flex-1 flex items-center gap-3 p-4 text-left active:scale-[0.98] transition-transform rounded-xl"
+              >
+                <div className="w-10 h-10 sw-mark rounded-lg flex items-center justify-center flex-shrink-0" aria-hidden="true">
                   <Download className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-[var(--sw-ink)] text-sm">
-                    Install OpenBurner
-                  </h3>
-                  <p className="text-[var(--sw-muted)] text-xs mt-0.5">
-                    Add to home screen for quick access
-                  </p>
+                  <span className="block font-semibold text-[var(--sw-ink)] text-sm">Install OpenBurner</span>
+                  <span className="block text-[var(--sw-muted)] text-xs mt-0.5">Add to home screen for quick access</span>
                 </div>
-                <div
-                  className="flex-shrink-0 cursor-pointer text-[var(--sw-muted)] hover:text-[var(--sw-ink)] rounded-full p-1 transition-colors"
-                  onClick={handleCloseInstallCard}
-                >
-                  <X className="w-4 h-4" />
-                </div>
-              </div>
+              </button>
+              <button
+                onClick={handleCloseInstallCard}
+                className="flex-shrink-0 mr-3 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] rounded-full p-2 transition-colors"
+                aria-label="Dismiss install suggestion"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -198,10 +158,13 @@ export function HostedMobileConnect() {
       
       {/* Instructions Popup */}
       {showInstructions && (
-        <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3">
-          <div className="sw-surface rounded-xl border border-[var(--sw-line)] overflow-hidden p-6 max-w-sm w-full">
+        <Modal
+          onClose={() => setShowInstructions(false)}
+          labelledBy="install-title"
+          className="sw-surface rounded-xl border border-[var(--sw-line)] overflow-hidden p-6 max-w-sm w-full"
+        >
             <div className="text-center">
-              <div className="sw-uplabel mb-4">Add to home screen</div>
+              <h2 id="install-title" className="sw-uplabel mb-4">Add to home screen</h2>
 
               <p className="text-sm text-[var(--sw-ink-soft)] mb-6 leading-relaxed">
                 Install OpenBurner for quick access from your home screen.
@@ -227,8 +190,7 @@ export function HostedMobileConnect() {
                 Got it
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
       
     </div>

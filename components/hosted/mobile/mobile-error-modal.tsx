@@ -1,6 +1,7 @@
 "use client";
 
 import { Nfc, Smartphone, Wifi, X, RefreshCw } from "lucide-react";
+import { Modal } from "@/components/common/modal";
 
 interface MobileErrorModalProps {
   error: string | null;
@@ -64,14 +65,13 @@ export function MobileErrorModal({ error, onClose, onRetry }: MobileErrorModalPr
   };
 
   return (
-    <div className="modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3">
-      <div className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
-        <div className="px-5 py-5 text-center">
+    <Modal onClose={onClose} labelledBy="mobile-error-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[90dvh] overflow-y-auto">
+        <div className="px-5 py-5 text-center" role="alert">
           <div className="flex justify-center mb-4">
             {getErrorIcon()}
           </div>
 
-          <h3 className="text-lg font-bold text-[var(--sw-ink)] mb-2">
+          <h3 id="mobile-error-title" className="text-lg font-bold text-[var(--sw-ink)] mb-2">
             {getErrorTitle()}
           </h3>
 
@@ -107,12 +107,12 @@ export function MobileErrorModal({ error, onClose, onRetry }: MobileErrorModalPr
             <button
               onClick={onClose}
               className="sw-btn-ghost px-4 py-3 text-sm"
+              aria-label="Dismiss"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
