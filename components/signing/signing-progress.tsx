@@ -131,14 +131,22 @@ export function CardTapArt({
     // where the card lands, rather than a picture of the device.
     return (
       <svg viewBox="0 0 200 120" className={className} aria-hidden="true">
-        <g style={{ fill: "none", stroke: "var(--sw-accent)", opacity: active ? 1 : 0.3 }} strokeWidth="2">
-          {[
-            { rx: 18, ry: 4.5, cls: "" },
-            { rx: 32, ry: 8, cls: "ob-wave-2" },
-            { rx: 46, ry: 11.5, cls: "ob-wave-3" },
-          ].map((r) => (
-            <ellipse key={r.rx} cx="100" cy="98" rx={r.rx} ry={r.ry} className={active ? `ob-wave ${r.cls}` : ""} />
-          ))}
+        <g style={{ fill: "none", stroke: "var(--sw-accent)" }} strokeWidth="2">
+          {active
+            ? // Three identical rings, a third of a cycle apart: a steady stream outward.
+              [0, -1, -2].map((delay) => (
+                <ellipse
+                  key={delay}
+                  cx="100"
+                  cy="98"
+                  rx="50"
+                  ry="12.5"
+                  vectorEffect="non-scaling-stroke"
+                  className="ob-ripple"
+                  style={{ animationDelay: `${delay}s` }}
+                />
+              ))
+            : [18, 32, 46].map((rx) => <ellipse key={rx} cx="100" cy="98" rx={rx} ry={rx / 4} opacity="0.3" />)}
         </g>
 
         {/* The card (the real render), coming down onto the zone */}
