@@ -29,6 +29,7 @@ export async function approveProposal(proposal: any) {
 export async function rejectProposal() {}
 export async function respondResult() {}
 export async function respondError() {}
+export async function addChainToSessions() {}
 export async function disconnectSession(topic: string) {
   const i = sessions.findIndex((s) => s.topic === topic);
   if (i >= 0) sessions.splice(i, 1);

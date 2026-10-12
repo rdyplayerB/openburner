@@ -21,11 +21,7 @@ export function NftDetailModal({
   const [showSend, setShowSend] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const { url: marketUrl, label: marketLabel } = getMarketplaceUrl(
-    chainId,
-    nft.contractAddress,
-    nft.tokenId
-  );
+  const market = getMarketplaceUrl(chainId, nft.contractAddress, nft.tokenId);
 
   function copyContract() {
     navigator.clipboard.writeText(nft.contractAddress);
@@ -153,15 +149,17 @@ export function NftDetailModal({
               <Send className="w-4 h-4" />
               Send
             </button>
-            <a
-              href={marketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sw-btn-ghost flex-1 py-3 text-sm flex items-center justify-center gap-2"
-            >
-              <ExternalLink className="w-4 h-4" />
-              {marketLabel}
-            </a>
+            {market && (
+              <a
+                href={market.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sw-btn-ghost flex-1 py-3 text-sm flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                {market.label}
+              </a>
+            )}
           </div>
         </div>
     </Modal>

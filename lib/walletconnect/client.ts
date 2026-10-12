@@ -127,6 +127,27 @@ export async function disconnectSession(topic: string) {
   await kit.disconnectSession({ topic, reason: getSdkError("USER_DISCONNECTED") });
 }
 
+/**
+ * Add a newly saved network to every open session, so apps that are already
+ * connected (including the one that asked to add it) can use it. A no-op when
+ * WalletConnect hasn't been loaded, since there are no sessions to update.
+ */
+export async function addChainToSessions(chainId: number, address: string): Promise<void> {
+  if (!walletKit) return;
+  const chain = `eip155:${chainId}`;
+  for (const session of Object.values(walletKit.getActiveSessions())) {
+    const ns = session.namespaces?.eip155;
+    if (!ns || ns.chains?.includes(chain) || ns.accounts.some((a: string) => a.startsWith(`${chain}:`))) continue;
+    await walletKit.updateSession({
+      topic: session.topic,
+      namespaces: {
+        ...session.namespaces,
+        eip155: { ...ns, chains: [...(ns.chains ?? []), chain], accounts: [...ns.accounts, `${chain}:${address}`] },
+      },
+    });
+  }
+}
+
 export async function getActiveSessions() {
   const kit = await getWalletKit();
   return Object.values(kit.getActiveSessions());

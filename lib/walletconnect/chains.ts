@@ -5,7 +5,7 @@
  * user has saved. We only ever approve WalletConnect sessions for chains in this set, so a
  * signing request can never arrive for a chain we have no RPC for.
  */
-import { CHAINS } from "../supported-chains";
+import { CHAINS, getNativeSymbol } from "../supported-chains";
 
 export interface ChainInfo {
   chainId: number;
@@ -49,8 +49,8 @@ export function requiresSigning(method: string): boolean {
 
 export const WC_EVENTS = ["chainChanged", "accountsChanged"];
 
-/** Read user-saved custom RPCs from localStorage ({ chainId: { name, rpcUrl } }). */
-export function getCustomRPCs(): Record<string, { name: string; rpcUrl: string }> {
+/** Read user-saved custom RPCs from localStorage ({ chainId: { name, rpcUrl, symbol? } }). */
+export function getCustomRPCs(): Record<string, { name: string; rpcUrl: string; symbol?: string }> {
   if (typeof window === "undefined") return {};
   try {
     return JSON.parse(localStorage.getItem("customRPCs") || "{}");
@@ -72,7 +72,7 @@ export function getServeChains(): ChainInfo[] {
         name: info.name,
         rpcUrl: info.rpcUrl,
         explorer: "",
-        currency: "ETH",
+        currency: getNativeSymbol(chainId),
       };
     }
   }
@@ -90,7 +90,7 @@ export function getChainInfo(chainId: number): ChainInfo | null {
   if (BUILTIN_CHAINS[chainId]) return BUILTIN_CHAINS[chainId];
   const custom = getCustomRPCs();
   const c = custom[String(chainId)];
-  return c ? { chainId, name: c.name, rpcUrl: c.rpcUrl, explorer: "", currency: "ETH" } : null;
+  return c ? { chainId, name: c.name, rpcUrl: c.rpcUrl, explorer: "", currency: getNativeSymbol(chainId) } : null;
 }
 
 export function getChainName(chainId: number): string {

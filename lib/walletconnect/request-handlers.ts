@@ -6,6 +6,9 @@
  * the JSON-RPC result. Errors thrown carry an optional `.code` for the dApp response.
  */
 import { ethers } from "ethers";
+import { feeFields } from "@/lib/card/tx";
+import { addChainToSessions } from "./client";
+import { CURRENCY_SYMBOL_RE } from "@/lib/supported-chains";
 import {
   signTransactionSmart,
   signMessageSmart,
@@ -106,7 +109,6 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
         const provider = getProvider(requestChainId, rpcUrl);
         // Always the connected card's account (the signer refuses any other).
         const from = account;
-        const isBaseNetwork = requestChainId === 8453;
 
         const [nonce, feeData] = await rpcRateLimiter.makeRequest(async () =>
           Promise.all([provider.getTransactionCount(from), provider.getFeeData()])
@@ -132,14 +134,7 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
           gasLimit,
         };
 
-        const transaction: ethers.TransactionRequest = isBaseNetwork
-          ? { ...base, type: 0, gasPrice: feeData.gasPrice }
-          : {
-              ...base,
-              type: 2,
-              maxFeePerGas: feeData.maxFeePerGas,
-              maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-            };
+        const transaction: ethers.TransactionRequest = { ...base, ...feeFields(requestChainId, feeData) };
 
         const signedTx = await signTransactionSmart(transaction, keySlot, pin, config);
 
@@ -178,10 +173,18 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
         }
 
         const name: string = p.chainName || `Chain ${target}`;
+        const symbol = typeof p.nativeCurrency?.symbol === "string" ? p.nativeCurrency.symbol.trim() : "";
+        const currencyName = typeof p.nativeCurrency?.name === "string" ? p.nativeCurrency.name.trim().slice(0, 40) : "";
         const existing = JSON.parse(localStorage.getItem("customRPCs") || "{}");
-        existing[String(target)] = { name, rpcUrl };
+        existing[String(target)] = {
+          name,
+          rpcUrl,
+          ...(CURRENCY_SYMBOL_RE.test(symbol) ? { symbol, ...(currencyName ? { currencyName } : {}) } : {}),
+        };
         localStorage.setItem("customRPCs", JSON.stringify(existing));
 
+        // Let the asking app (and any other open session) use the new network.
+        if (account) await addChainToSessions(target, account);
         useWalletStore.getState().setChain(target, rpcUrl, name);
         return null;
       }

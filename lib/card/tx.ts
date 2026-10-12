@@ -4,10 +4,27 @@ import { ethers } from "ethers";
  * Transaction / signature helpers shared by every transport.
  */
 
+type FeeFields = Pick<ethers.TransactionRequest, "type" | "gasPrice" | "maxFeePerGas" | "maxPriorityFeePerGas">;
+
+/**
+ * Fee fields for a transaction on this network. EIP-1559 where the network
+ * reports a base fee; a legacy gasPrice where it doesn't (so any EVM network
+ * works, including ones added by RPC). Base is always signed as legacy.
+ */
+export function feeFields(chainId: number | bigint, fee: ethers.FeeData): FeeFields {
+  if (Number(chainId) === 8453 || fee.maxFeePerGas == null) {
+    return { type: 0, gasPrice: fee.gasPrice };
+  }
+  return { type: 2, maxFeePerGas: fee.maxFeePerGas, maxPriorityFeePerGas: fee.maxPriorityFeePerGas };
+}
+
 /** Build the unsigned transaction the card will sign. */
 export function buildUnsignedTx(transaction: ethers.TransactionRequest): ethers.Transaction {
-  // Base is signed as a legacy (type 0) transaction with gasPrice.
-  const isLegacy = transaction.chainId === 8453;
+  // Legacy (type 0) when asked for, when only a gasPrice is given, and always on Base.
+  const isLegacy =
+    transaction.type === 0 ||
+    transaction.chainId === 8453 ||
+    (transaction.maxFeePerGas == null && transaction.gasPrice != null);
   return ethers.Transaction.from({
     to: transaction.to as string,
     value: transaction.value?.toString(),

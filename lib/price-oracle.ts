@@ -12,7 +12,7 @@
 import { coinGeckoLimiter } from "./coingecko-rate-limiter";
 import { getAppConfig } from "./config/environment";
 import { getUserKey } from "./user-keys";
-import { getChainConfig } from "./supported-chains";
+import { getChainConfig, getCustomCurrencySymbol } from "./supported-chains";
 import { log } from "./log";
 
 /** Header carrying the user's CoinGecko key (this browser) to the proxy, if set. */
@@ -115,8 +115,18 @@ type PriceSource =
   | { kind: "id"; id: string; cacheKey: string }
   | { kind: "contract"; platform: string; address: string; cacheKey: string };
 
-function sourceFor(token: { symbol: string; address?: string; chainId?: number }): PriceSource | null {
+/** Exported for tests. */
+export function sourceFor(token: { symbol: string; address?: string; chainId?: number }): PriceSource | null {
   const symbol = token.symbol.toUpperCase();
+  // Custom networks: price the coin only by the symbol its owner gave it (an
+  // unnamed coin defaults to "ETH" and must not get Ether's price), and never
+  // price their tokens, since a symbol alone can't tell a real USDC from a copy.
+  if (token.chainId && !getChainConfig(token.chainId)) {
+    if (token.address !== "native") return null;
+    const own = getCustomCurrencySymbol(token.chainId);
+    const id = own ? SYMBOL_TO_COINGECKO_ID[own.toUpperCase()] : undefined;
+    return id ? { kind: "id", id, cacheKey: `id:${id}` } : null;
+  }
   if (token.address === "native" && token.chainId) {
     const id = getChainConfig(token.chainId)?.nativeCoingeckoId ?? SYMBOL_TO_COINGECKO_ID[symbol];
     return id ? { kind: "id", id, cacheKey: `id:${id}` } : null;

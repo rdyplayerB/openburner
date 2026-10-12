@@ -50,13 +50,36 @@ export function getChainConfig(chainId: number): ChainConfig | undefined {
   return BY_ID.get(chainId);
 }
 
-/** Native currency symbol for a chain (ETH for unknown/custom chains). */
+/** Currency symbols a custom network may use (shown as the native coin). */
+export const CURRENCY_SYMBOL_RE = /^[A-Za-z0-9.$-]{1,11}$/;
+
+/** A saved custom network's currency, from the add-network form or an app's request. */
+function customCurrency(chainId: number): { symbol?: string; currencyName?: string } {
+  if (typeof window === "undefined") return {};
+  try {
+    const saved = JSON.parse(localStorage.getItem("customRPCs") || "{}")[String(chainId)];
+    return saved && typeof saved === "object" ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+/** The symbol a custom network's owner (or the app that added it) gave its coin, if any. */
+export function getCustomCurrencySymbol(chainId: number): string | null {
+  if (BY_ID.has(chainId)) return null;
+  const symbol = customCurrency(chainId).symbol;
+  return symbol && CURRENCY_SYMBOL_RE.test(symbol) ? symbol : null;
+}
+
+/** Native currency symbol for a chain (a custom network's own symbol, else ETH). */
 export function getNativeSymbol(chainId: number): string {
-  return BY_ID.get(chainId)?.nativeSymbol ?? "ETH";
+  const custom = customCurrency(chainId).symbol;
+  return BY_ID.get(chainId)?.nativeSymbol ?? (custom && CURRENCY_SYMBOL_RE.test(custom) ? custom : "ETH");
 }
 
 export function getNativeName(chainId: number): string {
-  return BY_ID.get(chainId)?.nativeName ?? "Ether";
+  const custom = customCurrency(chainId);
+  return BY_ID.get(chainId)?.nativeName ?? (custom.symbol ? custom.currencyName || custom.symbol : "Ether");
 }
 
 /** Human chain name; falls back to the given name (custom RPC) or "Chain N". */

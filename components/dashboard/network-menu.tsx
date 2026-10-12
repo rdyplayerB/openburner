@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, Plus, X } from "lucide-react";
 import { useWalletStore } from "@/store/wallet-store";
 import { showToast } from "@/store/toast-store";
-import { CHAINS } from "@/lib/supported-chains";
+import { CHAINS, CURRENCY_SYMBOL_RE } from "@/lib/supported-chains";
 import { ChainLogo } from "../common/token-icon";
 
-type CustomRPCs = { [chainId: string]: { name: string; rpcUrl: string } };
+type CustomRPCs = { [chainId: string]: { name: string; rpcUrl: string; symbol?: string } };
 
 /** Network picker: built-in networks, saved custom RPCs, and a form to add one. */
 export function NetworkMenu() {
@@ -21,6 +21,9 @@ export function NetworkMenu() {
   const [name, setName] = useState("");
   const [rpc, setRpc] = useState("");
   const [id, setId] = useState("");
+  const [symbol, setSymbol] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -64,13 +67,59 @@ export function NetworkMenu() {
     setShowForm(false);
   }
 
-  function addCustom() {
-    if (!rpc || !id || !name) return;
-    save({ ...customRPCs, [id]: { name, rpcUrl: rpc } });
-    setChain(parseInt(id), rpc, name);
+  const symbolOk = !symbol.trim() || CURRENCY_SYMBOL_RE.test(symbol.trim());
+
+  /** Check the RPC really serves this chain ID before saving it (a mistyped ID would sign every transaction for the wrong chain). */
+  async function addCustom() {
+    if (!rpc || !id || !name || !symbolOk || checking) return;
+    const chainIdNum = Number(id);
+    if (!Number.isSafeInteger(chainIdNum) || chainIdNum <= 0) {
+      setFormError("The chain ID must be a whole number.");
+      return;
+    }
+    const builtIn = CHAINS.find((c) => c.chainId === chainIdNum);
+    if (builtIn) {
+      setFormError(`Chain ${chainIdNum} is already built in as ${builtIn.name}.`);
+      return;
+    }
+    setFormError(null);
+    setChecking(true);
+    let served: number | null = null;
+    try {
+      const { ethers } = await import("ethers");
+      const probe = new ethers.JsonRpcProvider(rpc, undefined, { staticNetwork: true });
+      const net = await Promise.race([
+        probe.getNetwork(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+      ]).catch(() => null);
+      probe.destroy();
+      served = net ? Number(net.chainId) : null;
+    } finally {
+      setChecking(false);
+    }
+    if (served === null) {
+      setFormError("Couldn't reach that RPC URL. Check the address and try again.");
+      return;
+    }
+    if (served !== chainIdNum) {
+      setFormError(`That RPC URL serves chain ${served}, not ${chainIdNum}.`);
+      return;
+    }
+
+    const sym = symbol.trim();
+    save({ ...customRPCs, [String(chainIdNum)]: { name, rpcUrl: rpc, ...(sym ? { symbol: sym } : {}) } });
+    setChain(chainIdNum, rpc, name);
+    // Apps already connected can use the new network too.
+    const address = useWalletStore.getState().address;
+    if (address) {
+      import("@/lib/walletconnect/client")
+        .then((m) => m.addChainToSessions(chainIdNum, address))
+        .catch(() => {});
+    }
     setName("");
     setRpc("");
     setId("");
+    setSymbol("");
     setShowForm(false);
     setOpen(false);
   }
@@ -178,20 +227,33 @@ export function NetworkMenu() {
                   { v: name, set: setName, ph: "Network name", label: "Network name", type: "text" },
                   { v: rpc, set: setRpc, ph: "https://rpc.example.org", label: "RPC URL", type: "url" },
                   { v: id, set: setId, ph: "Chain ID", label: "Chain ID", type: "number" },
+                  { v: symbol, set: setSymbol, ph: "Currency symbol (optional, e.g. POL)", label: "Currency symbol", type: "text" },
                 ].map((f) => (
                   <div key={f.label} className="sw-field px-3 py-2">
                     <input
                       type={f.type}
                       value={f.v}
-                      onChange={(e) => f.set(e.target.value)}
+                      onChange={(e) => {
+                        f.set(e.target.value);
+                        setFormError(null);
+                      }}
                       placeholder={f.ph}
                       aria-label={f.label}
                       className="sw-field-input text-sm sw-mono"
                     />
                   </div>
                 ))}
-                <button type="submit" disabled={!rpc || !id || !name} className="sw-btn-primary w-full py-2.5 text-sm">
-                  Add network
+                {(formError || !symbolOk) && (
+                  <p className="text-xs text-[var(--sw-down)] px-1" role="alert">
+                    {formError ?? "Use up to 11 letters or numbers for the symbol."}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={!rpc || !id || !name || !symbolOk || checking}
+                  className="sw-btn-primary w-full py-2.5 text-sm"
+                >
+                  {checking ? "Checking the RPC…" : "Add network"}
                 </button>
               </form>
             )}

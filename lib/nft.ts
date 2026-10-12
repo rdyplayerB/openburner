@@ -95,12 +95,12 @@ const BLOCK_EXPLORERS: Record<number, string> = {
   1301: "https://unichain-sepolia.blockscout.com",
 };
 
-/** Build a "View on OpenSea" URL, falling back to the chain's block explorer. */
+/** Build a "View on OpenSea" URL, falling back to the chain's block explorer (none for unknown chains). */
 export function getMarketplaceUrl(
   chainId: number,
   contractAddress: string,
   tokenId: string
-): { url: string; label: string } {
+): { url: string; label: string } | null {
   const slug = OPENSEA_CHAIN_SLUGS[chainId];
   if (slug) {
     return {
@@ -108,7 +108,8 @@ export function getMarketplaceUrl(
       label: "OpenSea",
     };
   }
-  const explorer = BLOCK_EXPLORERS[chainId] || "https://etherscan.io";
+  const explorer = BLOCK_EXPLORERS[chainId];
+  if (!explorer) return null;
   return {
     url: `${explorer}/token/${contractAddress}?a=${tokenId}`,
     label: "Explorer",

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, type RefObject } from "react";
 import { ethers } from "ethers";
+import { feeFields } from "@/lib/card/tx";
 import { useWalletStore } from "@/store/wallet-store";
 import { PinInput } from "./pin-input";
 import { X, ArrowLeft, Loader2, ChevronDown, ArrowUpDown, ClipboardPaste } from "lucide-react";
@@ -517,19 +518,13 @@ export function SendToken({
         provider.getFeeData(),
       ]);
       const call = buildCall(review.to, review.amountWei);
-      // Base: legacy pricing (matches the rest of the app).
-      const transaction: ethers.TransactionRequest =
-        chainId === 8453
-          ? { ...call, nonce, chainId, type: 0, gasPrice: feeData.gasPrice, gasLimit: review.gasLimit }
-          : {
-              ...call,
-              nonce,
-              chainId,
-              type: 2,
-              maxFeePerGas: feeData.maxFeePerGas,
-              maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-              gasLimit: review.gasLimit,
-            };
+      const transaction: ethers.TransactionRequest = {
+        ...call,
+        nonce,
+        chainId,
+        gasLimit: review.gasLimit,
+        ...feeFields(chainId, feeData),
+      };
 
       setSignStep("sign");
       const { signTransactionSmart } = await import("@/lib/smart-signer");

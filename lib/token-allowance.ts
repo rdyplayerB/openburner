@@ -8,6 +8,7 @@
 
 import { ethers } from "ethers";
 import { rpcRateLimiter } from "./rpc-rate-limiter";
+import { feeFields } from "./card/tx";
 
 export interface AllowanceInfo {
   tokenAddress: string;
@@ -66,18 +67,14 @@ async function buildApprove(
     rpcRateLimiter.makeRequest(() => provider.getTransactionCount(owner, "pending")),
     rpcRateLimiter.makeRequest(() => provider.getFeeData()),
   ]);
-  const isBaseNetwork = network.chainId === 8453n;
   return {
     to: tokenAddress,
     data,
     value: 0n,
     nonce,
     chainId: Number(network.chainId),
-    type: isBaseNetwork ? 0 : 2, // Base: legacy pricing
     gasLimit: (gasEstimate * 120n) / 100n,
-    ...(isBaseNetwork
-      ? { gasPrice: feeData.gasPrice }
-      : { maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas: feeData.maxPriorityFeePerGas }),
+    ...feeFields(network.chainId, feeData),
   };
 }
 

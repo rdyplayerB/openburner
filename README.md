@@ -1,6 +1,6 @@
 # 🔥 OpenBurner
 
-An open-source app for Burner Ethereum cards that adds more networks and gives you a starting point for your own Burner project. Built with Next.js, TypeScript and ethers.js.
+An open-source app for Burner Ethereum cards. Use it on any EVM network with your own RPC URL, or start your own Burner project from its code. Built with Next.js, TypeScript and ethers.js.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
@@ -14,7 +14,7 @@ An open-source app for Burner Ethereum cards that adds more networks and gives y
 
 OpenBurner has two goals:
 
-- **More networks for your Burner.** Burner supports Ethereum, Base, Optimism and Arbitrum. OpenBurner adds Polygon, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll and Unichain, and you can add other EVM networks with an RPC URL and chain ID.
+- **Use your Burner on any EVM network.** Ethereum, Base, Optimism, Arbitrum, Polygon, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll and Unichain are built in. For any other EVM network, add its chain ID and your own RPC URL.
 - **A starting point for your own Burner project.** The code is MIT-licensed, so you can fork it and build on it. It already covers reading the card over NFC, signing with a PIN and a tap, checking every signature against the card's address, and connecting to apps through WalletConnect.
 
 You can run it locally with a USB NFC reader, or host it and use your phone as the reader. Either way, your private keys stay in the card's secure element.
@@ -31,7 +31,7 @@ You can run it locally with a USB NFC reader, or host it and use your phone as t
 - 🖼️ **NFT Management** - View, receive, and send ERC-721 & ERC-1155 collectibles with a gallery view, full detail pages, and OpenSea links. Auto-discovery via an optional [Alchemy NFT API](https://www.alchemy.com) key, plus manual add-by-contract on any chain
 - 🔗 **WalletConnect** - Connect to dApps by scanning a WalletConnect QR (powered by [Reown](https://reown.com)). A header chip shows connected dApps with a live indicator and lets you manage or disconnect them
 - 📊 **Real-Time Prices** - CoinGecko price feeds, available in both local and hosted modes (hosted needs a CoinGecko API key — the free Demo tier works)
-- 🚀 **Custom RPCs** - Connect to any EVM-compatible chain
+- 🚀 **Any EVM Network** - Add a network with its RPC URL and chain ID, and optionally its currency symbol. OpenBurner checks that the RPC serves that chain ID before saving the network. Apps you've already connected can use the new network right away
 - 🛡️ **Card Checks** - Every key the card reports is validated, and every signature is checked against your connected card before anything is sent
 
 ### Technical Highlights

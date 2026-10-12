@@ -15,13 +15,6 @@ import { BuildArt, CardArt, NetworksArt, SignArt } from "./intro-art";
 
 const SOURCE_URL = "https://github.com/rdyplayerB/openburner";
 
-// Burner's own networks (help.burner.pro, "What blockchain networks does Burner support?").
-const BURNER_NETWORKS = 4;
-const NAMED_EXTRAS = 3; // Polygon, BNB Chain, Avalanche
-const MORE = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][
-  CHAINS.length - BURNER_NETWORKS - NAMED_EXTRAS
-] ?? String(CHAINS.length - BURNER_NETWORKS - NAMED_EXTRAS);
-
 const SLIDES = [
   {
     Art: CardArt,
@@ -30,8 +23,8 @@ const SLIDES = [
   },
   {
     Art: NetworksArt,
-    title: `Works on ${CHAINS.length} networks.`,
-    body: `Burner supports Ethereum, Base, Optimism and Arbitrum. OpenBurner adds Polygon, BNB Chain, Avalanche and ${MORE} more, and you can add others.`,
+    title: "Works on any EVM network.",
+    body: `OpenBurner comes with ${CHAINS.length} networks, including Ethereum, Base, Polygon and Avalanche. Add any other EVM network with your own RPC URL.`,
   },
   {
     Art: BuildArt,

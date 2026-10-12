@@ -10,6 +10,7 @@
 
 import { ethers } from 'ethers';
 import { rpcRateLimiter } from "./rpc-rate-limiter";
+import { feeFields } from "./card/tx";
 import { getUserKey } from "./user-keys";
 import { log, errMsg } from "./log";
 
@@ -426,9 +427,6 @@ export async function buildApprovalTransaction(
  */
 export async function buildSwapTransaction(quote: SwapQuote, from: string, provider: ethers.Provider, chainId?: number): Promise<ethers.TransactionRequest> {
   try {
-    // Check if we're on Base network (which doesn't support EIP-1559 properly)
-    const isBaseNetwork = chainId === 8453;
-    
     // Get gas limit from quote and add 10% buffer for safety
     const baseGasLimit = ethers.getBigInt(quote.transaction.gas);
     const gasLimit = (baseGasLimit * 110n) / 100n; // Add 10% buffer
@@ -451,14 +449,7 @@ export async function buildSwapTransaction(quote: SwapQuote, from: string, provi
       nonce,
       gasLimit,
       chainId,
-      type: isBaseNetwork ? 0 : 2, // Use legacy format for Base network
-      ...(isBaseNetwork
-        ? { gasPrice: feeData.gasPrice }
-        : {
-            maxFeePerGas: feeData.maxFeePerGas,
-            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          }
-      ),
+      ...feeFields(chainId ?? (await provider.getNetwork()).chainId, feeData),
     };
 
 

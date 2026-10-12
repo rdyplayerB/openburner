@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { feeFields } from "@/lib/card/tx";
 import { useWalletStore } from "@/store/wallet-store";
 import { recordActivity, settleActivity } from "@/store/activity-store";
 import { PinInput } from "../pin-input";
@@ -153,11 +154,7 @@ export function SendNft({
         provider.getFeeData(),
       ]);
       const base = { to: nft.contractAddress, value: 0n, data: review.data, nonce, chainId, gasLimit: review.gasLimit };
-      // Base: legacy pricing (matches the rest of the app).
-      const transaction: ethers.TransactionRequest =
-        chainId === 8453
-          ? { ...base, type: 0, gasPrice: feeData.gasPrice }
-          : { ...base, type: 2, maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas: feeData.maxPriorityFeePerGas };
+      const transaction: ethers.TransactionRequest = { ...base, ...feeFields(chainId, feeData) };
 
       setSignStep("sign");
       const { signTransactionSmart } = await import("@/lib/smart-signer");
