@@ -106,7 +106,7 @@ function StepDot({ state }: { state: "done" | "active" | "todo" }) {
   );
 }
 
-/** A Burner card easing toward a phone, or tapping down onto a USB reader, with NFC waves between them. */
+/** A Burner card easing toward a phone (NFC waves between them), or tapping down onto an abstract tap zone for the USB reader. */
 export function CardTapArt({
   reader = "phone",
   active = true,
@@ -127,34 +127,25 @@ export function CardTapArt({
   const waveStyle = { stroke: "var(--sw-accent)", fill: "none", opacity: active ? 1 : 0.25 };
 
   if (reader === "reader") {
-    // Desktop USB NFC reader (HaLo Bridge): a dark pad seen from slightly above,
-    // contactless mark on top, status light, USB cable. The card taps down onto it.
+    // USB reader, drawn abstractly: a flat tap zone with rings rippling out
+    // where the card lands, rather than a picture of the device.
     return (
       <svg viewBox="0 0 200 120" className={className} aria-hidden="true">
-        {/* Cable and plug */}
-        <path d="M160 100 C 176 100, 178 112, 192 112" fill="none" stroke="#2A2A30" strokeWidth="3" strokeLinecap="round" />
-        <rect x="188" y="108" width="10" height="8" rx="1.5" fill="#2A2A30" />
-        {/* Pad: front edge, then top face */}
-        <path d="M54 100 H162 V105 Q162 109 158 109 H58 Q54 109 54 105 Z" fill="#0B0B0D" stroke="#fff" strokeOpacity="0.1" />
-        <path d="M68 80 H148 Q152 80 154 83 L162 97 Q163 100 159 100 H57 Q53 100 54 97 L62 83 Q64 80 68 80 Z" fill="#1C1C21" stroke="#fff" strokeOpacity="0.14" />
-        {/* Contactless mark printed on the pad */}
-        <g transform="translate(108 90) scale(1 0.42)" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="2.4" strokeLinecap="round">
-          <path d="M -8 -6 A 8 8 0 0 1 8 -6" transform="rotate(180) translate(0 -2)" />
-          <path d="M -13 -10 A 14 14 0 0 1 13 -10" transform="rotate(180) translate(0 -2)" />
-          <path d="M -18 -14 A 20 20 0 0 1 18 -14" transform="rotate(180) translate(0 -2)" />
-        </g>
-        {/* Status light */}
-        <circle cx="148" cy="94" r="2.6" style={{ fill: active ? "var(--sw-up)" : "#3A3A42" }} />
-
-        {/* NFC waves between card and pad, pointing down */}
-        <g transform="translate(108 75) rotate(90)" style={waveStyle} strokeWidth="2.5" strokeLinecap="round">
-          {waves}
+        <ellipse cx="100" cy="98" rx="62" ry="15" style={{ fill: "var(--sw-fill-strong)" }} />
+        <g style={{ fill: "none", stroke: "var(--sw-accent)", opacity: active ? 1 : 0.3 }} strokeWidth="2">
+          {[
+            { rx: 18, ry: 4.5, cls: "" },
+            { rx: 32, ry: 8, cls: "ob-wave-2" },
+            { rx: 46, ry: 11.5, cls: "ob-wave-3" },
+          ].map((r) => (
+            <ellipse key={r.rx} cx="100" cy="98" rx={r.rx} ry={r.ry} className={active ? `ob-wave ${r.cls}` : ""} />
+          ))}
         </g>
 
-        {/* The card (the real render), coming down onto the pad */}
-        <g transform="translate(86 0)">
+        {/* The card (the real render), coming down onto the zone */}
+        <g transform="translate(79 4)">
           <g className={active ? "ob-tap-down" : ""}>
-            <image href={BURNER_CARD.angled()} width={58 * BURNER_CARD.angledRatio} height={58} />
+            <image href={BURNER_CARD.angled()} width={64 * BURNER_CARD.angledRatio} height={64} />
           </g>
         </g>
       </svg>
