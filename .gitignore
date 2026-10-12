@@ -39,3 +39,4 @@ next-env.d.ts
 
 # Claude Code worktrees
 .claude/
+ladle-build/

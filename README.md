@@ -90,6 +90,9 @@ npm run dev
 
 # Run the test suite
 npm test
+
+# Browse every screen and state (no card needed)
+npm run stories
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -217,6 +220,7 @@ You're encouraged to fork OpenBurner for your own use:
 - `lib/card/` - Card key parsing and signature checks (shared by every connection mode)
 - `middleware.ts` - Origin guard for the API routes
 - `tests/` - Vitest suite (`npm test`)
+- `stories/` - Every screen and state as a [Ladle](https://ladle.dev) story (`npm run stories`)
 - `store/` - Zustand state management
 
 ## How can I support OpenBurner?

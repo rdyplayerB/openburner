@@ -44,7 +44,13 @@ export function SigningProgress({ steps, current }: { steps: ProgressStep[]; cur
   const waitingOnCard = !!step?.card && phase === "tap";
 
   const title = step?.card ? (phase === "signed" ? "Signed" : waitingOnCard ? "Tap your Burner" : "Getting your card ready…") : `${step?.label ?? "Working"}…`;
-  const hint = step?.card ? (waitingOnCard ? TAP_HINT[reader] : "Your PIN goes straight to the card.") : "Keep this window open.";
+  const hint = step?.card
+    ? waitingOnCard
+      ? TAP_HINT[reader]
+      : phase === "signed"
+        ? "Checked: the signature matches your card."
+        : "Your PIN goes straight to the card."
+    : "Keep this window open.";
 
   return (
     <div className="px-5 pt-6 pb-5" role="status" aria-live="polite">

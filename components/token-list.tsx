@@ -46,6 +46,11 @@ interface CacheEntry {
   loadedAt: number;
 }
 const listCache = new Map<string, CacheEntry>();
+
+/** Forget cached balances (story viewer, tests). */
+export function resetTokenListCache() {
+  listCache.clear();
+}
 const REVALIDATE_AFTER_MS = 60_000;
 
 function cacheKey(chainId: number, address: string) {

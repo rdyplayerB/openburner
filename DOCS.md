@@ -508,9 +508,25 @@ npm run lint
 # Tests
 npm test
 
+# Screens: every screen and state in Ladle, no card or network needed
+npm run stories
+
+# Screens as a static site (ladle-build/)
+npm run stories:build
+
 # Build for production
 npm run build
 ```
+
+### Screens (Ladle)
+
+`stories/` holds every screen and state of the app as a [Ladle](https://ladle.dev) story: welcome, dashboard, send, signing, swap and connected apps, on phone and desktop widths, in light and dark (press `d`). Stories render the real components, so editing a component updates its stories as you save.
+
+Nothing in a story touches a card or the network. `.ladle/vite.config.ts` swaps the modules that would (RPC, prices, quotes, ENS, the card signer, WalletConnect, the connect transports) for fakes in `.ladle/mocks/`, fed by example data in `.ladle/fixtures.ts`. Each story picks its situation with knobs from `.ladle/scenario.ts`: hosted or local, prices on or off, a wrong PIN, a failed transaction, an approval needed, and so on.
+
+A story can also act like a person after it opens, through `Scene` steps (`.ladle/scene.tsx`): click a button, type into a field, wait for text. That's how stories open straight on a filled-in review or a quote, and how the "Whole flow" stories play a send or swap from start to finish with a pretend card.
+
+To add a screen state, copy a nearby story and change its knobs or steps.
 
 ## License & Usage
 

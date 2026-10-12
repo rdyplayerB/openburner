@@ -25,6 +25,11 @@ const MANUAL_KEY = (chainId: number) => `nfts_manual_${chainId}`;
 
 // Per chain:address cache so switching tabs/chains back is instant.
 const galleryCache = new Map<string, { nfts: NftItem[]; autoConfigured: boolean; loadedAt: number }>();
+
+/** Forget cached collectibles (story viewer, tests). */
+export function resetGalleryCache() {
+  galleryCache.clear();
+}
 const REVALIDATE_AFTER_MS = 5 * 60_000;
 
 export function NftGallery({ onReceive }: { onReceive?: () => void }) {

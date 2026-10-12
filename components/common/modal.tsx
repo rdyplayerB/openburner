@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { usePortalRoot } from "./portal-root";
 
 /**
  * Shared accessible modal.
@@ -21,14 +22,14 @@ const stack: string[] = [];
 let scrollLocks = 0;
 let savedOverflow = "";
 
-function lockScroll() {
+function lockScroll(doc: Document) {
   if (scrollLocks++ === 0) {
-    savedOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    savedOverflow = doc.body.style.overflow;
+    doc.body.style.overflow = "hidden";
   }
 }
-function unlockScroll() {
-  if (--scrollLocks === 0) document.body.style.overflow = savedOverflow;
+function unlockScroll(doc: Document) {
+  if (--scrollLocks === 0) doc.body.style.overflow = savedOverflow;
 }
 
 const FOCUSABLE =
@@ -89,6 +90,7 @@ export function Modal({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const [mounted, setMounted] = useState(false);
+  const portalRoot = usePortalRoot();
   const sheet = align === "center";
   const keyboardInset = useKeyboardInset(mounted && sheet);
 
@@ -98,14 +100,16 @@ export function Modal({
 
   useEffect(() => {
     if (!mounted) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
+    // The document the dialog lives in (not always the global one, e.g. in an iframe).
+    const doc = panelRef.current?.ownerDocument ?? document;
+    const previouslyFocused = doc.activeElement as HTMLElement | null;
     stack.push(id);
-    lockScroll();
+    lockScroll(doc);
 
     // Focus the dialog itself unless something asks for focus (initialFocusRef,
     // data-autofocus, or a React autoFocus input that already took it), so
     // opening a sheet doesn't light up its close button.
-    const alreadyInside = !!panelRef.current?.contains(document.activeElement);
+    const alreadyInside = !!panelRef.current?.contains(doc.activeElement);
     if (!alreadyInside || initialFocusRef?.current) {
       const focusTarget =
         initialFocusRef?.current ||
@@ -123,7 +127,7 @@ export function Modal({
       }
       if (e.key === "Tab" && panelRef.current) {
         const nodes = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-          (el) => el.offsetParent !== null || el === document.activeElement
+          (el) => el.offsetParent !== null || el === doc.activeElement
         );
         if (nodes.length === 0) {
           e.preventDefault();
@@ -132,7 +136,7 @@ export function Modal({
         }
         const first = nodes[0];
         const last = nodes[nodes.length - 1];
-        const active = document.activeElement;
+        const active = doc.activeElement;
         if (active === panelRef.current) {
           e.preventDefault();
           (e.shiftKey ? last : first).focus();
@@ -147,14 +151,14 @@ export function Modal({
         }
       }
     }
-    document.addEventListener("keydown", onKeyDown);
+    doc.addEventListener("keydown", onKeyDown);
 
     return () => {
-      document.removeEventListener("keydown", onKeyDown);
+      doc.removeEventListener("keydown", onKeyDown);
       const idx = stack.lastIndexOf(id);
       if (idx >= 0) stack.splice(idx, 1);
-      unlockScroll();
-      if (previouslyFocused && document.contains(previouslyFocused)) {
+      unlockScroll(doc);
+      if (previouslyFocused && doc.contains(previouslyFocused)) {
         previouslyFocused.focus({ preventScroll: true });
       }
     };
@@ -162,7 +166,7 @@ export function Modal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, id]);
 
-  if (!mounted) return null;
+  if (!mounted || !portalRoot) return null;
 
   return createPortal(
     <div
@@ -186,6 +190,6 @@ export function Modal({
         {children}
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }

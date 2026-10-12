@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePortalRoot } from "./common/portal-root";
 import { CheckCircle, AlertTriangle, Info, X } from "lucide-react";
 import { useToastStore, type ToastItem, type ToastType } from "@/store/toast-store";
 
@@ -51,8 +52,9 @@ export function ToastHost() {
   const toasts = useToastStore((s) => s.toasts);
   const dismiss = useToastStore((s) => s.dismiss);
   const [mounted, setMounted] = useState(false);
+  const portalRoot = usePortalRoot();
   useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  if (!mounted || !portalRoot) return null;
 
   return createPortal(
     <div
@@ -63,6 +65,6 @@ export function ToastHost() {
         <ToastView key={t.id} toast={t} onClose={() => dismiss(t.id)} />
       ))}
     </div>,
-    document.body
+    portalRoot
   );
 }
