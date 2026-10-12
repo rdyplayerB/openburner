@@ -127,11 +127,10 @@ export function CardTapArt({
   const waveStyle = { stroke: "var(--sw-accent)", fill: "none", opacity: active ? 1 : 0.25 };
 
   if (reader === "reader") {
-    // USB reader, drawn abstractly: a flat tap zone with rings rippling out
+    // USB reader, drawn abstractly: rings rippling out
     // where the card lands, rather than a picture of the device.
     return (
       <svg viewBox="0 0 200 120" className={className} aria-hidden="true">
-        <ellipse cx="100" cy="98" rx="62" ry="15" style={{ fill: "var(--sw-fill-strong)" }} />
         <g style={{ fill: "none", stroke: "var(--sw-accent)", opacity: active ? 1 : 0.3 }} strokeWidth="2">
           {[
             { rx: 18, ry: 4.5, cls: "" },
