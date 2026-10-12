@@ -119,7 +119,7 @@ export function CardArt({ active }: { active: boolean }) {
   // The NFC mark on the card front (chip underneath).
   const nfc: [number, number] = [x + w * 0.235, 34 + h * 0.838];
   return (
-    <Canvas label="Burner cards. The chip behind the NFC mark makes and keeps your keys.">
+    <Canvas label="Burner cards. The secure chip behind the NFC mark makes and holds your keys.">
       <Defs ids={ids} />
       <ellipse cx={x + w / 2 - 14} cy={34 + h + 4} rx="84" ry="6" fill="#000" opacity="0.2" filter={`url(#${ids.shadow})`} />
       <g transform={`rotate(-24 ${pivot}) translate(${x} 34)`}>
@@ -138,66 +138,34 @@ export function CardArt({ active }: { active: boolean }) {
           tx={242}
           ty={nfc[1] - 4}
           label="SECURE CHIP"
-          note={["Your keys live here", "and never leave"]}
+          note={["Makes and holds", "your keys"]}
         />
       </g>
     </Canvas>
   );
 }
 
-// ─── 2 · Tap to see what you hold ───────────────────────────────────────────
+// ─── 2 · More networks ──────────────────────────────────────────────────────
 
-const TOKENS: { name: string; amount: string; value: string; icon: React.ReactNode }[] = [
-  {
-    name: "Ethereum",
-    amount: "1.2483 ETH",
-    value: "$3,160.33",
-    icon: <image href="/images/chains/ethereum.png" x="-7" y="-7" width="14" height="14" />,
-  },
-  {
-    name: "USD Coin",
-    amount: "1,250.50 USDC",
-    value: "$1,250.50",
-    icon: <Coin fill="#2775CA" glyph="$" />,
-  },
-  {
-    name: "Wrapped Ether",
-    amount: "0.35 WETH",
-    value: "$886.10",
-    icon: <Coin fill="#E4447A" glyph="W" />,
-  },
-  {
-    name: "Wrapped BTC",
-    amount: "0.0123 cbBTC",
-    value: "$753.38",
-    icon: <Coin fill="#0052FF" glyph="₿" />,
-  },
+const NETWORKS: { name: string; logo: string; square?: boolean }[] = [
+  { name: "Ethereum", logo: "/images/chains/ethereum.png" },
+  { name: "Base", logo: "/images/chains/base.svg", square: true },
+  { name: "Arbitrum One", logo: "/images/chains/arbitrum.png" },
+  { name: "OP Mainnet", logo: "/images/chains/optimism.png" },
+  { name: "Polygon", logo: "/images/chains/polygon.png" },
+  { name: "BNB Chain", logo: "/images/chains/binance.png" },
+  { name: "Avalanche", logo: "/images/chains/avalanche.png" },
+  { name: "Linea Mainnet", logo: "/images/chains/linea.png" },
+  { name: "Scroll", logo: "/images/chains/scroll.png" },
+  { name: "Unichain", logo: "/images/chains/unichain.png" },
 ];
+const SELECTED = "Polygon";
 
-function Coin({ fill, glyph }: { fill: string; glyph: string }) {
-  return (
-    <g>
-      <circle r="7" fill={fill} />
-      <text y="2.6" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#fff" style={{ fontFamily: SANS }}>
-        {glyph}
-      </text>
-    </g>
-  );
-}
-
-const CHAINS = [
-  { src: "/images/chains/ethereum.png" },
-  { src: "/images/chains/base.svg", square: true },
-  { src: "/images/chains/optimism.png" },
-  { src: "/images/chains/arbitrum.png" },
-  { src: "/images/chains/polygon.png" },
-];
-
-export function BalancesArt({ active }: { active: boolean }) {
+export function NetworksArt({ active }: { active: boolean }) {
   const ids = useIds();
   const sx = 186; // screen left
   return (
-    <Canvas label="Tapping the card to a phone shows your balances in OpenBurner.">
+    <Canvas label="OpenBurner's network list on a phone, with Polygon selected.">
       <Defs ids={ids} />
 
       {/* Phone, cropped by the bottom edge */}
@@ -207,64 +175,40 @@ export function BalancesArt({ active }: { active: boolean }) {
       <rect x="185" y="27" width="132" height="280" rx="19" style={ink("paper")} />
       <rect x="234" y="33" width="34" height="9" rx="4.5" fill="#18181C" />
 
-      {/* OpenBurner dashboard */}
+      {/* OpenBurner's network menu */}
       <g style={{ fontFamily: SANS }}>
         <image href="/images/openburnerlogo.svg" x={sx + 4} y="50" width="13" height="13" />
-        <rect x={sx + 22} y="49" width="40" height="15" rx="7.5" style={ink("fill-strong")} />
-        <rect x={sx + 27} y="53.5" width="6" height="6" rx="1" fill="#0000FF" />
+        <rect x={sx + 22} y="49" width="52" height="15" rx="7.5" style={ink("fill-strong")} />
+        <image href="/images/chains/polygon.png" x={sx + 26} y="52.5" width="8" height="8" />
         <text x={sx + 37} y="59.5" fontSize="6.8" fontWeight="600" style={ink("ink")}>
-          Base
+          Polygon
         </text>
 
-        <rect x={sx + 2} y="72" width="126" height="86" rx="8" style={{ ...ink("surface"), stroke: "var(--sw-line-soft)" }} />
-        <text x={sx + 10} y="88" fontSize="6" style={ink("ink-soft")}>
-          Total balance
-        </text>
-        <text x={sx + 10} y="108" fontSize="18" fontWeight="800" letterSpacing="-0.6" style={ink("ink")}>
-          $6,127.67
-        </text>
-        <text x={sx + 10} y="119" fontSize="5.6" style={ink("muted")}>
-          1.2483 ETH · 4 other tokens
-        </text>
-        <rect x={sx + 10} y="128" width="34" height="16" rx="2" style={ink("accent-fill")} />
-        <text x={sx + 27} y="138.5" textAnchor="middle" fontSize="5.6" fontWeight="700" letterSpacing="0.4" fill="#fff">
-          SEND
-        </text>
-        {["SWAP", "RECEIVE"].map((label, i) => (
-          <g key={label}>
-            <rect
-              x={sx + 48 + i * 38}
-              y="128.5"
-              width="34"
-              height="15"
-              rx="2"
-              fill="none"
-              style={{ stroke: "var(--sw-ink)" }}
-              strokeWidth="0.8"
-            />
-            <text x={sx + 65 + i * 38} y="138.5" textAnchor="middle" fontSize="5.6" fontWeight="700" letterSpacing="0.4" style={ink("ink")}>
-              {label}
-            </text>
-          </g>
-        ))}
-
-        {TOKENS.map((t, i) => {
-          const y = 178 + i * 25;
+        <rect x={sx + 2} y="72" width="126" height="240" rx="8" style={{ ...ink("surface"), stroke: "var(--sw-line-soft)" }} />
+        {NETWORKS.map((n, i) => {
+          const y = 88 + i * 19;
+          const on = n.name === SELECTED;
           return (
-            <g key={t.name}>
-              <g transform={`translate(${sx + 12} ${y})`}>{t.icon}</g>
-              <text x={sx + 24} y={y - 1} fontSize="7" fontWeight="600" style={ink("ink")}>
-                {t.name}
+            <g key={n.name}>
+              {on && <rect x={sx + 5} y={y - 9} width="120" height="18" rx="4" style={ink("fill-strong")} />}
+              {n.square ? (
+                <image href={n.logo} x={sx + 11} y={y - 4.5} width="9" height="9" />
+              ) : (
+                <image href={n.logo} x={sx + 10} y={y - 5.5} width="11" height="11" />
+              )}
+              <text x={sx + 27} y={y + 2.5} fontSize="7" fontWeight={on ? 700 : 500} style={ink("ink")}>
+                {n.name}
               </text>
-              <text x={sx + 24} y={y + 7} fontSize="5.4" style={ink("muted")}>
-                {t.amount.split(" ")[1]}
-              </text>
-              <text x={sx + 124} y={y - 1} textAnchor="end" fontSize="7" fontWeight="600" style={ink("ink")}>
-                {t.value}
-              </text>
-              <text x={sx + 124} y={y + 7} textAnchor="end" fontSize="5.4" style={ink("muted")}>
-                {t.amount}
-              </text>
+              {on && (
+                <path
+                  d={`M${sx + 112} ${y} l2.2 2.2 l4 -4.4`}
+                  style={{ stroke: "var(--sw-ink)" }}
+                  strokeWidth="1.1"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
             </g>
           );
         })}
@@ -280,33 +224,83 @@ export function BalancesArt({ active }: { active: boolean }) {
       <g transform="translate(168 72)">
         <Waves active={active} />
       </g>
+    </Canvas>
+  );
+}
 
-      {/* Networks */}
-      <g transform="translate(30 246)">
-        {CHAINS.map((c, i) => (
-          <g key={c.src} transform={`translate(${i * 15} 0)`}>
-            {c.square ? (
-              <>
-                <circle r="9" style={ink("paper")} />
-                <image href={c.src} x="-5.5" y="-5.5" width="11" height="11" />
-              </>
-            ) : (
-              <>
-                <circle r="9" style={ink("paper")} />
-                <image href={c.src} x="-7.5" y="-7.5" width="15" height="15" />
-              </>
-            )}
+// ─── 3 · Build on it ────────────────────────────────────────────────────────
+
+type Tok = [string, "kw" | "fn" | "str" | "cm" | "tx"];
+const CODE: Tok[][] = [
+  [["import", "kw"], [" { ", "tx"], ["getBurnerAddress", "fn"], [" } ", "tx"], ["from", "kw"], [' "@/lib/burner";', "str"]],
+  [["import", "kw"], [" { ", "tx"], ["signMessageSmart", "fn"], [" } ", "tx"], ["from", "kw"], [' "@/lib/smart-signer";', "str"]],
+  [],
+  [["// Tap the card to read its address", "cm"]],
+  [["const", "kw"], [" { address, keySlot } = ", "tx"], ["await", "kw"], [" ", "tx"], ["getBurnerAddress", "fn"], ["();", "tx"]],
+  [],
+  [["// PIN + tap to sign with it", "cm"]],
+  [["await", "kw"], [" ", "tx"], ["signMessageSmart", "fn"], ["(", "tx"], ['"gm"', "str"], [", keySlot, pin);", "tx"]],
+];
+
+const TOKEN_STYLE: Record<Tok[1], CSSProperties> = {
+  kw: { fill: "var(--sw-accent-ink)", fontWeight: 600 },
+  fn: { fill: "var(--sw-ink)", fontWeight: 600 },
+  str: { fill: "var(--sw-up)" },
+  cm: { fill: "var(--sw-muted)" },
+  tx: { fill: "var(--sw-ink-soft)" },
+};
+
+export function BuildArt({ active }: { active: boolean }) {
+  const ids = useIds();
+  const MONO = "var(--font-geist-mono), ui-monospace, monospace";
+  return (
+    <Canvas label="A short code sample that reads a Burner card and signs with it.">
+      <Defs ids={ids} />
+
+      {/* Terminal */}
+      <g filter={`url(#${ids.lift})`}>
+        <rect x="14" y="20" width="332" height="30" rx="8" fill="#18181C" />
+      </g>
+      <text x="28" y="39" fontSize="9" fill="#9A9AA2" style={{ fontFamily: MONO }}>
+        $ <tspan fill="#F2F2F4">git clone github.com/rdyplayerB/openburner</tspan>
+      </text>
+
+      {/* Editor */}
+      <g filter={`url(#${ids.lift})`}>
+        <rect x="14" y="60" width="332" height="170" rx="10" style={{ ...ink("surface"), stroke: "var(--sw-line-soft)" }} />
+      </g>
+      <text x="28" y="80" fontSize="8" style={{ ...ink("muted"), fontFamily: MONO }}>
+        my-burner-app.ts
+      </text>
+      <rect x="14" y="88" width="332" height="1" style={ink("line-soft")} />
+      <g style={{ fontFamily: MONO }} fontSize="8.4">
+        {CODE.map((line, i) => (
+          <g key={i}>
+            <text x="34" y={106 + i * 14} textAnchor="end" style={ink("muted")} opacity="0.7">
+              {i + 1}
+            </text>
+            <text x="42" y={106 + i * 14} xmlSpace="preserve">
+              {line.map(([t, k], j) => (
+                <tspan key={j} style={TOKEN_STYLE[k]}>
+                  {t}
+                </tspan>
+              ))}
+            </text>
           </g>
         ))}
-        <text x={CHAINS.length * 15 + 2} y="4" fontSize="10.5" style={{ ...ink("ink-soft"), fontFamily: SANS }}>
-          and more
-        </text>
+      </g>
+
+      {/* The card */}
+      <g transform="translate(276 186) rotate(10)">
+        <g className={active ? "ob-float" : ""}>
+          <AngledCard h={112} />
+        </g>
       </g>
     </Canvas>
   );
 }
 
-// ─── 3 · Nothing moves without your card ────────────────────────────────────
+// ─── 4 · Nothing moves without your card ────────────────────────────────────
 
 export function SignArt({ active }: { active: boolean }) {
   const ids = useIds();

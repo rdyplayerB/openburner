@@ -16,21 +16,28 @@ export const Intro: Story = () => (
     <Home />
   </Scene>
 );
-Intro.storyName = "Intro 1, your card is your wallet";
+Intro.storyName = "Intro 1, what OpenBurner is";
 
-export const IntroBalances: Story = () => (
+export const IntroNetworks: Story = () => (
   <Scene connected={false} intro steps={[{ click: "Next" }]}>
     <Home />
   </Scene>
 );
-IntroBalances.storyName = "Intro 2, tap to see what you hold";
+IntroNetworks.storyName = "Intro 2, more networks";
 
-export const IntroSigning: Story = () => (
+export const IntroBuild: Story = () => (
   <Scene connected={false} intro steps={[{ click: "Slide 3" }]}>
     <Home />
   </Scene>
 );
-IntroSigning.storyName = "Intro 3, nothing moves without your card";
+IntroBuild.storyName = "Intro 3, build your own";
+
+export const IntroSigning: Story = () => (
+  <Scene connected={false} intro steps={[{ click: "Slide 4" }]}>
+    <Home />
+  </Scene>
+);
+IntroSigning.storyName = "Intro 4, every signature needs your card";
 
 export const IntroPhone: Story = () => (
   <Scene connected={false} intro knobs={{ mode: "hosted", mobile: true, pricing: false }}>

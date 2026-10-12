@@ -1,7 +1,7 @@
 {
   "name": "OpenBurner - Mobile Wallet",
   "short_name": "OpenBurner",
-  "description": "Mobile wallet for Burner Ethereum hardware cards. Tap your card to connect and manage your crypto.",
+  "description": "An open-source app for your Burner Ethereum card. Tap your card to check balances, send, swap and connect to apps.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

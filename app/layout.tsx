@@ -9,7 +9,8 @@ const isHosted = process.env.NEXT_PUBLIC_APP_MODE === 'hosted';
 
 export const metadata: Metadata = {
   title: "OpenBurner",
-  description: "Start using OpenBurner",
+  description:
+    "An open-source app for Burner Ethereum cards. Use your card on Polygon, Avalanche and 11 other networks, or build your own Burner project from the code.",
   icons: {
     icon: '/openburnerlogo.ico',
   },

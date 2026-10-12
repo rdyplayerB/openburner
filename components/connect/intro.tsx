@@ -3,30 +3,45 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { useIntroStore } from "@/store/intro-store";
+import { CHAINS } from "@/lib/supported-chains";
 import { Wordmark } from "./connect-layout";
-import { BalancesArt, CardArt, SignArt } from "./intro-art";
+import { BuildArt, CardArt, NetworksArt, SignArt } from "./intro-art";
 
 /**
- * First-run welcome: three slides on what OpenBurner is, then the connect
+ * First-run welcome: four slides on what OpenBurner is, then the connect
  * screen. Swipe, use the arrow keys, or press Next. Shown once; "What is
  * OpenBurner?" on the connect screen brings it back.
  */
 
+const SOURCE_URL = "https://github.com/rdyplayerB/openburner";
+
+// Burner's own networks (help.burner.pro, "What blockchain networks does Burner support?").
+const BURNER_NETWORKS = 4;
+const NAMED_EXTRAS = 3; // Polygon, BNB Chain, Avalanche
+const MORE = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][
+  CHAINS.length - BURNER_NETWORKS - NAMED_EXTRAS
+] ?? String(CHAINS.length - BURNER_NETWORKS - NAMED_EXTRAS);
+
 const SLIDES = [
   {
     Art: CardArt,
-    title: "Your Burner card is your wallet.",
-    body: "OpenBurner is an open-source app for your Burner card. Your keys are made on the card’s chip and never leave it.",
+    title: "An open-source app for your Burner Ethereum card.",
+    body: "Tap your card to check balances, send, swap and connect to apps.",
   },
   {
-    Art: BalancesArt,
-    title: "Tap to see what you hold.",
-    body: "Use your phone or a USB reader. See your tokens, collectibles and activity on Ethereum, Base and more.",
+    Art: NetworksArt,
+    title: `Works on ${CHAINS.length} networks.`,
+    body: `Burner supports Ethereum, Base, Optimism and Arbitrum. OpenBurner adds Polygon, BNB Chain, Avalanche and ${MORE} more, and you can add others.`,
+  },
+  {
+    Art: BuildArt,
+    title: "Build your own Burner project.",
+    body: "The code is on GitHub and free to use and change, so you can run your own copy or build on it.",
   },
   {
     Art: SignArt,
-    title: "Nothing moves without your card.",
-    body: "Sends, swaps and app requests each need your PIN and a tap. You see what you’re signing, in plain words, first.",
+    title: "Every signature needs your card.",
+    body: "You’ll see what you’re signing first, then confirm with your PIN and a tap.",
   },
 ];
 
@@ -178,12 +193,12 @@ export function Intro() {
       </div>
 
       <a
-        href="https://openburner.xyz"
+        href={SOURCE_URL}
         target="_blank"
         rel="noopener noreferrer"
         className="hidden sm:inline-flex items-center gap-1 mt-6 text-xs text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
       >
-        Open source · openburner.xyz
+        Source code on GitHub
         <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
       </a>
     </div>

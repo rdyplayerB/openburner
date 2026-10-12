@@ -1,6 +1,6 @@
 # 🔥 OpenBurner
 
-An open source Web3 wallet for Burner Ethereum hardware wallets. Built with Next.js, TypeScript, and ethers.js.
+An open-source app for Burner Ethereum cards that adds more networks and gives you a starting point for your own Burner project. Built with Next.js, TypeScript and ethers.js.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
@@ -12,7 +12,12 @@ An open source Web3 wallet for Burner Ethereum hardware wallets. Built with Next
 
 ## What is OpenBurner?
 
-OpenBurner is a wallet application for Burner Ethereum hardware wallets. It supports both local and hosted deployment modes. Private keys remain in the card's secure element.
+OpenBurner has two goals:
+
+- **More networks for your Burner.** Burner supports Ethereum, Base, Optimism and Arbitrum. OpenBurner adds Polygon, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll and Unichain, and you can add other EVM networks with an RPC URL and chain ID.
+- **A starting point for your own Burner project.** The code is MIT-licensed, so you can fork it and build on it. It already covers reading the card over NFC, signing with a PIN and a tap, checking every signature against the card's address, and connecting to apps through WalletConnect.
+
+You can run it locally with a USB NFC reader, or host it and use your phone as the reader. Either way, your private keys stay in the card's secure element.
 
 ## ✨ Features
 
