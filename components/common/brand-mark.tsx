@@ -2,8 +2,8 @@ import { FLAME_ASPECT, FLAME_FULL, FLAME_SMALL, FLAME_SMALL_BELOW, FLAME_VIEWBOX
 
 /**
  * The OpenBurner flame, drawn inline so it takes the theme's accent orange.
- * Below 44 px it switches to the small version (bolder, no inner tongue), which
- * stays legible in headers and favicons. Geometry: design/brand (npm run brand).
+ * Below 44 px it switches to the small version (a solid flame with a teardrop cut
+ * out), which still reads as a flame in headers and favicons. Geometry: design/brand (npm run brand).
  */
 export function BrandMark({
   size,

@@ -64,7 +64,8 @@ These rules sit on top of everything above. Where they disagree, these win.
   takes the theme's accent orange (`--sw-accent`), so it always matches the buttons.
 - The wordmark is one colour: "OpenBurner" in ink, the flame is the only orange. Don't
   colour part of the name.
-- The flame switches to its small version (bolder, no inner tongue) below 44 px. Don't
+- The flame switches to its small version below 44 px: one solid flame with a teardrop
+  cut out, because the full mark's open crescents read as "( )" at header sizes. Don't
   draw the full mark smaller than that.
 - Clear space: at least half the flame's width on every side. Minimum size: 16 px tall.
 - Don't stretch, outline, rotate, recolour (other than ink or white on orange), or put

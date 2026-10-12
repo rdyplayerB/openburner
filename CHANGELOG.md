@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Any EVM network** - Networks you add are saved only after their RPC confirms the chain ID, can have their own currency symbol, and work right away with apps you've already connected
 
 ### Changed
-- **Redrawn logo** - The flame is redrawn cleanly from circles and smooth curves (it was an auto-trace), with a bolder version for small sizes, a favicon drawn pixel by pixel at 16 px, and new app icons. The wordmark is one colour, with the flame as the only orange, and the flame now matches the app's accent orange in light and dark
+- **Redrawn logo** - The flame is redrawn cleanly from circles and smooth curves (it was an auto-trace), with a solid version for small sizes that still reads as a flame next to the name, a favicon drawn pixel by pixel at 16 px, and new app icons. The wordmark is one colour, with the flame as the only orange, and the flame now matches the app's accent orange in light and dark
 - **New dashboard** - Two columns on desktop (account + assets/activity), one clean column on phones; identicon, balance that animates on change, and a native-balance headline when prices are off instead of "$—"
 - **New Send** - Large amount entry with USD toggle, token switcher in the sheet, a button that says what's missing, and a review step with the full recipient address (ends highlighted) and first-time-recipient warnings
 - **New Swap** - Opens on your native token, quotes as you type, keeps the main button visible, shows balances on both sides and folds rate, impact, minimum received and fees into one row
