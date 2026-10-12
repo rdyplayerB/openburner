@@ -85,6 +85,7 @@ These rules sit on top of everything above. Where they disagree, these win.
 | Warning / error / note | `.sw-callout` + `sw-callout-warn` / `sw-callout-danger` / `sw-callout-info` |
 | Loading placeholder | `.sw-skeleton` with a width and height |
 | Quiet fills | `bg-[var(--sw-fill)]`, `bg-[var(--sw-fill-strong)]` |
+| A Burner card | `BURNER_CARD` (`components/common/burner-card.ts`): the real renders in `public/images/cards` (`angled` for tap moments, `flat` for the front). Never draw a Burner card. |
 
 ### Signing
 - PIN entry and the card tap are one sheet: `PinInput` with `progress={{ steps, current }}`.

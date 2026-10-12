@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { useEnvironment } from "@/hooks/use-environment";
 import { useWalletStore } from "@/store/wallet-store";
 import { useSigningStore } from "@/store/signing-store";
+import { BURNER_CARD } from "@/components/common/burner-card";
 
 /**
  * The "tap your card" moment. Shows what's happening right now (illustration +
@@ -138,9 +139,16 @@ export function CardTapArt({
         </g>
       )}
 
+      {/* The card (the real render) */}
+      <g transform={reader === "reader" ? "translate(30 4)" : "translate(34 10)"}>
+        <g className={active ? "ob-tap-card" : ""}>
+          <image href={BURNER_CARD.angled()} width={(reader === "reader" ? 84 : 92) * BURNER_CARD.angledRatio} height={reader === "reader" ? 84 : 92} />
+        </g>
+      </g>
+
       {/* NFC waves, centred between the card and the reader */}
       <g
-        transform={reader === "reader" ? "translate(110 62)" : "translate(116 32)"}
+        transform={reader === "reader" ? "translate(104 42)" : "translate(118 34)"}
         style={{ stroke: "var(--sw-accent)", fill: "none", opacity: active ? 1 : 0.25 }}
         strokeWidth="2.5"
         strokeLinecap="round"
@@ -148,19 +156,6 @@ export function CardTapArt({
         <path className={active ? "ob-wave" : ""} d="M -4 -8 A 10 10 0 0 1 -4 8" />
         <path className={active ? "ob-wave ob-wave-2" : ""} d="M -11 -14 A 18 18 0 0 1 -11 14" />
         <path className={active ? "ob-wave ob-wave-3" : ""} d="M -18 -20 A 26 26 0 0 1 -18 20" />
-      </g>
-
-      {/* The card */}
-      <g transform={reader === "reader" ? "translate(24 34)" : "translate(18 26)"}>
-        <g className={active ? "ob-tap-card" : ""}>
-        <g transform="rotate(-8 36 23)">
-          <rect x="0" y="0" width="76" height="48" rx="7" style={{ fill: "var(--sw-ink)" }} />
-          <rect x="9" y="11" width="13" height="10" rx="2" style={{ fill: "var(--sw-accent)" }} />
-          <rect x="9" y="33" width="34" height="4" rx="2" style={{ fill: "var(--sw-paper)", opacity: 0.35 }} />
-          <path d="M60 8 c 6 6 6 12 0 18" style={{ stroke: "var(--sw-paper)", fill: "none", opacity: 0.55 }} strokeWidth="2" strokeLinecap="round" />
-          <path d="M55 11 c 4 4 4 8 0 12" style={{ stroke: "var(--sw-paper)", fill: "none", opacity: 0.55 }} strokeWidth="2" strokeLinecap="round" />
-        </g>
-        </g>
       </g>
     </svg>
   );

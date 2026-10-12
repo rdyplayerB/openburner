@@ -1,18 +1,17 @@
 "use client";
 
 import { useId, type CSSProperties } from "react";
+import { BURNER_CARD, type BurnerColor } from "@/components/common/burner-card";
 
 /**
- * Illustrations for the welcome slides, drawn as labelled diagrams in the
- * app's own style (flat, hairlines, one accent) and built from OpenBurner's
- * real screens. The card itself is a plain, unbranded card. All three share
- * a 360 × 270 canvas.
+ * Illustrations for the welcome slides: labelled diagrams in the app's own
+ * style (flat, hairlines, one accent) built from OpenBurner's real screens and
+ * the real Burner card renders. All three share a 360 × 270 canvas.
  */
 
 const W = 360;
 const H = 270;
 
-const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 
 const ink = (v: string): CSSProperties => ({ fill: `var(--sw-${v})` });
@@ -20,7 +19,7 @@ const ink = (v: string): CSSProperties => ({ fill: `var(--sw-${v})` });
 /** Unique, url()-safe ids for one drawing's gradients and filters. */
 function useIds() {
   const base = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  return { card: `${base}-card`, chip: `${base}-chip`, shadow: `${base}-shadow`, lift: `${base}-lift` };
+  return { shadow: `${base}-shadow`, lift: `${base}-lift` };
 }
 
 type Ids = ReturnType<typeof useIds>;
@@ -28,14 +27,6 @@ type Ids = ReturnType<typeof useIds>;
 function Defs({ ids }: { ids: Ids }) {
   return (
     <defs>
-      <linearGradient id={ids.card} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#2C2C33" />
-        <stop offset="1" stopColor="#111114" />
-      </linearGradient>
-      <linearGradient id={ids.chip} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#EED39A" />
-        <stop offset="1" stopColor="#B8873C" />
-      </linearGradient>
       <filter id={ids.shadow} x="-50%" y="-200%" width="200%" height="500%">
         <feGaussianBlur stdDeviation="6" />
       </filter>
@@ -46,33 +37,14 @@ function Defs({ ids }: { ids: Ids }) {
   );
 }
 
-/** A Burner-sized card, 200 × 126, drawn at the origin. */
-function Card({ ids, address = true }: { ids: Ids; address?: boolean }) {
-  return (
-    <g>
-      <rect width="200" height="126" rx="13" fill={`url(#${ids.card})`} />
-      <rect x="0.5" y="0.5" width="199" height="125" rx="12.5" fill="none" stroke="#fff" strokeOpacity="0.12" />
-      <path d="M118 0 H152 L96 126 H62 Z" fill="#fff" opacity="0.035" />
-      <rect x="22" y="38" width="36" height="28" rx="5" fill={`url(#${ids.chip})`} />
-      <path
-        d="M22 52 H58 M40 38 V66 M22 45 H31 M22 59 H31 M49 45 H58 M49 59 H58"
-        stroke="#5A3E12"
-        strokeOpacity="0.35"
-        strokeWidth="0.9"
-        fill="none"
-      />
-      <g stroke="#fff" strokeOpacity="0.6" strokeWidth="2.2" strokeLinecap="round" fill="none">
-        <path d="M163 28 a 9 9 0 0 1 0 14" />
-        <path d="M169 23 a 15 15 0 0 1 0 24" />
-        <path d="M175 18 a 21 21 0 0 1 0 34" />
-      </g>
-      {address && (
-        <text x="22" y="104" fill="#fff" fillOpacity="0.5" fontSize="11" letterSpacing="1" style={{ fontFamily: MONO }}>
-          0x8ba1 … BA72
-        </text>
-      )}
-    </g>
-  );
+/** The real Burner card, 3/4 view, `h` tall with its top-left at the origin. */
+function AngledCard({ h, color = "purple" }: { h: number; color?: BurnerColor }) {
+  return <image href={BURNER_CARD.angled(color)} width={h * BURNER_CARD.angledRatio} height={h} />;
+}
+
+/** The real Burner card front, `h` tall with its top-left at the origin. */
+function FlatCard({ h, color = "purple" }: { h: number; color?: BurnerColor }) {
+  return <image href={BURNER_CARD.flat(color)} width={h * BURNER_CARD.flatRatio} height={h} />;
 }
 
 /** NFC waves pointing right, centred on (0, 0). */
@@ -100,7 +72,7 @@ function Callout({
   from: [number, number];
   elbow: [number, number];
   label: string;
-  note: string;
+  note: string | string[];
   anchor?: "start" | "end";
   tx: number;
   ty: number;
@@ -118,9 +90,11 @@ function Callout({
       <text x={tx} y={ty} textAnchor={anchor} fontSize="9.5" fontWeight="700" letterSpacing="1.4" style={{ ...ink("ink"), fontFamily: SANS }}>
         {label}
       </text>
-      <text x={tx} y={ty + 15} textAnchor={anchor} fontSize="11.5" style={{ ...ink("ink-soft"), fontFamily: SANS }}>
-        {note}
-      </text>
+      {(Array.isArray(note) ? note : [note]).map((line, i) => (
+        <text key={i} x={tx} y={ty + 15 + i * 14} textAnchor={anchor} fontSize="11.5" style={{ ...ink("ink-soft"), fontFamily: SANS }}>
+          {line}
+        </text>
+      ))}
     </g>
   );
 }
@@ -137,25 +111,36 @@ function Canvas({ children, label }: { children: React.ReactNode; label: string 
 
 export function CardArt({ active }: { active: boolean }) {
   const ids = useIds();
+  // Front card: 196 tall, top-left at (x, 34); fanned cards pivot on its bottom centre.
+  const x = 84;
+  const h = 196;
+  const w = h * BURNER_CARD.flatRatio;
+  const pivot = `${x + w / 2} ${34 + h}`;
+  // The NFC mark on the card front (chip underneath).
+  const nfc: [number, number] = [x + w * 0.235, 34 + h * 0.838];
   return (
-    <Canvas label="A Burner card. Its chip holds your keys; tap it to connect.">
+    <Canvas label="Burner cards. The chip behind the NFC mark makes and keeps your keys.">
       <Defs ids={ids} />
-      <ellipse cx="180" cy="214" rx="92" ry="7" fill="#000" opacity="0.18" filter={`url(#${ids.shadow})`} />
-      <g transform="translate(80 76)">
-        <g className={active ? "ob-float" : ""}>
-          <Card ids={ids} />
-        </g>
+      <ellipse cx={x + w / 2 - 14} cy={34 + h + 4} rx="84" ry="6" fill="#000" opacity="0.2" filter={`url(#${ids.shadow})`} />
+      <g transform={`rotate(-24 ${pivot}) translate(${x} 34)`}>
+        <FlatCard h={h} color="lime" />
       </g>
-      <Callout from={[120, 128]} elbow={[120, 40]} tx={130} ty={38} label="SECURE CHIP" note="Your keys are made here" />
-      <Callout
-        from={[258, 123]}
-        elbow={[258, 236]}
-        tx={248}
-        ty={233}
-        anchor="end"
-        label="NFC"
-        note="Tap it to your phone or reader"
-      />
+      <g transform={`rotate(-12 ${pivot}) translate(${x} 34)`}>
+        <FlatCard h={h} color="orange" />
+      </g>
+      <g className={active ? "ob-float" : ""}>
+        <g transform={`translate(${x} 34)`}>
+          <FlatCard h={h} />
+        </g>
+        <Callout
+          from={nfc}
+          elbow={[236, nfc[1]]}
+          tx={242}
+          ty={nfc[1] - 4}
+          label="SECURE CHIP"
+          note={["Your keys live here", "and never leave"]}
+        />
+      </g>
     </Canvas>
   );
 }
@@ -286,18 +271,18 @@ export function BalancesArt({ active }: { active: boolean }) {
       </g>
 
       {/* The card, tapping in from the left */}
-      <ellipse cx="94" cy="192" rx="62" ry="5" fill="#000" opacity="0.14" filter={`url(#${ids.shadow})`} />
-      <g transform="translate(26 70) rotate(-9) scale(0.68)">
+      <ellipse cx="84" cy="220" rx="54" ry="5" fill="#000" opacity="0.16" filter={`url(#${ids.shadow})`} />
+      <g transform="translate(26 34)">
         <g className={active ? "ob-tap-card" : ""}>
-          <Card ids={ids} address={false} />
+          <AngledCard h={176} />
         </g>
       </g>
-      <g transform="translate(166 96)">
+      <g transform="translate(168 72)">
         <Waves active={active} />
       </g>
 
       {/* Networks */}
-      <g transform="translate(30 236)">
+      <g transform="translate(30 246)">
         {CHAINS.map((c, i) => (
           <g key={c.src} transform={`translate(${i * 15} 0)`}>
             {c.square ? (
@@ -407,13 +392,12 @@ export function SignArt({ active }: { active: boolean }) {
       </g>
 
       {/* The card, coming in to sign */}
-      <ellipse cx="304" cy="254" rx="58" ry="5" fill="#000" opacity="0.14" filter={`url(#${ids.shadow})`} />
-      <g transform="translate(238 172) rotate(-12) scale(0.64)">
+      <g transform="translate(242 112)">
         <g className={active ? "ob-tap-card ob-tap-left" : ""}>
-          <Card ids={ids} address={false} />
+          <AngledCard h={166} />
         </g>
       </g>
-      <g transform="translate(232 210) scale(-1 1)">
+      <g transform="translate(240 176) scale(-1 1)">
         <Waves active={active} />
       </g>
     </Canvas>
