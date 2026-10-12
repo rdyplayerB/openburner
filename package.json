@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "stories": "ladle serve",
-    "stories:build": "ladle build"
+    "stories:build": "ladle build",
+    "brand": "node design/brand/build.mjs"
   },
   "dependencies": {
     "@arx-research/libhalo": "1.20.0",

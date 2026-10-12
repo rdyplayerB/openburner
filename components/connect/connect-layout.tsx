@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Image from "next/image";
+import { Wordmark as BrandWordmark } from "@/components/common/brand-mark";
 import { ArrowUpRight, Check, Loader2 } from "lucide-react";
 import { useIntroStore } from "@/store/intro-store";
 
@@ -11,25 +11,9 @@ import { useIntroStore } from "@/store/intro-store";
  * button, and what's ready underneath.
  */
 
+/** OpenBurner wordmark at the connect screen's two sizes. */
 export function Wordmark({ size = "sm" }: { size?: "sm" | "lg" }) {
-  const lg = size === "lg";
-  return (
-    <span className={`inline-flex items-center ${lg ? "gap-2" : "gap-1.5"}`}>
-      <Image
-        src="/images/openburnerlogo.svg"
-        alt=""
-        width={lg ? 40 : 26}
-        height={lg ? 40 : 26}
-        className={lg ? "w-10 h-10 -mt-1" : "w-[26px] h-[26px] -mt-0.5"}
-        priority
-      />
-      <span
-        className={`font-bold tracking-tight leading-none text-[var(--sw-ink)] ${lg ? "text-3xl" : "text-lg"}`}
-      >
-        Open<span className="sw-accent">Burner</span>
-      </span>
-    </span>
-  );
+  return <BrandWordmark fontSize={size === "lg" ? 30 : 18} />;
 }
 
 interface ConnectLayoutProps {

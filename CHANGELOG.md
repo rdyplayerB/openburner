@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Any EVM network** - Networks you add are saved only after their RPC confirms the chain ID, can have their own currency symbol, and work right away with apps you've already connected
 
 ### Changed
+- **Redrawn logo** - The flame is redrawn cleanly from circles and smooth curves (it was an auto-trace), with a bolder version for small sizes, a favicon drawn pixel by pixel at 16 px, and new app icons. The wordmark is one colour, with the flame as the only orange, and the flame now matches the app's accent orange in light and dark
 - **New dashboard** - Two columns on desktop (account + assets/activity), one clean column on phones; identicon, balance that animates on change, and a native-balance headline when prices are off instead of "$—"
 - **New Send** - Large amount entry with USD toggle, token switcher in the sheet, a button that says what's missing, and a review step with the full recipient address (ends highlighted) and first-time-recipient warnings
 - **New Swap** - Opens on your native token, quotes as you type, keeps the main button visible, shows balances on both sides and folds rate, impact, minimum received and fees into one row
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **One transaction screen** - Sent → Confirming → Confirmed in a single sheet, with explorer link
 
 ### Fixed
+- **Logo sent to connected apps** - Apps now get a logo that exists (the old link pointed at a missing file)
 - **Network RPCs** - Polygon's RPC had stopped answering. Every preset network now has two tested public RPCs from different operators, and the app switches to the second if the first stops answering
 - **Large batches on public RPCs** - The official Optimism, Scroll and Unichain RPCs refuse batches over 10 calls, so batches are now capped at 10, and a batch an RPC rejects is re-sent one call at a time
 - **Sending on networks without EIP-1559** - Transactions now use a legacy gas price on any network that reports no base fee

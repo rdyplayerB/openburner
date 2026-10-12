@@ -58,6 +58,22 @@ Keep text **clear, concise, direct**. Sentence case for body; UPPERCASE only via
 
 These rules sit on top of everything above. Where they disagree, these win.
 
+### Logo
+- Use `<BrandMark size={px} />` or `<Wordmark fontSize={px} />` from
+  `components/common/brand-mark.tsx`. Never an `<img>` of the logo: the inline flame
+  takes the theme's accent orange (`--sw-accent`), so it always matches the buttons.
+- The wordmark is one colour: "OpenBurner" in ink, the flame is the only orange. Don't
+  colour part of the name.
+- The flame switches to its small version (bolder, no inner tongue) below 44 px. Don't
+  draw the full mark smaller than that.
+- Clear space: at least half the flame's width on every side. Minimum size: 16 px tall.
+- Don't stretch, outline, rotate, recolour (other than ink or white on orange), or put
+  the flame on a busy photo.
+- The geometry lives in `design/brand/flame.json`. After editing it, run
+  `npm run brand` to rebuild the component paths, logo SVG, app icons and favicon
+  (16 px is drawn by hand in `design/brand/favicon-16.txt`). Tests fail if the
+  shipped paths are out of date or a smooth joint kinks.
+
 ### Line breaks
 - Never leave one word alone on the last line. `globals.css` sets `text-wrap: balance` on
   headings and `text-wrap: pretty` on everything else. Where the text matters most (welcome

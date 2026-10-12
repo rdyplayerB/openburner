@@ -489,6 +489,9 @@ npm run stories
 # Screens as a static site (ladle-build/)
 npm run stories:build
 
+# Logo: rebuild the flame paths, logo SVG, app icons and favicon from design/brand/flame.json
+npm run brand
+
 # Build for production
 npm run build
 ```

@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   description:
     "An open-source app for Burner Ethereum cards. Use it on any EVM network with your own RPC, or start your own Burner project from the code.",
   icons: {
-    icon: '/openburnerlogo.ico',
+    // ICO only: browsers prefer an SVG favicon when one is listed, which would
+    // hide the pixel-fitted 16 px version.
+    icon: [{ url: '/openburnerlogo.ico', sizes: '16x16 32x32 48x48' }],
   },
   // PWA-specific metadata
   ...(isHosted && {
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
       'mobile-web-app-capable': 'yes',
       'apple-mobile-web-app-capable': 'yes',
       'apple-mobile-web-app-status-bar-style': 'default',
-      'msapplication-TileColor': '#FF6B35',
+      'msapplication-TileColor': '#E4572E',
       'msapplication-config': '/browserconfig.xml',
     },
   }),
@@ -39,7 +41,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#FF6B35',
+  themeColor: '#E4572E',
 };
 
 // Reads zustand's persisted theme ("theme-storage") synchronously.
@@ -59,15 +61,14 @@ export default function RootLayout({
         {isHosted && (
           <>
             <link rel="manifest" href="/manifest.json" />
-            <meta name="theme-color" content="#FF6B35" />
+            <meta name="theme-color" content="#E4572E" />
             <meta name="apple-mobile-web-app-capable" content="yes" />
             <meta name="apple-mobile-web-app-status-bar-style" content="default" />
             <meta name="apple-mobile-web-app-title" content="OpenBurner" />
-            <link rel="apple-touch-icon" href="/icons/icon-180x180.png" />
             <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
             <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
             <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
-            <meta name="msapplication-TileColor" content="#FF6B35" />
+            <meta name="msapplication-TileColor" content="#E4572E" />
             <meta name="msapplication-config" content="/browserconfig.xml" />
             {/* Android-specific meta tags */}
             <meta name="mobile-web-app-capable" content="yes" />

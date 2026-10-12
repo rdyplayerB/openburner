@@ -5,35 +5,38 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#FF6B35",
+  "theme_color": "#E4572E",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
-  "categories": ["finance", "utilities"],
+  "categories": [
+    "finance",
+    "utilities"
+  ],
   "icons": [
     {
-      "src": "/icons/icon-120x120.svg",
-      "sizes": "120x120",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-180x180.svg",
-      "sizes": "180x180",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-192x192.svg",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512x512.svg",
-      "sizes": "512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "screenshots": [
@@ -58,8 +61,9 @@
       "url": "/",
       "icons": [
         {
-          "src": "/icons/icon-120x120.svg",
-          "sizes": "120x120"
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     }

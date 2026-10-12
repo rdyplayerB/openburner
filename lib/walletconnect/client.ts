@@ -21,9 +21,9 @@ function projectId(): string {
 
 const METADATA = {
   name: "OpenBurner",
-  description: "OpenBurner — a web3 wallet for Burner hardware cards",
+  description: "An open-source app for Burner Ethereum cards",
   url: typeof window !== "undefined" ? window.location.origin : "https://openburner.xyz",
-  icons: ["https://openburner.xyz/openburnerlogo.svg"],
+  icons: ["https://openburner.xyz/icons/icon-512x512.png"],
 };
 
 /** localStorage flag: set while at least one dApp session exists, so we only boot the SDK when useful. */

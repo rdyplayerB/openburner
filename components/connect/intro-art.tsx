@@ -2,6 +2,7 @@
 
 import { useId, type CSSProperties } from "react";
 import { BURNER_CARD, type BurnerColor } from "@/components/common/burner-card";
+import { FLAME_SMALL, FLAME_VIEWBOX } from "@/components/common/brand-mark-paths";
 
 /**
  * Illustrations for the welcome slides: labelled diagrams in the app's own
@@ -170,7 +171,9 @@ export function NetworksArt({ active }: { active: boolean }) {
 
       {/* OpenBurner's "Add a custom network" form */}
       <g style={{ fontFamily: SANS }}>
-        <image href="/images/openburnerlogo.svg" x={sx + 4} y="50" width="13" height="13" />
+        <svg x={sx + 5} y="50" width="11" height="13" viewBox={FLAME_VIEWBOX}>
+          <path d={FLAME_SMALL} style={ink("accent")} fillRule="evenodd" />
+        </svg>
         <rect x={sx + 22} y="49" width="44" height="15" rx="7.5" style={ink("fill-strong")} />
         <text x={sx + 29} y="59.5" fontSize="6.8" fontWeight="600" style={ink("ink")}>
           Network

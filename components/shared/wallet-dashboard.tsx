@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
+import { BrandMark, Wordmark } from "@/components/common/brand-mark";
 import { useWalletStore } from "@/store/wallet-store";
 import { useSwapStore } from "@/store/swap-store";
 import { useThemeStore } from "@/store/theme-store";
@@ -277,8 +277,8 @@ export function WalletDashboard() {
       <header className="sticky top-0 z-40 border-b border-[var(--sw-line-soft)] bg-[color-mix(in_srgb,var(--sw-paper)_88%,transparent)] backdrop-blur-md pt-[env(safe-area-inset-top)]">
         <div className="max-w-6xl mx-auto px-4 lg:px-8 h-16 flex items-center gap-3">
           <a href="https://openburner.xyz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 flex-shrink-0" aria-label="OpenBurner website">
-            <Image src="/images/openburnerlogo.svg" alt="" width={28} height={28} className="w-7 h-7" priority />
-            <span className="hidden md:inline text-[17px] font-bold tracking-tight text-[var(--sw-ink)]">OpenBurner</span>
+            <span className="md:hidden"><BrandMark size={28} /></span>
+            <span className="hidden md:inline-flex"><Wordmark fontSize={18} /></span>
           </a>
           <span className="hidden md:block w-px h-6 bg-[var(--sw-line)] mx-1" aria-hidden="true" />
           <NetworkMenu />
