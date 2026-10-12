@@ -5,7 +5,7 @@ import { useWalletStore } from "@/store/wallet-store";
 import { Loader2, Smartphone } from "lucide-react";
 import { QRDisplay } from "@/components/local/qr-display";
 import { useGatewayPairing } from "@/hooks/use-gateway-pairing";
-import { ConnectLayout } from "@/components/connect/connect-layout";
+import { ConnectLayout, CheckRow } from "@/components/connect/connect-layout";
 
 export function HostedDesktopConnect() {
   const setWallet = useWalletStore((s) => s.setWallet);
@@ -26,30 +26,32 @@ export function HostedDesktopConnect() {
   return (
     <>
       <ConnectLayout
-        reader="gateway"
-        action={
+        subline="Use your phone to read your Burner card."
+        checksTitle="How it works"
+        checks={
           <>
-            <button
-              onClick={() => pairing.start()}
-              disabled={starting}
-              className="sw-btn-primary w-full py-4 text-sm flex items-center justify-center gap-2"
-            >
-              {starting ? (
-                <>
-                  <Loader2 className="animate-spin h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
-                  <span>Starting…</span>
-                </>
-              ) : (
-                <>
-                  <Smartphone className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
-                  <span>Connect with your phone</span>
-                </>
-              )}
-            </button>
-            <p className="text-sm text-[var(--sw-muted)] mt-3 leading-snug">
-              Your phone becomes the card reader. You&apos;ll scan a QR code, then tap your card to the phone.
-            </p>
+            <CheckRow state={1} title="Scan a QR code with your phone" detail="Any iPhone or Android phone with NFC." />
+            <CheckRow state={2} title="Tap your card to the phone" detail="Hold it flat against the back until it buzzes." />
           </>
+        }
+        action={
+          <button
+            onClick={() => pairing.start()}
+            disabled={starting}
+            className="sw-btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
+          >
+            {starting ? (
+              <>
+                <Loader2 className="animate-spin h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
+                <span>Starting…</span>
+              </>
+            ) : (
+              <>
+                <Smartphone className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
+                <span>Connect with your phone</span>
+              </>
+            )}
+          </button>
         }
       />
 

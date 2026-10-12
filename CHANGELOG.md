@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **New dashboard** - Two columns on desktop (account + assets/activity), one clean column on phones; identicon, balance that animates on change, and a native-balance headline when prices are off instead of "$—"
 - **New Send** - Large amount entry with USD toggle, token switcher in the sheet, a button that says what's missing, and a review step with the full recipient address (ends highlighted) and first-time-recipient warnings
 - **New Swap** - Opens on your native token, quotes as you type, keeps the main button visible, shows balances on both sides and folds rate, impact, minimum received and fees into one row
-- **New welcome screen** - A proper first impression with a card-tap illustration, one main button and a three-step "How it works"; live bridge/card status in local mode
+- **New welcome** - First visit: three short slides on what OpenBurner is (swipe, or Skip). Then the clean centred connect card, with live bridge and card status in local mode and "What is OpenBurner?" to see the slides again
 - **Bottom sheets on phones** - Every dialog opens from the bottom and stays above the keyboard
 - **Clearer, calmer visuals** - One shape for token icons with network badges, sentence-case labels, orange reserved for actions, readable button contrast (WCAG AA) and a clear disabled state
 - **One transaction screen** - Sent → Confirming → Confirmed in a single sheet, with explorer link

@@ -11,6 +11,35 @@ export default {
   meta: { iframed: true, width: "desktop" },
 } satisfies StoryDefault;
 
+export const Intro: Story = () => (
+  <Scene connected={false} intro>
+    <Home />
+  </Scene>
+);
+Intro.storyName = "Intro 1, your card is your wallet";
+
+export const IntroBalances: Story = () => (
+  <Scene connected={false} intro steps={[{ click: "Next" }]}>
+    <Home />
+  </Scene>
+);
+IntroBalances.storyName = "Intro 2, tap to see what you hold";
+
+export const IntroSigning: Story = () => (
+  <Scene connected={false} intro steps={[{ click: "Slide 3" }]}>
+    <Home />
+  </Scene>
+);
+IntroSigning.storyName = "Intro 3, nothing moves without your card";
+
+export const IntroPhone: Story = () => (
+  <Scene connected={false} intro knobs={{ mode: "hosted", mobile: true, pricing: false }}>
+    <Home />
+  </Scene>
+);
+IntroPhone.storyName = "Intro on a phone";
+IntroPhone.meta = { width: "phone" };
+
 export const UsbReader: Story = () => (
   <Scene connected={false} knobs={{ bridge: "down" }}>
     <Home />

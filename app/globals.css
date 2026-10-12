@@ -315,6 +315,30 @@ body {
 .ob-wave-3 { animation-delay: 0.7s; }
 .ob-draw { stroke-dasharray: 24; animation: obDraw 0.4s ease-out both; }
 
+/* Welcome slides: a resting card floats, a waiting step pings. */
+@keyframes obFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes obPing {
+  0% { transform: scale(1); opacity: 0.9; }
+  80%, 100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes obTapLeft {
+  0%, 100% { transform: translate(0, 0); }
+  45%, 60% { transform: translate(-14px, -6px); }
+}
+.ob-float { animation: obFloat 4s ease-in-out infinite; }
+.ob-ping { animation: obPing 1.6s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+.ob-tap-left { animation-name: obTapLeft; }
+/* 4:3 stage; tall phones get a square one so the slide fills the screen. */
+.ob-intro-stage { aspect-ratio: 4 / 3; }
+@media (max-width: 639px) and (min-height: 740px) {
+  .ob-intro-stage { aspect-ratio: 1 / 1; }
+}
+.ob-no-scrollbar { scrollbar-width: none; }
+.ob-no-scrollbar::-webkit-scrollbar { display: none; }
+
 .ob-modal-backdrop { animation: obFadeIn 0.15s ease-out; }
 .ob-modal-panel { animation: obPop 0.18s ease-out; }
 

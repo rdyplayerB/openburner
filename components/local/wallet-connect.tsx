@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useWalletStore } from "@/store/wallet-store";
-import { Nfc, Loader2, Smartphone, ArrowUpRight } from "lucide-react";
+import { Nfc, Loader2, Smartphone, ArrowUpRight, X } from "lucide-react";
 import { QRDisplay } from "./qr-display";
 import { ModeToggle } from "./mode-toggle";
 import { ErrorModal } from "./error-modal";
 import { useGatewayPairing } from "@/hooks/use-gateway-pairing";
-import { ConnectLayout, StatusPill } from "@/components/connect/connect-layout";
+import { ConnectLayout, CheckRow } from "@/components/connect/connect-layout";
 
 const BRIDGE_WS_URL = "ws://127.0.0.1:32868/ws";
 const BRIDGE_DOWNLOAD_URL = "https://github.com/arx-research/libhalo/releases";
@@ -177,7 +177,7 @@ export function WalletConnect() {
       <button
         onClick={() => handleConnect()}
         disabled={busy}
-        className="sw-btn-primary w-full py-4 text-sm flex items-center justify-center gap-2"
+        className="sw-btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
       >
         {busy ? (
           <>
@@ -199,52 +199,68 @@ export function WalletConnect() {
       {isConnecting && (
         <button
           onClick={handleCancel}
-          className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+          className="sw-btn-ghost w-full mt-3 py-3 text-sm flex items-center justify-center gap-2"
         >
-          Cancel
+          <X className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
+          <span>Cancel</span>
         </button>
       )}
+    </>
+  );
 
-      {isBridge ? (
-        <div className="mt-4" aria-live="polite">
-          <div className="flex flex-wrap gap-2">
-            <StatusPill
-              label="Bridge"
-              state={bridgeConnected === null ? "checking" : bridgeConnected ? "ok" : "bad"}
-              value={bridgeConnected === null ? "Checking…" : bridgeConnected ? "Ready" : "Not running"}
-            />
-            <StatusPill
-              label="Card"
-              state={readerConnected === null ? "checking" : readerConnected ? "ok" : "bad"}
-              value={readerConnected === null ? "Checking…" : readerConnected ? "Detected" : "Place it on the reader"}
-            />
-          </div>
-          {bridgeConnected === false && (
-            <a
-              href={BRIDGE_DOWNLOAD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sw-link inline-flex items-center gap-1 text-sm mt-3"
-            >
-              Set up HaLo Bridge
-              <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
-            </a>
-          )}
-        </div>
-      ) : (
-        <p className="text-sm text-[var(--sw-muted)] mt-3 leading-snug">
-          You&apos;ll scan a QR code with your phone, then tap your card to it.
-        </p>
-      )}
+  const checks = isBridge ? (
+    <>
+      <CheckRow
+        state={bridgeConnected === null ? "checking" : bridgeConnected ? "ok" : "waiting"}
+        title="HaLo Bridge"
+        detail={
+          bridgeConnected === null ? (
+            "Checking…"
+          ) : bridgeConnected ? (
+            "Running"
+          ) : (
+            <>
+              Not running.{" "}
+              <a
+                href={BRIDGE_DOWNLOAD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sw-link inline-flex items-center gap-0.5"
+              >
+                Set it up
+                <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
+              </a>
+            </>
+          )
+        }
+      />
+      <CheckRow
+        state={readerConnected === null ? "checking" : readerConnected ? "ok" : "waiting"}
+        title="Reader and card"
+        detail={
+          readerConnected === null
+            ? "Checking…"
+            : readerConnected
+              ? "Card detected"
+              : "Place your Burner card on the reader"
+        }
+      />
+    </>
+  ) : (
+    <>
+      <CheckRow state={1} title="Scan a QR code with your phone" detail="Any iPhone or Android phone with NFC." />
+      <CheckRow state={2} title="Tap your card to the phone" detail="Hold it flat against the back until it buzzes." />
     </>
   );
 
   return (
     <>
       <ConnectLayout
-        reader={isBridge ? "reader" : "gateway"}
         controls={<ModeToggle onModeChange={handleModeChange} />}
+        subline={isBridge ? "Connect your Burner card with a USB NFC reader." : "Use your phone to read your Burner card."}
         action={action}
+        checks={checks}
+        checksTitle={isBridge ? "Before you connect" : "How it works"}
       />
 
       {/* QR Code Display (gateway pairing with live progress) */}

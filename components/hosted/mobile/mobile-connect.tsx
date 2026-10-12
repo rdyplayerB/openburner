@@ -52,14 +52,19 @@ export function HostedMobileConnect() {
 
   const installSuggestion =
     shouldEnablePWA && !isInstalled && showInstallCard ? (
-      <div className="flex items-center gap-3 rounded-xl bg-[var(--sw-fill)] pl-3 pr-1 py-1">
-        <Download className="w-4 h-4 text-[var(--sw-ink-soft)] flex-shrink-0" aria-hidden="true" />
-        <button onClick={handleInstall} className="flex-1 text-left py-2 text-xs text-[var(--sw-ink-soft)]">
-          <span className="font-semibold text-[var(--sw-ink)]">Add to Home Screen</span> for one-tap access
+      <div className="sw-surface rounded-xl border border-[var(--sw-line)] flex items-center">
+        <button onClick={handleInstall} className="flex-1 flex items-center gap-3 p-4 text-left rounded-xl">
+          <span className="w-10 h-10 sw-mark rounded-lg flex items-center justify-center flex-shrink-0" aria-hidden="true">
+            <Download className="w-5 h-5" />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block font-semibold text-sm text-[var(--sw-ink)]">Install OpenBurner</span>
+            <span className="block text-xs text-[var(--sw-muted)] mt-0.5">One tap from your home screen</span>
+          </span>
         </button>
         <button
           onClick={() => setShowInstallCard(false)}
-          className="sw-icon-btn p-2.5"
+          className="sw-icon-btn p-2.5 mr-2 flex-shrink-0"
           aria-label="Dismiss install suggestion"
         >
           <X className="w-4 h-4" aria-hidden="true" />
@@ -70,21 +75,17 @@ export function HostedMobileConnect() {
   return (
     <>
       <ConnectLayout
-        reader="phone"
-        artActive={isConnecting}
-        headline={isConnecting ? "Hold your card to your phone." : undefined}
         subline={
           isConnecting
-            ? "Place your Burner flat against the top of your phone and keep it there until it buzzes."
-            : undefined
+            ? "Hold your card flat against the top of your phone until it buzzes."
+            : "Tap your Burner card to your phone."
         }
-        hideSteps={isConnecting}
         action={
           <>
             <button
               onClick={handleConnect}
               disabled={isConnecting}
-              className="sw-btn-primary w-full py-4 text-sm flex items-center justify-center gap-2"
+              className="sw-btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
             >
               {isConnecting ? (
                 <>
@@ -101,9 +102,10 @@ export function HostedMobileConnect() {
             {isConnecting && (
               <button
                 onClick={handleCancel}
-                className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+                className="sw-btn-ghost w-full mt-3 py-3 text-sm flex items-center justify-center gap-2"
               >
-                Cancel
+                <X className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
+                <span>Cancel</span>
               </button>
             )}
           </>

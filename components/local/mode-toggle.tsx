@@ -10,10 +10,10 @@ interface ModeToggleProps {
 
 const OPTIONS: { mode: ConnectionMode; label: string; Icon: typeof Usb }[] = [
   { mode: "bridge", label: "USB reader", Icon: Usb },
-  { mode: "gateway", label: "Phone as reader", Icon: Smartphone },
+  { mode: "gateway", label: "Phone", Icon: Smartphone },
 ];
 
-/** Segmented control: connect through a USB NFC reader or a phone (HaLo Gateway). */
+/** Tabs: connect through a USB NFC reader or a phone (HaLo Gateway). */
 export function ModeToggle({ onModeChange }: ModeToggleProps) {
   const connectionMode = useWalletStore((s) => s.connectionMode);
   const setConnectionMode = useWalletStore((s) => s.setConnectionMode);
@@ -36,14 +36,10 @@ export function ModeToggle({ onModeChange }: ModeToggleProps) {
 
   return (
     <div>
-      <p id="connect-mode-label" className="sw-label mb-2">
-        How will you tap your card?
+      <p id="connect-mode-label" className="sw-uplabel mb-3">
+        Connect with
       </p>
-      <div
-        role="radiogroup"
-        aria-labelledby="connect-mode-label"
-        className="inline-flex w-full sm:w-auto rounded-full bg-[var(--sw-fill-strong)] p-1"
-      >
+      <div role="radiogroup" aria-labelledby="connect-mode-label" className="flex gap-6 border-b border-[var(--sw-line)]">
         {OPTIONS.map(({ mode, label, Icon }) => {
           const active = connectionMode === mode;
           return (
@@ -54,10 +50,8 @@ export function ModeToggle({ onModeChange }: ModeToggleProps) {
               aria-checked={active}
               onClick={() => handleModeChange(mode)}
               disabled={isChanging}
-              className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 min-h-[40px] text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sw-accent)] ${
-                active
-                  ? "bg-[var(--sw-surface)] text-[var(--sw-ink)] shadow-[0_0_0_1px_var(--sw-line)]"
-                  : "text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)]"
+              className={`sw-tab text-sm pb-3 inline-flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sw-accent)] ${
+                active ? "sw-tab-active" : ""
               }`}
             >
               <Icon className="w-4 h-4" aria-hidden="true" />
