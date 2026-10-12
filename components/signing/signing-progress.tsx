@@ -106,7 +106,7 @@ function StepDot({ state }: { state: "done" | "active" | "todo" }) {
   );
 }
 
-/** A Burner card easing toward a phone (or reader) with NFC waves between them. */
+/** A Burner card easing toward a phone, or tapping down onto a USB reader, with NFC waves between them. */
 export function CardTapArt({
   reader = "phone",
   active = true,
@@ -117,45 +117,74 @@ export function CardTapArt({
   className?: string;
 }) {
   const ink = { stroke: "var(--sw-ink)" };
+  const waves = (
+    <>
+      <path className={active ? "ob-wave" : ""} d="M -4 -8 A 10 10 0 0 1 -4 8" />
+      <path className={active ? "ob-wave ob-wave-2" : ""} d="M -11 -14 A 18 18 0 0 1 -11 14" />
+      <path className={active ? "ob-wave ob-wave-3" : ""} d="M -18 -20 A 26 26 0 0 1 -18 20" />
+    </>
+  );
+  const waveStyle = { stroke: "var(--sw-accent)", fill: "none", opacity: active ? 1 : 0.25 };
+
+  if (reader === "reader") {
+    // Desktop USB NFC reader (HaLo Bridge): a dark pad seen from slightly above,
+    // contactless mark on top, status light, USB cable. The card taps down onto it.
+    return (
+      <svg viewBox="0 0 200 120" className={className} aria-hidden="true">
+        {/* Cable and plug */}
+        <path d="M160 100 C 176 100, 178 112, 192 112" fill="none" stroke="#2A2A30" strokeWidth="3" strokeLinecap="round" />
+        <rect x="188" y="108" width="10" height="8" rx="1.5" fill="#2A2A30" />
+        {/* Pad: front edge, then top face */}
+        <path d="M54 100 H162 V105 Q162 109 158 109 H58 Q54 109 54 105 Z" fill="#0B0B0D" stroke="#fff" strokeOpacity="0.1" />
+        <path d="M68 80 H148 Q152 80 154 83 L162 97 Q163 100 159 100 H57 Q53 100 54 97 L62 83 Q64 80 68 80 Z" fill="#1C1C21" stroke="#fff" strokeOpacity="0.14" />
+        {/* Contactless mark printed on the pad */}
+        <g transform="translate(108 90) scale(1 0.42)" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="2.4" strokeLinecap="round">
+          <path d="M -8 -6 A 8 8 0 0 1 8 -6" transform="rotate(180) translate(0 -2)" />
+          <path d="M -13 -10 A 14 14 0 0 1 13 -10" transform="rotate(180) translate(0 -2)" />
+          <path d="M -18 -14 A 20 20 0 0 1 18 -14" transform="rotate(180) translate(0 -2)" />
+        </g>
+        {/* Status light */}
+        <circle cx="148" cy="94" r="2.6" style={{ fill: active ? "var(--sw-up)" : "#3A3A42" }} />
+
+        {/* NFC waves between card and pad, pointing down */}
+        <g transform="translate(108 75) rotate(90)" style={waveStyle} strokeWidth="2.5" strokeLinecap="round">
+          {waves}
+        </g>
+
+        {/* The card (the real render), coming down onto the pad */}
+        <g transform="translate(86 0)">
+          <g className={active ? "ob-tap-down" : ""}>
+            <image href={BURNER_CARD.angled()} width={58 * BURNER_CARD.angledRatio} height={58} />
+          </g>
+        </g>
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 200 120" className={className} aria-hidden="true">
-      {reader === "reader" ? (
-        // Desktop USB reader: a flat pad with a status light.
-        <g>
-          <rect x="96" y="80" width="84" height="22" rx="6" style={{ fill: "var(--sw-surface)", ...ink }} strokeWidth="2" />
-          <circle cx="168" cy="91" r="2.5" style={{ fill: active ? "var(--sw-up)" : "var(--sw-line)" }} />
-        </g>
-      ) : (
-        // Phone
-        <g>
-          <rect x="120" y="10" width="56" height="100" rx="11" style={{ fill: "var(--sw-surface)", ...ink }} strokeWidth="2" />
-          <rect x="140" y="16" width="16" height="3" rx="1.5" style={{ fill: "var(--sw-line)" }} />
-          {reader === "gateway" && (
-            <g style={{ fill: "var(--sw-line)" }}>
-              <rect x="130" y="36" width="36" height="5" rx="2.5" />
-              <rect x="130" y="47" width="26" height="5" rx="2.5" />
-            </g>
-          )}
-        </g>
-      )}
+      {/* Phone */}
+      <g>
+        <rect x="120" y="10" width="56" height="100" rx="11" style={{ fill: "var(--sw-surface)", ...ink }} strokeWidth="2" />
+        <rect x="140" y="16" width="16" height="3" rx="1.5" style={{ fill: "var(--sw-line)" }} />
+        {reader === "gateway" && (
+          <g style={{ fill: "var(--sw-line)" }}>
+            <rect x="130" y="36" width="36" height="5" rx="2.5" />
+            <rect x="130" y="47" width="26" height="5" rx="2.5" />
+          </g>
+        )}
+      </g>
 
       {/* The card (the real render) */}
-      <g transform={reader === "reader" ? "translate(30 4)" : "translate(34 10)"}>
+      <g transform="translate(34 10)">
         <g className={active ? "ob-tap-card" : ""}>
-          <image href={BURNER_CARD.angled()} width={(reader === "reader" ? 84 : 92) * BURNER_CARD.angledRatio} height={reader === "reader" ? 84 : 92} />
+          <image href={BURNER_CARD.angled()} width={92 * BURNER_CARD.angledRatio} height={92} />
         </g>
       </g>
 
-      {/* NFC waves, centred between the card and the reader */}
-      <g
-        transform={reader === "reader" ? "translate(104 42)" : "translate(118 34)"}
-        style={{ stroke: "var(--sw-accent)", fill: "none", opacity: active ? 1 : 0.25 }}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      >
-        <path className={active ? "ob-wave" : ""} d="M -4 -8 A 10 10 0 0 1 -4 8" />
-        <path className={active ? "ob-wave ob-wave-2" : ""} d="M -11 -14 A 18 18 0 0 1 -11 14" />
-        <path className={active ? "ob-wave ob-wave-3" : ""} d="M -18 -20 A 26 26 0 0 1 -18 20" />
+      {/* NFC waves, between the card and the phone */}
+      <g transform="translate(118 34)" style={waveStyle} strokeWidth="2.5" strokeLinecap="round">
+        {waves}
       </g>
     </svg>
   );
