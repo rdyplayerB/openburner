@@ -23,7 +23,7 @@ export const IntroNetworks: Story = () => (
     <Home />
   </Scene>
 );
-IntroNetworks.storyName = "Intro 2, any EVM network";
+IntroNetworks.storyName = "Intro 2, other EVM networks";
 
 export const IntroBuild: Story = () => (
   <Scene connected={false} intro steps={[{ click: "Slide 3" }]}>

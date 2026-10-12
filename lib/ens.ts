@@ -11,7 +11,7 @@ const CACHE_KEY = "openburner_ens";
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 function mainnet() {
-  return getProvider(1, getChainConfig(1)?.rpcUrl ?? "https://ethereum.publicnode.com");
+  return getProvider(1, getChainConfig(1)?.rpcUrl ?? "https://ethereum-rpc.publicnode.com");
 }
 
 /** True for strings that look like an ENS name (e.g. "vitalik.eth"). */

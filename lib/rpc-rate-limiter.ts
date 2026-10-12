@@ -1,7 +1,7 @@
 /**
  * Small concurrency limiter for RPC calls.
  *
- * Public RPCs (mainnet.base.org, polygon-rpc.com, …) throttle bursts, so we cap
+ * Public RPCs throttle bursts, so we cap
  * how many calls are in flight at once and retry only when the endpoint says
  * "429 / rate limited". Everything else fails fast so the UI can show an error.
  */

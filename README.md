@@ -14,7 +14,7 @@ An open-source app for Burner Ethereum cards. Use it on any EVM network with you
 
 OpenBurner has two goals:
 
-- **Use your Burner on any EVM network.** Ethereum, Base, Optimism, Arbitrum, Polygon, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Scroll and Unichain are built in. For any other EVM network, add its chain ID and your own RPC URL.
+- **Use your Burner on other EVM networks.** OpenBurner works with any EVM-compatible network you have an RPC URL for, including ones Burner doesn't officially support.
 - **A starting point for your own Burner project.** The code is MIT-licensed, so you can fork it and build on it. It already covers reading the card over NFC, signing with a PIN and a tap, checking every signature against the card's address, and connecting to apps through WalletConnect.
 
 You can run it locally with a USB NFC reader, or host it and use your phone as the reader. Either way, your private keys stay in the card's secure element.
@@ -24,7 +24,6 @@ You can run it locally with a USB NFC reader, or host it and use your phone as t
 ### Core Functionality
 - 🔐 **Hardware-Secured Keys** - Private keys never leave the secure element chip
 - 📱 **Flexible Connectivity** - Use a desktop USB NFC reader (HaLo Bridge) locally, or turn your phone into the reader via the HaLo Gateway when hosted — scan a QR, tap your card. Hosted sessions stay alive through brief phone sleeps so you keep working without re-pairing
-- 🌐 **Multi-Chain Support** - Extends Burner use across Ethereum, Base, Arbitrum, Optimism, BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, and any custom EVM chain
 - 💰 **Token Management** - View balances for ETH and ERC-20 tokens
 - 💸 **Send Transactions** - Native and ERC-20 transfers with hardware signing
 - 🔄 **Token Swaps** - Decentralized swaps using [0x Standard Swap API](https://0x.org/docs/category/swap-api) (requires a 0x API key — your own locally, or one configured by the deployer when hosted)
@@ -37,6 +36,7 @@ You can run it locally with a USB NFC reader, or host it and use your phone as t
 ### Technical Highlights
 - **Fast First Load** - About 111 kB of JavaScript up front; WalletConnect, the card libraries and each connect screen load only when you need them
 - **Multicall3 Integration** - One batched RPC call for native and token balances
+- **Public RPCs with a Backup** - Each preset network has two tested public RPCs from different operators, and the app switches to the second if the first stops answering. Batches are capped at 10 calls, and a batch an RPC rejects is re-sent one call at a time
 - **Advanced Caching** - Multi-tier price caching with a rate-limited server-side proxy
 - **Resilient Gateway Sessions** - Hosted phone-as-reader connections survive brief phone sleeps and resume in place, no constant QR re-scanning
 - **Burner Card Integration** - NFC-based hardware wallet support (local bridge or hosted gateway)
@@ -162,23 +162,9 @@ On top of that, OpenBurner:
 - **Keeps its API to itself** - The pricing, swap and NFT proxies refuse other websites and validate every request
 - **Doesn't log card data** - No keys, signatures, pairing links or PINs in the console
 
-## 📊 Supported Networks
+## 📊 Networks
 
-**Everything BurnerOS supports:**
-- Ethereum, Base, Arbitrum, Optimism
-
-**Plus additional chains:**
-- BNB Chain
-- Avalanche  
-- Blast
-- Linea
-- Mantle
-- Mode
-- Polygon
-- Scroll
-- Unichain
-
-**Plus any custom EVM-compatible chain via Custom RPC configuration**
+OpenBurner works with any EVM-compatible network. The network menu lists some networks as examples. To add another, choose **Add a custom network** and enter its name, chain ID and your own RPC URL. Add the network's currency symbol too, even if it's ETH, so the balance can show a price. Before saving, OpenBurner checks that the RPC URL returns the chain ID you entered.
 
 ## 📝 License & Usage
 

@@ -145,27 +145,20 @@ export function CardArt({ active }: { active: boolean }) {
   );
 }
 
-// ─── 2 · More networks ──────────────────────────────────────────────────────
+// ─── 2 · Other EVM networks ─────────────────────────────────────────────────
 
-const NETWORKS: { name: string; logo: string; square?: boolean }[] = [
-  { name: "Ethereum", logo: "/images/chains/ethereum.png" },
-  { name: "Base", logo: "/images/chains/base.svg", square: true },
-  { name: "Arbitrum One", logo: "/images/chains/arbitrum.png" },
-  { name: "OP Mainnet", logo: "/images/chains/optimism.png" },
-  { name: "Polygon", logo: "/images/chains/polygon.png" },
-  { name: "BNB Chain", logo: "/images/chains/binance.png" },
-  { name: "Avalanche", logo: "/images/chains/avalanche.png" },
-  { name: "Linea Mainnet", logo: "/images/chains/linea.png" },
-  { name: "Scroll", logo: "/images/chains/scroll.png" },
-  { name: "Unichain", logo: "/images/chains/unichain.png" },
+const FIELDS: { label: string; typed?: string }[] = [
+  { label: "Network name" },
+  { label: "RPC URL", typed: "https://" },
+  { label: "Chain ID" },
+  { label: "Currency symbol" },
 ];
-const SELECTED = "Polygon";
 
 export function NetworksArt({ active }: { active: boolean }) {
   const ids = useIds();
   const sx = 186; // screen left
   return (
-    <Canvas label="OpenBurner's network list on a phone, with Polygon selected.">
+    <Canvas label="OpenBurner's form for adding a network with your own RPC URL.">
       <Defs ids={ids} />
 
       {/* Phone, cropped by the bottom edge */}
@@ -175,43 +168,55 @@ export function NetworksArt({ active }: { active: boolean }) {
       <rect x="185" y="27" width="132" height="280" rx="19" style={ink("paper")} />
       <rect x="234" y="33" width="34" height="9" rx="4.5" fill="#18181C" />
 
-      {/* OpenBurner's network menu */}
+      {/* OpenBurner's "Add a custom network" form */}
       <g style={{ fontFamily: SANS }}>
         <image href="/images/openburnerlogo.svg" x={sx + 4} y="50" width="13" height="13" />
-        <rect x={sx + 22} y="49" width="52" height="15" rx="7.5" style={ink("fill-strong")} />
-        <image href="/images/chains/polygon.png" x={sx + 26} y="52.5" width="8" height="8" />
-        <text x={sx + 37} y="59.5" fontSize="6.8" fontWeight="600" style={ink("ink")}>
-          Polygon
+        <rect x={sx + 22} y="49" width="44" height="15" rx="7.5" style={ink("fill-strong")} />
+        <text x={sx + 29} y="59.5" fontSize="6.8" fontWeight="600" style={ink("ink")}>
+          Network
         </text>
 
         <rect x={sx + 2} y="72" width="126" height="240" rx="8" style={{ ...ink("surface"), stroke: "var(--sw-line-soft)" }} />
-        {NETWORKS.map((n, i) => {
-          const y = 88 + i * 19;
-          const on = n.name === SELECTED;
+        <circle cx={sx + 15} cy="88" r="6" style={ink("fill-strong")} />
+        <path d={`M${sx + 12.5} 88 h5 M${sx + 15} 85.5 v5`} style={{ stroke: "var(--sw-ink)" }} strokeWidth="1" strokeLinecap="round" />
+        <text x={sx + 26} y="90.5" fontSize="7.2" fontWeight="600" style={ink("ink")}>
+          Add a custom network
+        </text>
+
+        {FIELDS.map((f, i) => {
+          const y = 102 + i * 27;
+          const focused = !!f.typed;
           return (
-            <g key={n.name}>
-              {on && <rect x={sx + 5} y={y - 9} width="120" height="18" rx="4" style={ink("fill-strong")} />}
-              {n.square ? (
-                <image href={n.logo} x={sx + 11} y={y - 4.5} width="9" height="9" />
+            <g key={f.label}>
+              <rect
+                x={sx + 8}
+                y={y}
+                width="114"
+                height="21"
+                rx="5"
+                fill="none"
+                style={{ stroke: focused ? "var(--sw-accent)" : "var(--sw-line)" }}
+                strokeWidth={focused ? 1.1 : 0.8}
+              />
+              {focused ? (
+                <>
+                  <text x={sx + 14} y={y + 13.5} fontSize="6.8" style={{ ...ink("ink"), fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}>
+                    {f.typed}
+                  </text>
+                  <rect x={sx + 45} y={y + 6} width="0.9" height="10" style={ink("accent")} className={active ? "ob-caret" : ""} />
+                </>
               ) : (
-                <image href={n.logo} x={sx + 10} y={y - 5.5} width="11" height="11" />
-              )}
-              <text x={sx + 27} y={y + 2.5} fontSize="7" fontWeight={on ? 700 : 500} style={ink("ink")}>
-                {n.name}
-              </text>
-              {on && (
-                <path
-                  d={`M${sx + 112} ${y} l2.2 2.2 l4 -4.4`}
-                  style={{ stroke: "var(--sw-ink)" }}
-                  strokeWidth="1.1"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <text x={sx + 14} y={y + 13.5} fontSize="6.8" style={ink("muted")}>
+                  {f.label}
+                </text>
               )}
             </g>
           );
         })}
+        <rect x={sx + 8} y="212" width="114" height="22" rx="2" style={ink("accent-fill")} />
+        <text x={sx + 65} y="225.5" textAnchor="middle" fontSize="6.2" fontWeight="700" letterSpacing="0.5" fill="#fff">
+          ADD NETWORK
+        </text>
       </g>
 
       {/* The card, tapping in from the left */}

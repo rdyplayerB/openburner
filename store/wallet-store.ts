@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { CHAINS, getChainConfig } from "@/lib/supported-chains";
 
 export type ConnectionMode = 'bridge' | 'gateway';
 
@@ -29,7 +30,7 @@ export const useWalletStore = create<WalletState>()(
       publicKey: null,
       keySlot: null,
       chainId: 1,
-      rpcUrl: "https://eth.llamarpc.com",
+      rpcUrl: CHAINS[0].rpcUrl,
       chainName: "Ethereum",
       isConnected: false,
       balance: "0",
@@ -40,29 +41,9 @@ export const useWalletStore = create<WalletState>()(
         set({ address, publicKey, keySlot, isConnected: true });
       },
       setChain: (chainId, rpcUrl, chainName) => {
-        // Force update RPC URLs to official ones for all networks
-        const officialRPCs: Record<number, string> = {
-          1: "https://ethereum.publicnode.com",
-          8453: "https://mainnet.base.org",
-          56: "https://bsc-dataseed1.binance.org",
-          42161: "https://arb1.arbitrum.io/rpc",
-          43114: "https://api.avax.network/ext/bc/C/rpc",
-          81457: "https://rpc.blast.io",
-          59144: "https://rpc.linea.build",
-          5000: "https://rpc.mantle.xyz",
-          34443: "https://mainnet.mode.network",
-          10: "https://mainnet.optimism.io",
-          137: "https://polygon-rpc.com",
-          534352: "https://rpc.scroll.io",
-          130: "https://mainnet.unichain.org",
-        };
-
-        if (officialRPCs[chainId] && rpcUrl !== officialRPCs[chainId]) {
-          const newRpcUrl = officialRPCs[chainId];
-          rpcUrl = newRpcUrl;
-        }
-        
-        set({ chainId, rpcUrl, chainName, balance: "0" });
+        // Preset networks always use their tested public RPCs (lib/supported-chains.ts).
+        const preset = getChainConfig(chainId);
+        set({ chainId, rpcUrl: preset?.rpcUrl ?? rpcUrl, chainName, balance: "0" });
       },
       setBalance: (balance) => {
         set({ balance });
@@ -84,7 +65,7 @@ export const useWalletStore = create<WalletState>()(
         // Force page reload to pick up new settings
         window.location.reload();
       },
-      // Initialize and fix RPC URLs to official ones for all networks
+      // Fix up saved state on load
       initialize: () => {
         const state = get();
 
@@ -93,25 +74,11 @@ export const useWalletStore = create<WalletState>()(
         if (state.address && !state.keySlot) {
           set({ address: null, publicKey: null, keySlot: null, isConnected: false, balance: "0" });
         }
-        const officialRPCs: Record<number, string> = {
-          1: "https://ethereum.publicnode.com",
-          8453: "https://mainnet.base.org",
-          56: "https://bsc-dataseed1.binance.org",
-          42161: "https://arb1.arbitrum.io/rpc",
-          43114: "https://api.avax.network/ext/bc/C/rpc",
-          81457: "https://rpc.blast.io",
-          59144: "https://rpc.linea.build",
-          5000: "https://rpc.mantle.xyz",
-          34443: "https://mainnet.mode.network",
-          10: "https://mainnet.optimism.io",
-          137: "https://polygon-rpc.com",
-          534352: "https://rpc.scroll.io",
-          130: "https://mainnet.unichain.org",
-        };
-
-        if (officialRPCs[state.chainId] && state.rpcUrl !== officialRPCs[state.chainId]) {
-          const newRpcUrl = officialRPCs[state.chainId];
-          set({ rpcUrl: newRpcUrl });
+        // Move saved sessions on a preset network to its current RPC (e.g. after
+        // an RPC is retired).
+        const preset = getChainConfig(state.chainId);
+        if (preset && state.rpcUrl !== preset.rpcUrl) {
+          set({ rpcUrl: preset.rpcUrl });
         }
       },
     }),

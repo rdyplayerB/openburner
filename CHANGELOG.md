@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **One transaction screen** - Sent → Confirming → Confirmed in a single sheet, with explorer link
 
 ### Fixed
+- **Network RPCs** - Polygon's RPC had stopped answering. Every preset network now has two tested public RPCs from different operators, and the app switches to the second if the first stops answering
+- **Large batches on public RPCs** - The official Optimism, Scroll and Unichain RPCs refuse batches over 10 calls, so batches are now capped at 10, and a batch an RPC rejects is re-sent one call at a time
 - **Sending on networks without EIP-1559** - Transactions now use a legacy gas price on any network that reports no base fee
 - **Prices on added networks** - An added network's coin is priced only by the currency symbol you set for it. Tokens on added networks show no price, since a symbol alone can't tell a real USDC from a copy
 - **Collectible links on added networks** - Collectibles on added networks no longer show an Etherscan link, since Etherscan doesn't cover those networks

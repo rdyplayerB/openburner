@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { useIntroStore } from "@/store/intro-store";
-import { CHAINS } from "@/lib/supported-chains";
 import { Wordmark } from "./connect-layout";
 import { BuildArt, CardArt, NetworksArt, SignArt } from "./intro-art";
 
@@ -23,8 +22,8 @@ const SLIDES = [
   },
   {
     Art: NetworksArt,
-    title: "Works on any EVM network.",
-    body: `OpenBurner comes with ${CHAINS.length} networks, including Ethereum, Base, Polygon and Avalanche. Add any other EVM network with your own RPC URL.`,
+    title: "Use your Burner on other EVM networks.",
+    body: "Add any EVM-compatible network, including ones Burner doesn’t officially support, with your own RPC URL.",
   },
   {
     Art: BuildArt,

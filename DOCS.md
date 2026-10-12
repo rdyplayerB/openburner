@@ -19,17 +19,9 @@ OpenBurner is a wallet application for Burner Ethereum hardware wallets. Run it 
 - Local (USB reader) or hosted (phone as NFC reader) modes
 - MIT licensed
 
-### How is this different from BurnerOS?
+### How does OpenBurner relate to BurnerOS?
 
-**BurnerOS** is the official wallet from Burner that supports Ethereum, Base, Arbitrum, and Optimism.
-
-**OpenBurner** is an alternative that:
-- Supports all BurnerOS chains + many more (BNB Chain, Avalanche, Blast, Linea, Mantle, Mode, Polygon, Scroll, Unichain, etc.)
-- Allows you to add any custom EVM-compatible chain
-- Runs locally on your machine with full control over RPC endpoints
-- Is open source (MIT licensed)
-
-Both work with the same Burner Ethereum card - your addresses and keys remain the same.
+BurnerOS is the app Burner makes for its cards. OpenBurner is an open-source app for the same cards, built for two things: using your card on EVM networks Burner doesn't officially support, and giving developers a starting point for their own Burner projects. Your card works with both apps.
 
 ## Local vs Hosted Versions
 
@@ -260,8 +252,8 @@ OpenBurner supports token swaps on both local and hosted versions using the [0x 
 - **Hosted version**: Set at 0.88% (88 basis points) in the swap function code
 - **Supports development**: Fees help maintain and improve OpenBurner
 
-**Supported Networks:**
-- All EVM-compatible chains supported by OpenBurner
+**Networks:**
+- The preset networks that both 0x and the app's swap proxy support (see `SUPPORTED_SWAP_CHAINS` in `lib/supported-chains.ts`)
 - Automatic network detection and routing
 - Real-time quote fetching and execution
 
@@ -320,26 +312,9 @@ Notes:
 
 **Note**: The 0x API key is used for the standard swap API endpoints (`/swap/allowance-holder/price` and `/swap/allowance-holder/quote`), not the gasless API endpoints.
 
-## Supported Networks
+## Networks
 
-OpenBurner supports **everything BurnerOS does** (Ethereum, Base, Arbitrum, Optimism) **plus many more**:
-
-- BNB Chain
-- Avalanche
-- Blast
-- Linea
-- Mantle
-- Mode
-- Polygon
-- Scroll
-- Unichain
-- Any custom EVM-compatible chain
-
-**How BurnerOS compares:**
-- BurnerOS officially supports: Ethereum, Base, Arbitrum, Optimism
-- OpenBurner supports those + all additional EVM chains via custom RPC configuration
-
-Add any custom network via the UI network selector.
+OpenBurner works with any EVM-compatible network. The presets in the network menu are examples, each defined in `lib/supported-chains.ts` with a primary public RPC URL and a backup from a different operator. If the primary stops answering, the app switches to the backup. Add any other network from the menu with its name, chain ID and an RPC URL. Networks you add are saved in your browser only. Presets also carry explorer, price and swap settings. An added network's coin is priced from the currency symbol you set for it.
 
 ## Token Management
 
