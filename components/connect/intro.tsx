@@ -45,6 +45,13 @@ const SLIDES = [
   },
 ];
 
+/** Join the last two words so a line never ends with one word on its own
+ * (fallback for browsers without `text-wrap: balance / pretty`). */
+function keepLastWordsTogether(text: string) {
+  const i = text.lastIndexOf(" ");
+  return i > 0 ? `${text.slice(0, i)}\u00A0${text.slice(i + 1)}` : text;
+}
+
 function prefersReducedMotion() {
   try {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -151,9 +158,9 @@ export function Intro() {
                 <Art active={i === index} />
               </div>
               <h1 className="mt-7 text-[1.75rem] leading-[1.1] sm:text-[2rem] font-bold tracking-tight text-[var(--sw-ink)]">
-                {title}
+                {keepLastWordsTogether(title)}
               </h1>
-              <p className="mt-3 text-[15px] leading-relaxed text-[var(--sw-ink-soft)]">{body}</p>
+              <p className="mt-3 text-[15px] leading-relaxed text-[var(--sw-ink-soft)]">{keepLastWordsTogether(body)}</p>
             </section>
           ))}
         </div>

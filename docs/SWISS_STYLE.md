@@ -58,6 +58,12 @@ Keep text **clear, concise, direct**. Sentence case for body; UPPERCASE only via
 
 These rules sit on top of everything above. Where they disagree, these win.
 
+### Line breaks
+- Never leave one word alone on the last line. `globals.css` sets `text-wrap: balance` on
+  headings and `text-wrap: pretty` on everything else. Where the text matters most (welcome
+  slides), the last two words are also joined with a non-breaking space for browsers
+  without `text-wrap`.
+
 ### Hierarchy
 - **One primary action per screen.** It uses `sw-btn-primary` and stays visible at all
   times. When it can't run yet, it's disabled and its label says what's missing

@@ -85,6 +85,13 @@ body {
   z-index: 1000;
 }
 
+/* Never leave one word alone on the last line: headings balance their lines,
+   running text avoids a lone last word. */
+@layer base {
+  body { text-wrap: pretty; }
+  h1, h2, h3, h4, h5, h6, legend { text-wrap: balance; }
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
