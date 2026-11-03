@@ -19,7 +19,7 @@ export function DappIcon({ src, size = "md" }: { src?: string; size?: "sm" | "md
   const box = size === "lg" ? "w-12 h-12" : size === "sm" ? "w-8 h-8" : "w-10 h-10";
   return (
     <span
-      className={`${box} rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 bg-[var(--sw-fill-strong)] text-[var(--sw-ink-soft)]`}
+      className={`${box} rounded-xl overflow-hidden flex items-center justify-center shrink-0 bg-(--sw-fill-strong) text-(--sw-ink-soft)`}
       aria-hidden="true"
     >
       {src && !broken ? (
@@ -36,10 +36,10 @@ export function DappIcon({ src, size = "md" }: { src?: string; size?: "sm" | "md
 export function VerifyBadge({ status }: { status: VerifyStatus }) {
   if (status === "none") return null;
   const view = {
-    verified: { Icon: BadgeCheck, text: "Verified", cls: "text-[var(--sw-up)]" },
-    unverified: { Icon: ShieldQuestion, text: "Unverified", cls: "text-[var(--sw-muted)]" },
-    mismatch: { Icon: ShieldAlert, text: "Domain mismatch", cls: "text-[var(--sw-down)]" },
-    scam: { Icon: ShieldAlert, text: "Known scam", cls: "text-[var(--sw-down)]" },
+    verified: { Icon: BadgeCheck, text: "Verified", cls: "text-(--sw-up)" },
+    unverified: { Icon: ShieldQuestion, text: "Unverified", cls: "text-(--sw-muted)" },
+    mismatch: { Icon: ShieldAlert, text: "Domain mismatch", cls: "text-(--sw-down)" },
+    scam: { Icon: ShieldAlert, text: "Known scam", cls: "text-(--sw-down)" },
   }[status];
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold ${view.cls}`}>

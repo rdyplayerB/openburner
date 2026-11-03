@@ -133,7 +133,7 @@ export function NetworkMenu() {
 
   const row = (active: boolean) =>
     `w-full text-left px-2.5 py-2 rounded-lg text-sm flex items-center gap-3 transition-colors ${
-      active ? "bg-[var(--sw-fill-strong)] text-[var(--sw-ink)] font-semibold" : "text-[var(--sw-ink)] hover:bg-[var(--sw-fill)]"
+      active ? "bg-(--sw-fill-strong) text-(--sw-ink) font-semibold" : "text-(--sw-ink) hover:bg-(--sw-fill)"
     }`;
 
   return (
@@ -146,14 +146,14 @@ export function NetworkMenu() {
         className="sw-chip pl-1.5 pr-3 py-1.5 text-sm"
       >
         <ChainLogo key={chainId} chainId={chainId} name={chainName} className="w-6 h-6" />
-        <span className="max-w-[9rem] truncate">{chainName}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-[var(--sw-muted)] transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+        <span className="max-w-36 truncate">{chainName}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-(--sw-muted) transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
 
       {open && (
         <div
           ref={listRef}
-          className="ob-pop-in absolute left-0 top-full mt-2 w-72 sw-surface rounded-xl border border-[var(--sw-line)] z-50 p-1.5 max-h-[70vh] overflow-y-auto shadow-xl"
+          className="ob-pop-in absolute left-0 top-full mt-2 w-72 sw-surface rounded-xl border border-(--sw-line) z-50 p-1.5 max-h-[70vh] overflow-y-auto shadow-xl"
         >
           <div className="space-y-0.5" role="listbox" aria-label="Networks">
             {CHAINS.map((chain) => {
@@ -168,14 +168,14 @@ export function NetworkMenu() {
                 >
                   <ChainLogo chainId={chain.chainId} name={chain.name} className="w-6 h-6" />
                   <span className="flex-1 truncate">{chain.name}</span>
-                  {active && <Check className="w-4 h-4 text-[var(--sw-ink)]" aria-hidden="true" />}
+                  {active && <Check className="w-4 h-4 text-(--sw-ink)" aria-hidden="true" />}
                 </button>
               );
             })}
           </div>
 
           {Object.keys(customRPCs).length > 0 && (
-            <div className="pt-1.5 mt-1.5 border-t border-[var(--sw-line-soft)] space-y-0.5">
+            <div className="pt-1.5 mt-1.5 border-t border-(--sw-line-soft) space-y-0.5">
               {Object.entries(customRPCs).map(([key, data]) => {
                 const active = parseInt(key) === chainId;
                 return (
@@ -184,12 +184,12 @@ export function NetworkMenu() {
                       <ChainLogo chainId={parseInt(key)} name={data.name} className="w-6 h-6" />
                       <span className="min-w-0">
                         <span className="block truncate">{data.name}</span>
-                        <span className="block text-[11px] text-[var(--sw-muted)] font-normal">Chain {key}</span>
+                        <span className="block text-[11px] text-(--sw-muted) font-normal">Chain {key}</span>
                       </span>
                     </button>
                     <button
                       onClick={() => removeCustom(key)}
-                      className="sw-icon-btn p-1.5 hover:!text-[var(--sw-down)]"
+                      className="sw-icon-btn p-1.5 hover:text-(--sw-down)!"
                       aria-label={`Remove ${data.name}`}
                     >
                       <X className="w-3.5 h-3.5" />
@@ -200,16 +200,16 @@ export function NetworkMenu() {
             </div>
           )}
 
-          <div className="pt-1.5 mt-1.5 border-t border-[var(--sw-line-soft)]">
+          <div className="pt-1.5 mt-1.5 border-t border-(--sw-line-soft)">
             <button
               onClick={() => {
                 setShowForm(!showForm);
                 if (!showForm) setTimeout(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }), 120);
               }}
               aria-expanded={showForm}
-              className="w-full text-sm text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] flex items-center gap-3 px-2.5 py-2 rounded-lg hover:bg-[var(--sw-fill)]"
+              className="w-full text-sm text-(--sw-ink-soft) hover:text-(--sw-ink) flex items-center gap-3 px-2.5 py-2 rounded-lg hover:bg-(--sw-fill)"
             >
-              <span className="w-6 h-6 rounded-full bg-[var(--sw-fill-strong)] flex items-center justify-center">
+              <span className="w-6 h-6 rounded-full bg-(--sw-fill-strong) flex items-center justify-center">
                 {showForm ? <X className="w-3.5 h-3.5" aria-hidden="true" /> : <Plus className="w-3.5 h-3.5" aria-hidden="true" />}
               </span>
               {showForm ? "Cancel" : "Add a custom network"}
@@ -244,7 +244,7 @@ export function NetworkMenu() {
                   </div>
                 ))}
                 {(formError || !symbolOk) && (
-                  <p className="text-xs text-[var(--sw-down)] px-1" role="alert">
+                  <p className="text-xs text-(--sw-down) px-1" role="alert">
                     {formError ?? "Use up to 11 letters or numbers for the symbol."}
                   </p>
                 )}

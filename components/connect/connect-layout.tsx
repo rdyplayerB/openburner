@@ -33,22 +33,22 @@ interface ConnectLayoutProps {
 export function ConnectLayout({ subline, controls, action, checks, checksTitle = "Before you connect", extra }: ConnectLayoutProps) {
   const setIntroSeen = useIntroStore((s) => s.setSeen);
   return (
-    <div className="sw-screen min-h-[100dvh] flex flex-col">
+    <div className="sw-screen min-h-dvh flex flex-col">
       <div className="flex-1 flex items-center justify-center px-4 pt-[max(2.5rem,env(safe-area-inset-top))] pb-10">
         <div className="w-full max-w-md">
           {controls && <div className="mb-6">{controls}</div>}
 
-          <div className="sw-surface rounded-xl border border-[var(--sw-line)] overflow-hidden">
+          <div className="sw-surface rounded-xl border border-(--sw-line) overflow-hidden">
             <div className="text-center px-6 sm:px-8 pt-10 pb-8">
               <Wordmark size="lg" />
-              <p className="mt-6 text-base leading-relaxed text-[var(--sw-ink-soft)] max-w-sm mx-auto" aria-live="polite">
+              <p className="mt-6 text-base leading-relaxed text-(--sw-ink-soft) max-w-sm mx-auto" aria-live="polite">
                 {subline}
               </p>
               <div className="mt-8">{action}</div>
             </div>
 
             {checks && (
-              <div className="px-6 sm:px-8 pt-6 pb-4 border-t border-[var(--sw-line)]">
+              <div className="px-6 sm:px-8 pt-6 pb-4 border-t border-(--sw-line)">
                 <div className="sw-uplabel mb-1">{checksTitle}</div>
                 <div className="sw-list" aria-live="polite">
                   {checks}
@@ -57,15 +57,15 @@ export function ConnectLayout({ subline, controls, action, checks, checksTitle =
             )}
           </div>
 
-          <nav className="mt-6 flex items-center justify-center gap-5 text-sm text-[var(--sw-muted)]">
-            <button type="button" onClick={() => setIntroSeen(false)} className="hover:text-[var(--sw-ink)] transition-colors">
+          <nav className="mt-6 flex items-center justify-center gap-5 text-sm text-(--sw-muted)">
+            <button type="button" onClick={() => setIntroSeen(false)} className="hover:text-(--sw-ink) transition-colors">
               What is OpenBurner?
             </button>
             <a
               href="https://openburner.xyz"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 hover:text-[var(--sw-ink)] transition-colors"
+              className="inline-flex items-center gap-1 hover:text-(--sw-ink) transition-colors"
             >
               openburner.xyz
               <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
@@ -96,24 +96,24 @@ export function CheckRow({
 }) {
   return (
     <div className="flex items-center gap-4 py-3">
-      <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center" aria-hidden="true">
+      <span className="shrink-0 w-6 h-6 flex items-center justify-center" aria-hidden="true">
         {state === "checking" ? (
-          <Loader2 className="w-5 h-5 text-[var(--sw-muted)] animate-spin" strokeWidth={2.5} />
+          <Loader2 className="w-5 h-5 text-(--sw-muted) animate-spin" strokeWidth={2.5} />
         ) : state === "ok" ? (
-          <span className="w-5 h-5 rounded-full bg-[var(--sw-up)] text-white flex items-center justify-center">
+          <span className="w-5 h-5 rounded-full bg-(--sw-up) text-white flex items-center justify-center">
             <Check className="w-3 h-3" strokeWidth={3.5} />
           </span>
         ) : state === "waiting" ? (
-          <span className="w-5 h-5 rounded-full border-2 border-dashed border-[var(--sw-muted)]" />
+          <span className="w-5 h-5 rounded-full border-2 border-dashed border-(--sw-muted)" />
         ) : (
-          <span className="w-5 h-5 rounded-full bg-[var(--sw-fill-strong)] text-[var(--sw-ink)] text-[11px] font-bold sw-num flex items-center justify-center">
+          <span className="w-5 h-5 rounded-full bg-(--sw-fill-strong) text-(--sw-ink) text-[11px] font-bold sw-num flex items-center justify-center">
             {state}
           </span>
         )}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm text-[var(--sw-ink)]">{title}</p>
-        <p className="text-xs text-[var(--sw-muted)] mt-0.5 leading-snug">{detail}</p>
+        <p className="font-medium text-sm text-(--sw-ink)">{title}</p>
+        <p className="text-xs text-(--sw-muted) mt-0.5 leading-snug">{detail}</p>
       </div>
     </div>
   );

@@ -62,9 +62,9 @@ export function ReceiveSheet({
   }
 
   return (
-    <Modal onClose={onClose} labelledBy="receive-title" className="sw-surface rounded-xl border border-[var(--sw-line)] w-full max-w-sm overflow-hidden">
+    <Modal onClose={onClose} labelledBy="receive-title" className="sw-surface rounded-xl border border-(--sw-line) w-full max-w-sm overflow-hidden">
       <div className="flex items-center justify-between px-5 pt-5">
-        <h2 id="receive-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">
+        <h2 id="receive-title" className="text-lg font-bold text-(--sw-ink) tracking-tight">
           Receive
         </h2>
         <button onClick={onClose} className="sw-icon-btn p-2 -mr-2" aria-label="Close">
@@ -73,16 +73,16 @@ export function ReceiveSheet({
       </div>
 
       <div className="px-5 pt-3 pb-5">
-        <p className="text-sm text-[var(--sw-ink-soft)] mb-4">
+        <p className="text-sm text-(--sw-ink-soft) mb-4">
           Send only{" "}
-          <span className="inline-flex items-center gap-1 font-semibold text-[var(--sw-ink)] align-[-2px]">
+          <span className="inline-flex items-center gap-1 font-semibold text-(--sw-ink) align-[-2px]">
             <ChainLogo chainId={chainId} name={chainName} className="w-4 h-4" />
             {chainName}
           </span>{" "}
           {noun} to this address.
         </p>
 
-        <div className="relative mx-auto w-[220px] h-[220px] bg-white rounded-2xl p-4 border border-[var(--sw-line)]">
+        <div className="relative mx-auto w-[220px] h-[220px] bg-white rounded-2xl p-4 border border-(--sw-line)">
           {qr ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={qr} alt="QR code of your wallet address" className="w-full h-full" />
@@ -98,7 +98,7 @@ export function ReceiveSheet({
           )}
         </div>
 
-        <div className="mt-5 rounded-xl bg-[var(--sw-fill)] px-4 py-3 text-center">
+        <div className="mt-5 rounded-xl bg-(--sw-fill) px-4 py-3 text-center">
           <AddressText address={address} className="text-sm" />
         </div>
 

@@ -57,8 +57,8 @@ export function SigningProgress({ steps, current }: { steps: ProgressStep[]; cur
     <div className="px-5 pt-6 pb-5" role="status" aria-live="polite">
       <CardTapArt reader={reader} active={waitingOnCard} />
 
-      <h3 className="text-xl font-bold text-[var(--sw-ink)] text-center mt-4 tracking-tight">{title}</h3>
-      <p className="text-sm text-[var(--sw-ink-soft)] text-center mt-1 min-h-[2.5rem] max-w-[18rem] mx-auto leading-snug">
+      <h3 className="text-xl font-bold text-(--sw-ink) text-center mt-4 tracking-tight">{title}</h3>
+      <p className="text-sm text-(--sw-ink-soft) text-center mt-1 min-h-10 max-w-[18rem] mx-auto leading-snug">
         {hint}
       </p>
 
@@ -71,7 +71,7 @@ export function SigningProgress({ steps, current }: { steps: ProgressStep[]; cur
               <StepDot state={done ? "done" : active ? "active" : "todo"} />
               <span
                 className={`text-sm ${
-                  done ? "text-[var(--sw-ink-soft)]" : active ? "text-[var(--sw-ink)] font-semibold" : "text-[var(--sw-muted)]"
+                  done ? "text-(--sw-ink-soft)" : active ? "text-(--sw-ink) font-semibold" : "text-(--sw-muted)"
                 }`}
               >
                 {s.label}
@@ -87,21 +87,21 @@ export function SigningProgress({ steps, current }: { steps: ProgressStep[]; cur
 function StepDot({ state }: { state: "done" | "active" | "todo" }) {
   if (state === "done") {
     return (
-      <span className="w-5 h-5 rounded-full bg-[var(--sw-up)] text-white flex items-center justify-center flex-shrink-0">
+      <span className="w-5 h-5 rounded-full bg-(--sw-up) text-white flex items-center justify-center shrink-0">
         <Check className="w-3 h-3" strokeWidth={3} aria-hidden="true" />
       </span>
     );
   }
   if (state === "active") {
     return (
-      <span className="w-5 h-5 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-        <span className="w-4 h-4 rounded-full border-2 border-[var(--sw-line)] border-t-[var(--sw-accent)] animate-spin" />
+      <span className="w-5 h-5 flex items-center justify-center shrink-0" aria-hidden="true">
+        <span className="w-4 h-4 rounded-full border-2 border-(--sw-line) border-t-(--sw-accent) animate-spin" />
       </span>
     );
   }
   return (
-    <span className="w-5 h-5 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-      <span className="w-2 h-2 rounded-full bg-[var(--sw-line)]" />
+    <span className="w-5 h-5 flex items-center justify-center shrink-0" aria-hidden="true">
+      <span className="w-2 h-2 rounded-full bg-(--sw-line)" />
     </span>
   );
 }

@@ -1,253 +1,463 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-:root {
-  --foreground: #111114;
-  --background: #FAFAFA;
-  --brand-orange: #E4572E;
+@custom-variant dark (&:is(.dark *));
 
-  /* ===== Swiss Editorial design tokens (light) ===== */
-  --sw-paper: #FAFAFA;
-  --sw-surface: #FFFFFF;
-  --sw-ink: #111114;
-  --sw-ink-soft: #5B5B62;
-  --sw-muted: #9A9AA2;
-  --sw-line: rgba(17, 17, 20, 0.14);
-  --sw-line-soft: rgba(17, 17, 20, 0.08);
-  --sw-accent: #E4572E;
-  --sw-accent-press: #C94A26;
-  --sw-up: #1F9D57;
-  --sw-down: #D8442B;
-  /* Button fill / small accent text tuned for 4.5:1 contrast (WCAG AA). */
-  --sw-accent-fill: #CC4A22;
-  --sw-accent-fill-hover: #B9431E;
-  --sw-accent-ink: #C8431D;
-  --sw-on-accent: #FFFFFF;
-  /* Quiet fills for chips, inputs and disabled controls. */
-  --sw-fill: rgba(17, 17, 20, 0.04);
-  --sw-fill-strong: rgba(17, 17, 20, 0.08);
-  --sw-warn: #A86A12;
-  --sw-warn-bg: rgba(225, 163, 30, 0.12);
-  --sw-down-bg: rgba(216, 68, 43, 0.08);
-  --sw-up-bg: rgba(31, 157, 87, 0.10);
+@theme {
+  --color-brand-orange: #e4572e;
+  --color-brand-orange-light: #ff8c61;
+  --color-brand-orange-dark: #c94a26;
+
+  --color-text-primary: #1e1e1e;
+
+  --color-bg-base: #fafafa;
+
+  --color-amber-warning: #e1a31e;
+
+  --shadow-glow-orange: 0 0 20px rgba(228, 87, 46, 0.3);
+  --shadow-glow-orange-lg: 0 0 30px rgba(228, 87, 46, 0.4);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-card-lg: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-.dark {
-  --foreground: #F2F2F4;
-  --background: #0E0E11;
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
 
-  /* ===== Swiss Editorial design tokens (dark) ===== */
-  --sw-paper: #0E0E11;
-  --sw-surface: #161619;
-  --sw-ink: #F2F2F4;
-  --sw-ink-soft: #A6A6AE;
-  --sw-muted: #6C6C75;
-  --sw-line: rgba(255, 255, 255, 0.16);
-  --sw-line-soft: rgba(255, 255, 255, 0.08);
-  --sw-accent: #FF6B35;
-  --sw-accent-press: #E4572E;
-  --sw-up: #34D27B;
-  --sw-down: #FF6B57;
-  --sw-accent-fill: #CC4A22;
-  --sw-accent-fill-hover: #B9431E;
-  --sw-accent-ink: #FF6B35;
-  --sw-on-accent: #FFFFFF;
-  --sw-fill: rgba(255, 255, 255, 0.05);
-  --sw-fill-strong: rgba(255, 255, 255, 0.09);
-  --sw-warn: #F2B13C;
-  --sw-warn-bg: rgba(242, 177, 60, 0.12);
-  --sw-down-bg: rgba(255, 107, 87, 0.10);
-  --sw-up-bg: rgba(52, 210, 123, 0.10);
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* Tailwind 4 dropped these two defaults; keep them. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
 }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-  /* Ensure no gaps at the top */
-  position: relative;
-  /* Prevent mobile zoom */
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+@utility balance-number {
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1;
+  letter-spacing: -0.01em;
 }
 
-/* Layering: page < dropdowns (50) < modals (1000, components/common/modal.tsx)
+@utility token-opacity {
+  opacity: 0.8;
+}
+
+@utility toast-slide-in {
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+@utility toast-slide-out {
+  animation: toastSlideOut 0.3s ease-in;
+}
+
+@layer utilities {
+  :root {
+    --foreground: #111114;
+    --background: #fafafa;
+    --brand-orange: #e4572e;
+
+    /* ===== Swiss Editorial design tokens (light) ===== */
+    --sw-paper: #fafafa;
+    --sw-surface: #ffffff;
+    --sw-ink: #111114;
+    --sw-ink-soft: #5b5b62;
+    --sw-muted: #9a9aa2;
+    --sw-line: rgba(17, 17, 20, 0.14);
+    --sw-line-soft: rgba(17, 17, 20, 0.08);
+    --sw-accent: #e4572e;
+    --sw-accent-press: #c94a26;
+    --sw-up: #1f9d57;
+    --sw-down: #d8442b;
+    /* Button fill / small accent text tuned for 4.5:1 contrast (WCAG AA). */
+    --sw-accent-fill: #cc4a22;
+    --sw-accent-fill-hover: #b9431e;
+    --sw-accent-ink: #c8431d;
+    --sw-on-accent: #ffffff;
+    /* Quiet fills for chips, inputs and disabled controls. */
+    --sw-fill: rgba(17, 17, 20, 0.04);
+    --sw-fill-strong: rgba(17, 17, 20, 0.08);
+    --sw-warn: #a86a12;
+    --sw-warn-bg: rgba(225, 163, 30, 0.12);
+    --sw-down-bg: rgba(216, 68, 43, 0.08);
+    --sw-up-bg: rgba(31, 157, 87, 0.1);
+  }
+
+  .dark {
+    --foreground: #f2f2f4;
+    --background: #0e0e11;
+
+    /* ===== Swiss Editorial design tokens (dark) ===== */
+    --sw-paper: #0e0e11;
+    --sw-surface: #161619;
+    --sw-ink: #f2f2f4;
+    --sw-ink-soft: #a6a6ae;
+    --sw-muted: #6c6c75;
+    --sw-line: rgba(255, 255, 255, 0.16);
+    --sw-line-soft: rgba(255, 255, 255, 0.08);
+    --sw-accent: #ff6b35;
+    --sw-accent-press: #e4572e;
+    --sw-up: #34d27b;
+    --sw-down: #ff6b57;
+    --sw-accent-fill: #cc4a22;
+    --sw-accent-fill-hover: #b9431e;
+    --sw-accent-ink: #ff6b35;
+    --sw-on-accent: #ffffff;
+    --sw-fill: rgba(255, 255, 255, 0.05);
+    --sw-fill-strong: rgba(255, 255, 255, 0.09);
+    --sw-warn: #f2b13c;
+    --sw-warn-bg: rgba(242, 177, 60, 0.12);
+    --sw-down-bg: rgba(255, 107, 87, 0.1);
+    --sw-up-bg: rgba(52, 210, 123, 0.1);
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    /* Ensure no gaps at the top */
+    position: relative;
+    /* Prevent mobile zoom */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Layering: page < dropdowns (50) < modals (1000, components/common/modal.tsx)
    < toasts (2000). Legacy overlays use .modal-overlay at the modal tier. */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  height: 100dvh;
-  z-index: 1000;
-}
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    z-index: 1000;
+  }
 
-/* Never leave one word alone on the last line: headings balance their lines,
+  /* Never leave one word alone on the last line: headings balance their lines,
    running text avoids a lone last word. */
+}
 @layer base {
   body { text-wrap: pretty; }
   h1, h2, h3, h4, h5, h6, legend { text-wrap: balance; }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer utilities {
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-/* ===================================================================
+  /* ===================================================================
    Swiss Editorial — shared component utilities
    Flat surfaces, hairline rules, tabular numerals, single orange accent.
    =================================================================== */
-.sw-screen { background: var(--sw-paper); color: var(--sw-ink); }
-.sw-surface { background: var(--sw-surface); }
+  .sw-screen {
+    background: var(--sw-paper);
+    color: var(--sw-ink);
+  }
+  .sw-surface {
+    background: var(--sw-surface);
+  }
 
-.sw-uplabel {
-  font-size: 0.625rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.15em; color: var(--sw-muted);
-}
-.sw-seclabel {
-  font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.14em; color: var(--sw-ink);
-  padding-bottom: 0.5rem; border-bottom: 1px solid var(--sw-line);
-}
-.sw-rule { height: 1px; background: var(--sw-line); }
-.sw-rule-soft { height: 1px; background: var(--sw-line-soft); }
-.sw-divide > * + * { border-top: 1px solid var(--sw-line-soft); }
+  .sw-uplabel {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--sw-muted);
+  }
+  .sw-seclabel {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--sw-ink);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--sw-line);
+  }
+  .sw-rule {
+    height: 1px;
+    background: var(--sw-line);
+  }
+  .sw-rule-soft {
+    height: 1px;
+    background: var(--sw-line-soft);
+  }
+  .sw-divide > * + * {
+    border-top: 1px solid var(--sw-line-soft);
+  }
 
-.sw-mono { font-family: var(--font-geist-mono, ui-monospace, "JetBrains Mono", monospace); }
-/* Amounts: the UI sans with tabular figures (columns line up, no "terminal" look).
+  .sw-mono {
+    font-family: var(
+      --font-geist-mono,
+      ui-monospace,
+      'JetBrains Mono',
+      monospace
+    );
+  }
+  /* Amounts: the UI sans with tabular figures (columns line up, no "terminal" look).
    Addresses and hashes stay in sw-mono. */
-.sw-num {
-  font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: -0.01em;
-}
-.sw-display { font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
-
-.sw-accent { color: var(--sw-accent); }
-
-/* Buttons — Swiss = minimal radius, uppercase, single accent */
-.sw-btn-primary {
-  background: var(--sw-accent-fill); color: var(--sw-on-accent); border: none; border-radius: 3px;
-  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-  transition: background 0.15s, color 0.15s, transform 0.1s;
-}
-.sw-btn-primary:hover { background: var(--sw-accent-fill-hover); }
-.sw-btn-primary:active { transform: scale(0.985); }
-/* Disabled reads as "not yet", not as a washed-out orange. */
-.sw-btn-primary:disabled,
-.sw-btn-primary:disabled:hover {
-  background: var(--sw-fill-strong); color: var(--sw-muted);
-  opacity: 1; cursor: not-allowed; transform: none;
-}
-
-.sw-btn-ghost {
-  background: transparent; color: var(--sw-ink); border: 1px solid var(--sw-ink);
-  border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-  transition: background 0.15s, transform 0.1s;
-}
-.sw-btn-ghost:hover { background: color-mix(in srgb, var(--sw-ink) 6%, transparent); }
-.sw-btn-ghost:active { transform: scale(0.985); }
-
-/* Tabs — left aligned, orange underline */
-.sw-tab { color: var(--sw-muted); font-weight: 600; transition: color 0.15s; }
-.sw-tab:hover { color: var(--sw-ink); }
-.sw-tab-active { color: var(--sw-ink); box-shadow: inset 0 -2px 0 var(--sw-accent); }
-
-/* Inputs */
-.sw-input {
-  background: transparent; color: var(--sw-ink); border: 0;
-  border-bottom: 1px solid var(--sw-line); border-radius: 0;
-  transition: border-color 0.15s;
-}
-.sw-input::placeholder { color: var(--sw-muted); }
-.sw-input:focus { outline: none; border-bottom-color: var(--sw-accent); }
-
-/* Field label: sentence case. Uppercase sw-uplabel is for section kickers only. */
-.sw-label { font-size: 0.75rem; font-weight: 500; color: var(--sw-ink-soft); }
-
-/* Accent text links ("Max", "Paste") at a readable contrast. */
-.sw-link { color: var(--sw-accent-ink); font-weight: 600; transition: opacity 0.15s; }
-.sw-link:hover { opacity: 0.8; }
-.sw-link:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* Boxed field: the whole box takes focus. */
-.sw-field {
-  border: 1px solid var(--sw-line); border-radius: 12px; background: transparent;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.sw-field:focus-within {
-  border-color: var(--sw-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sw-accent) 18%, transparent);
-}
-.sw-field-input { background: transparent; color: var(--sw-ink); border: 0; outline: none; width: 100%; min-width: 0; }
-.sw-field-input::placeholder { color: var(--sw-muted); }
-/* Mono fields (addresses) keep a sans placeholder. */
-.sw-mono::placeholder { font-family: var(--font-geist-sans), system-ui, sans-serif; }
-
-/* Large amount entry */
-.sw-amount-input {
-  background: transparent; border: 0; outline: none; color: var(--sw-ink);
-  font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
-  min-width: 0; width: 100%;
-}
-.sw-amount-input::placeholder { color: var(--sw-muted); opacity: 0.6; }
-
-/* Token / network chip */
-.sw-chip {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  border-radius: 999px; background: var(--sw-fill-strong); color: var(--sw-ink);
-  font-weight: 600; transition: background 0.15s;
-}
-.sw-chip:hover { background: color-mix(in srgb, var(--sw-ink) 12%, transparent); }
-
-/* Quiet icon button */
-.sw-icon-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 10px; color: var(--sw-ink-soft); transition: background 0.15s, color 0.15s;
-}
-.sw-icon-btn:hover { background: var(--sw-fill-strong); color: var(--sw-ink); }
-
-/* Callouts */
-.sw-callout { border-radius: 10px; padding: 0.625rem 0.75rem; font-size: 0.75rem; line-height: 1.45; }
-.sw-callout-warn { background: var(--sw-warn-bg); color: var(--sw-ink); }
-.sw-callout-danger { background: var(--sw-down-bg); color: var(--sw-ink); }
-.sw-callout-info { background: var(--sw-fill); color: var(--sw-ink-soft); }
-
-/* Loading placeholder */
-.sw-skeleton {
-  border-radius: 6px;
-  background: linear-gradient(90deg, var(--sw-fill-strong) 0%, var(--sw-fill) 50%, var(--sw-fill-strong) 100%);
-  background-size: 200% 100%;
-  animation: obShimmer 1.4s ease-in-out infinite;
-}
-
-/* Token / chain mark (squared) */
-.sw-mark { border-radius: 7px; background: var(--sw-mark, var(--sw-ink)); color: var(--sw-paper); }
-
-/* Rows */
-.sw-row { display: flex; align-items: center; gap: 0.75rem; }
-.sw-list > * + * { border-top: 1px solid var(--sw-line-soft); }
-
-@layer utilities {
-  .balance-number {
-    font-feature-settings: 'tnum' 1, 'lnum' 1;
+  .sw-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
     letter-spacing: -0.01em;
   }
+  .sw-display {
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
 
-  .token-opacity {
+  .sw-accent {
+    color: var(--sw-accent);
+  }
+
+  /* Buttons — Swiss = minimal radius, uppercase, single accent */
+  .sw-btn-primary {
+    background: var(--sw-accent-fill);
+    color: var(--sw-on-accent);
+    border: none;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      transform 0.1s;
+  }
+  .sw-btn-primary:hover {
+    background: var(--sw-accent-fill-hover);
+  }
+  .sw-btn-primary:active {
+    transform: scale(0.985);
+  }
+  /* Disabled reads as "not yet", not as a washed-out orange. */
+  .sw-btn-primary:disabled,
+  .sw-btn-primary:disabled:hover {
+    background: var(--sw-fill-strong);
+    color: var(--sw-muted);
+    opacity: 1;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .sw-btn-ghost {
+    background: transparent;
+    color: var(--sw-ink);
+    border: 1px solid var(--sw-ink);
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition:
+      background 0.15s,
+      transform 0.1s;
+  }
+  .sw-btn-ghost:hover {
+    background: color-mix(in srgb, var(--sw-ink) 6%, transparent);
+  }
+  .sw-btn-ghost:active {
+    transform: scale(0.985);
+  }
+
+  /* Tabs — left aligned, orange underline */
+  .sw-tab {
+    color: var(--sw-muted);
+    font-weight: 600;
+    transition: color 0.15s;
+  }
+  .sw-tab:hover {
+    color: var(--sw-ink);
+  }
+  .sw-tab-active {
+    color: var(--sw-ink);
+    box-shadow: inset 0 -2px 0 var(--sw-accent);
+  }
+
+  /* Inputs */
+  .sw-input {
+    background: transparent;
+    color: var(--sw-ink);
+    border: 0;
+    border-bottom: 1px solid var(--sw-line);
+    border-radius: 0;
+    transition: border-color 0.15s;
+  }
+  .sw-input::placeholder {
+    color: var(--sw-muted);
+  }
+  .sw-input:focus {
+    outline: none;
+    border-bottom-color: var(--sw-accent);
+  }
+
+  /* Field label: sentence case. Uppercase sw-uplabel is for section kickers only. */
+  .sw-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--sw-ink-soft);
+  }
+
+  /* Accent text links ("Max", "Paste") at a readable contrast. */
+  .sw-link {
+    color: var(--sw-accent-ink);
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  .sw-link:hover {
     opacity: 0.8;
   }
-
-  .toast-slide-in {
-    animation: toastSlideIn 0.3s ease-out;
+  .sw-link:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
-  .toast-slide-out {
-    animation: toastSlideOut 0.3s ease-in;
+  /* Boxed field: the whole box takes focus. */
+  .sw-field {
+    border: 1px solid var(--sw-line);
+    border-radius: 12px;
+    background: transparent;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .sw-field:focus-within {
+    border-color: var(--sw-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sw-accent) 18%, transparent);
+  }
+  .sw-field-input {
+    background: transparent;
+    color: var(--sw-ink);
+    border: 0;
+    outline: none;
+    width: 100%;
+    min-width: 0;
+  }
+  .sw-field-input::placeholder {
+    color: var(--sw-muted);
+  }
+  /* Mono fields (addresses) keep a sans placeholder. */
+  .sw-mono::placeholder {
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+  }
+
+  /* Large amount entry */
+  .sw-amount-input {
+    background: transparent;
+    border: 0;
+    outline: none;
+    color: var(--sw-ink);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+    width: 100%;
+  }
+  .sw-amount-input::placeholder {
+    color: var(--sw-muted);
+    opacity: 0.6;
+  }
+
+  /* Token / network chip */
+  .sw-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    background: var(--sw-fill-strong);
+    color: var(--sw-ink);
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  .sw-chip:hover {
+    background: color-mix(in srgb, var(--sw-ink) 12%, transparent);
+  }
+
+  /* Quiet icon button */
+  .sw-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: var(--sw-ink-soft);
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+  .sw-icon-btn:hover {
+    background: var(--sw-fill-strong);
+    color: var(--sw-ink);
+  }
+
+  /* Callouts */
+  .sw-callout {
+    border-radius: 10px;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+  .sw-callout-warn {
+    background: var(--sw-warn-bg);
+    color: var(--sw-ink);
+  }
+  .sw-callout-danger {
+    background: var(--sw-down-bg);
+    color: var(--sw-ink);
+  }
+  .sw-callout-info {
+    background: var(--sw-fill);
+    color: var(--sw-ink-soft);
+  }
+
+  /* Loading placeholder */
+  .sw-skeleton {
+    border-radius: 6px;
+    background: linear-gradient(
+      90deg,
+      var(--sw-fill-strong) 0%,
+      var(--sw-fill) 50%,
+      var(--sw-fill-strong) 100%
+    );
+    background-size: 200% 100%;
+    animation: obShimmer 1.4s ease-in-out infinite;
+  }
+
+  /* Token / chain mark (squared) */
+  .sw-mark {
+    border-radius: 7px;
+    background: var(--sw-mark, var(--sw-ink));
+    color: var(--sw-paper);
+  }
+
+  /* Rows */
+  .sw-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .sw-list > * + * {
+    border-top: 1px solid var(--sw-line-soft);
   }
 }
 

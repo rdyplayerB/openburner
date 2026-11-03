@@ -11,8 +11,8 @@ import { Loader2 } from "lucide-react";
 function Loading() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="flex items-center gap-3 text-[var(--sw-muted)]" role="status">
-        <Loader2 className="h-6 w-6 animate-spin text-[var(--sw-accent)]" aria-hidden="true" />
+      <div className="flex items-center gap-3 text-(--sw-muted)" role="status">
+        <Loader2 className="h-6 w-6 animate-spin text-(--sw-accent)" aria-hidden="true" />
         <span className="text-sm">Loading…</span>
       </div>
     </div>
@@ -54,8 +54,8 @@ export default function Home() {
   if (!isClient) {
     return (
       <main className="sw-screen min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-3 text-[var(--sw-muted)]" role="status">
-          <Loader2 className="h-6 w-6 animate-spin text-[var(--sw-accent)]" aria-hidden="true" />
+        <div className="flex items-center gap-3 text-(--sw-muted)" role="status">
+          <Loader2 className="h-6 w-6 animate-spin text-(--sw-accent)" aria-hidden="true" />
           <span className="text-sm">Loading…</span>
         </div>
       </main>

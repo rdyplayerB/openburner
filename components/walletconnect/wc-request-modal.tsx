@@ -183,24 +183,24 @@ function RequestSheet({ request }: { request: any }) {
   return (
     <Modal onClose={() => !busy && rejectRequest()} labelledBy="wc-request-title" closeOnBackdrop={false}>
       {/* Who is asking */}
-      <div className="flex items-start gap-3 px-5 pt-5 pb-4 border-b border-[var(--sw-line)]">
+      <div className="flex items-start gap-3 px-5 pt-5 pb-4 border-b border-(--sw-line)">
         <DappIcon src={meta.icons?.[0]} />
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-[var(--sw-ink)] truncate">{meta.name || "Unknown dApp"}</p>
+          <p className="text-[15px] font-semibold text-(--sw-ink) truncate">{meta.name || "Unknown dApp"}</p>
           <div className="flex items-center gap-2 min-w-0">
-            {host && <span className="text-xs text-[var(--sw-ink-soft)] truncate">{host}</span>}
+            {host && <span className="text-xs text-(--sw-ink-soft) truncate">{host}</span>}
             <VerifyBadge status={verify.status} />
           </div>
         </div>
         {queued > 0 && (
-          <span className="text-[11px] font-semibold text-[var(--sw-ink-soft)] bg-[var(--sw-fill-strong)] rounded-full px-2 py-0.5 flex-shrink-0 mt-0.5">
+          <span className="text-[11px] font-semibold text-(--sw-ink-soft) bg-(--sw-fill-strong) rounded-full px-2 py-0.5 shrink-0 mt-0.5">
             +{queued} waiting
           </span>
         )}
         <button
           onClick={() => rejectRequest()}
           disabled={busy}
-          className="sw-icon-btn p-1.5 -mr-1.5 -mt-0.5 flex-shrink-0"
+          className="sw-icon-btn p-1.5 -mr-1.5 -mt-0.5 shrink-0"
           aria-label="Reject request"
         >
           <X className="w-5 h-5" />
@@ -219,11 +219,11 @@ function RequestSheet({ request }: { request: any }) {
           </div>
         ) : (
           <>
-            <h2 id="wc-request-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)] break-words">
+            <h2 id="wc-request-title" className="text-xl font-bold tracking-tight text-(--sw-ink) wrap-break-word">
               {decoded.action}
             </h2>
             {decoded.kind !== "network" && (
-              <p className="flex items-center gap-1.5 mt-1 text-sm text-[var(--sw-ink-soft)]">
+              <p className="flex items-center gap-1.5 mt-1 text-sm text-(--sw-ink-soft)">
                 <ChainLogo chainId={chainId} name={network} className="w-4 h-4" />
                 {network}
               </p>
@@ -240,7 +240,7 @@ function RequestSheet({ request }: { request: any }) {
         )}
 
         {siweStatement && (
-          <p className="mt-4 text-sm text-[var(--sw-ink)] bg-[var(--sw-fill)] rounded-xl px-3.5 py-3 leading-relaxed">
+          <p className="mt-4 text-sm text-(--sw-ink) bg-(--sw-fill) rounded-xl px-3.5 py-3 leading-relaxed">
             {siweStatement}
           </p>
         )}
@@ -248,7 +248,7 @@ function RequestSheet({ request }: { request: any }) {
         {message !== null && (
           <div className="mt-4">
             <p className="sw-label mb-1.5">Message</p>
-            <div className="text-sm text-[var(--sw-ink)] whitespace-pre-wrap break-words max-h-48 overflow-auto bg-[var(--sw-fill)] rounded-xl px-3.5 py-3">
+            <div className="text-sm text-(--sw-ink) whitespace-pre-wrap wrap-break-word max-h-48 overflow-auto bg-(--sw-fill) rounded-xl px-3.5 py-3">
               {message}
             </div>
           </div>
@@ -264,11 +264,11 @@ function RequestSheet({ request }: { request: any }) {
 
         {showRaw && (
           <details className="group mt-3">
-            <summary className="flex items-center gap-1 cursor-pointer select-none text-xs font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] py-2 list-none [&::-webkit-details-marker]:hidden">
+            <summary className="flex items-center gap-1 cursor-pointer select-none text-xs font-semibold text-(--sw-ink-soft) hover:text-(--sw-ink) py-2 list-none [&::-webkit-details-marker]:hidden">
               <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
               View raw data
             </summary>
-            <pre className="sw-mono text-[11px] leading-relaxed text-[var(--sw-ink-soft)] bg-[var(--sw-fill)] rounded-xl p-3 max-h-56 overflow-auto whitespace-pre-wrap break-all">
+            <pre className="sw-mono text-[11px] leading-relaxed text-(--sw-ink-soft) bg-(--sw-fill) rounded-xl p-3 max-h-56 overflow-auto whitespace-pre-wrap break-all">
               {decoded.raw}
             </pre>
           </details>
@@ -280,9 +280,9 @@ function RequestSheet({ request }: { request: any }) {
               type="checkbox"
               checked={acknowledged}
               onChange={(e) => setAcknowledged(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-[var(--sw-down)] flex-shrink-0"
+              className="mt-0.5 w-4 h-4 accent-(--sw-down) shrink-0"
             />
-            <span className="text-sm text-[var(--sw-ink)]">I understand the risk and want to continue.</span>
+            <span className="text-sm text-(--sw-ink)">I understand the risk and want to continue.</span>
           </label>
         )}
 
@@ -302,7 +302,7 @@ function RequestSheet({ request }: { request: any }) {
         </div>
 
         {needsPin && !unsupported && (
-          <p className="text-xs text-[var(--sw-muted)] text-center mt-3">
+          <p className="text-xs text-(--sw-muted) text-center mt-3">
             You&apos;ll enter your PIN, then tap your Burner to sign.
           </p>
         )}
@@ -330,13 +330,13 @@ function rank(level: RiskFlag["level"]): number {
 
 function RiskCallout({ risk }: { risk: RiskFlag }) {
   const view = {
-    danger: { cls: "sw-callout-danger", Icon: ShieldAlert, icon: "text-[var(--sw-down)]" },
-    warn: { cls: "sw-callout-warn", Icon: AlertTriangle, icon: "text-[var(--sw-warn)]" },
-    info: { cls: "sw-callout-info", Icon: Info, icon: "text-[var(--sw-muted)]" },
+    danger: { cls: "sw-callout-danger", Icon: ShieldAlert, icon: "text-(--sw-down)" },
+    warn: { cls: "sw-callout-warn", Icon: AlertTriangle, icon: "text-(--sw-warn)" },
+    info: { cls: "sw-callout-info", Icon: Info, icon: "text-(--sw-muted)" },
   }[risk.level];
   return (
     <div className={`sw-callout ${view.cls} flex items-start gap-2`} role={risk.level === "danger" ? "alert" : undefined}>
-      <view.Icon className={`w-4 h-4 mt-px flex-shrink-0 ${view.icon}`} aria-hidden="true" />
+      <view.Icon className={`w-4 h-4 mt-px shrink-0 ${view.icon}`} aria-hidden="true" />
       <span>{risk.message}</span>
     </div>
   );
@@ -349,10 +349,10 @@ function FactRow({ fact, tokens }: { fact: Fact; tokens: Record<string, TokenMet
     return (
       <div className="py-3">
         <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="text-[var(--sw-muted)]">{fact.label}</span>
+          <span className="text-(--sw-muted)">{fact.label}</span>
           <span className="flex items-center gap-2 min-w-0">
             <Identicon address={fact.address} size={18} />
-            <span className={`text-[var(--sw-ink)] font-medium truncate ${symbol || !fact.value.startsWith("0x") ? "" : "sw-mono text-xs"}`}>
+            <span className={`text-(--sw-ink) font-medium truncate ${symbol || !fact.value.startsWith("0x") ? "" : "sw-mono text-xs"}`}>
               {symbol ? `${symbol} · ${fact.value}` : fact.value}
             </span>
           </span>
@@ -363,8 +363,8 @@ function FactRow({ fact, tokens }: { fact: Fact; tokens: Record<string, TokenMet
   }
   return (
     <div className="flex items-center justify-between gap-3 py-3 text-sm">
-      <span className="text-[var(--sw-muted)] flex-shrink-0">{fact.label}</span>
-      <span className={`text-[var(--sw-ink)] font-medium text-right break-all ${fact.mono ? "sw-mono text-xs" : ""}`}>
+      <span className="text-(--sw-muted) shrink-0">{fact.label}</span>
+      <span className={`text-(--sw-ink) font-medium text-right break-all ${fact.mono ? "sw-mono text-xs" : ""}`}>
         {fact.value}
       </span>
     </div>

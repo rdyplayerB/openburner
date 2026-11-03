@@ -52,19 +52,19 @@ export function HostedMobileConnect() {
 
   const installSuggestion =
     shouldEnablePWA && !isInstalled && showInstallCard ? (
-      <div className="sw-surface rounded-xl border border-[var(--sw-line)] flex items-center">
+      <div className="sw-surface rounded-xl border border-(--sw-line) flex items-center">
         <button onClick={handleInstall} className="flex-1 flex items-center gap-3 p-4 text-left rounded-xl">
-          <span className="w-10 h-10 sw-mark rounded-lg flex items-center justify-center flex-shrink-0" aria-hidden="true">
+          <span className="w-10 h-10 sw-mark rounded-lg flex items-center justify-center shrink-0" aria-hidden="true">
             <Download className="w-5 h-5" />
           </span>
           <span className="flex-1 min-w-0">
-            <span className="block font-semibold text-sm text-[var(--sw-ink)]">Install OpenBurner</span>
-            <span className="block text-xs text-[var(--sw-muted)] mt-0.5">One tap from your home screen</span>
+            <span className="block font-semibold text-sm text-(--sw-ink)">Install OpenBurner</span>
+            <span className="block text-xs text-(--sw-muted) mt-0.5">One tap from your home screen</span>
           </span>
         </button>
         <button
           onClick={() => setShowInstallCard(false)}
-          className="sw-icon-btn p-2.5 mr-2 flex-shrink-0"
+          className="sw-icon-btn p-2.5 mr-2 shrink-0"
           aria-label="Dismiss install suggestion"
         >
           <X className="w-4 h-4" aria-hidden="true" />
@@ -118,10 +118,10 @@ export function HostedMobileConnect() {
       {showInstructions && (
         <Modal onClose={() => setShowInstructions(false)} labelledBy="install-title">
           <div className="px-5 pt-6 pb-5">
-            <h2 id="install-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)]">
+            <h2 id="install-title" className="text-xl font-bold tracking-tight text-(--sw-ink)">
               Add to Home Screen
             </h2>
-            <p className="text-sm text-[var(--sw-ink-soft)] mt-1.5 leading-relaxed">
+            <p className="text-sm text-(--sw-ink-soft) mt-1.5 leading-relaxed">
               OpenBurner opens full screen, like an app.
             </p>
             <ol className="mt-5 space-y-3">
@@ -130,8 +130,8 @@ export function HostedMobileConnect() {
                 "Choose “Add to Home Screen” or “Install app”.",
                 "Tap Add.",
               ].map((text, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm text-[var(--sw-ink)]">
-                  <span className="w-6 h-6 rounded-full bg-[var(--sw-fill-strong)] text-xs font-bold sw-num flex items-center justify-center flex-shrink-0">
+                <li key={i} className="flex items-start gap-3 text-sm text-(--sw-ink)">
+                  <span className="w-6 h-6 rounded-full bg-(--sw-fill-strong) text-xs font-bold sw-num flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
                   <span className="pt-0.5">{text}</span>

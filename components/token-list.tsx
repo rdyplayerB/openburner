@@ -497,8 +497,8 @@ function TokenListImpl({
     <div>
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-        <div className="sw-field flex items-center gap-2 px-3 py-2 flex-1 min-w-0 !rounded-full">
-          <Search className="w-4 h-4 text-[var(--sw-muted)] flex-shrink-0" aria-hidden="true" />
+        <div className="sw-field flex items-center gap-2 px-3 py-2 flex-1 min-w-0 rounded-full!">
+          <Search className="w-4 h-4 text-(--sw-muted) shrink-0" aria-hidden="true" />
           <input
             type="text"
             value={searchQuery}
@@ -508,7 +508,7 @@ function TokenListImpl({
             className="sw-field-input text-sm"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)]" aria-label="Clear search">
+            <button onClick={() => setSearchQuery("")} className="text-(--sw-muted) hover:text-(--sw-ink)" aria-label="Clear search">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -580,7 +580,7 @@ function TokenListImpl({
             </button>
           </div>
           {addError && (
-            <p role="alert" className="text-xs text-[var(--sw-down)] mt-2">
+            <p role="alert" className="text-xs text-(--sw-down) mt-2">
               {addError}
             </p>
           )}
@@ -590,11 +590,11 @@ function TokenListImpl({
       {/* RPC error while we still have last-known values on screen */}
       {error && hasData && (
         <div role="alert" className="sw-callout sw-callout-danger mx-4 mb-2 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--sw-down)]" aria-hidden="true" />
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-(--sw-down)" aria-hidden="true" />
           <p className="flex-1 min-w-0">
             <span className="font-semibold">Couldn&apos;t refresh balances.</span> {error} Showing last known values.
           </p>
-          <button onClick={() => loadTokens({ force: true })} className="sw-link flex-shrink-0">
+          <button onClick={() => loadTokens({ force: true })} className="sw-link shrink-0">
             Retry
           </button>
         </div>
@@ -604,7 +604,7 @@ function TokenListImpl({
         <div className="px-4 pb-3" aria-busy="true" aria-label="Loading assets">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3 py-3">
-              <div className="w-9 h-9 rounded-full sw-skeleton flex-shrink-0" />
+              <div className="w-9 h-9 rounded-full sw-skeleton shrink-0" />
               <div className="flex-1 space-y-2">
                 <div className="h-3 w-20 sw-skeleton" />
                 <div className="h-2.5 w-28 sw-skeleton" />
@@ -618,19 +618,19 @@ function TokenListImpl({
         </div>
       ) : !hasData && error ? (
         <div className="text-center px-6 py-14" role="alert">
-          <span className="mx-auto mb-4 w-12 h-12 rounded-full bg-[var(--sw-down-bg)] flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-[var(--sw-down)]" aria-hidden="true" />
+          <span className="mx-auto mb-4 w-12 h-12 rounded-full bg-(--sw-down-bg) flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-(--sw-down)" aria-hidden="true" />
           </span>
-          <p className="text-sm font-semibold text-[var(--sw-ink)]">Couldn&apos;t load your assets</p>
-          <p className="text-sm text-[var(--sw-muted)] mt-1 mb-4 max-w-xs mx-auto">{error}</p>
+          <p className="text-sm font-semibold text-(--sw-ink)">Couldn&apos;t load your assets</p>
+          <p className="text-sm text-(--sw-muted) mt-1 mb-4 max-w-xs mx-auto">{error}</p>
           <button onClick={() => loadTokens({ force: true })} className="sw-btn-ghost py-2.5 px-5 text-sm">
             Try again
           </button>
         </div>
       ) : visibleTokens.length === 0 ? (
         <div className="text-center px-6 py-14">
-          <p className="text-sm font-semibold text-[var(--sw-ink)]">{searchQuery ? "No matching tokens" : "No assets yet"}</p>
-          <p className="text-sm text-[var(--sw-muted)] mt-1">
+          <p className="text-sm font-semibold text-(--sw-ink)">{searchQuery ? "No matching tokens" : "No assets yet"}</p>
+          <p className="text-sm text-(--sw-muted) mt-1">
             {searchQuery ? "Try a name, symbol or contract address." : "Popular tokens show up here automatically."}
           </p>
         </div>
@@ -653,32 +653,32 @@ function TokenListImpl({
               >
                 <button
                   onClick={() => setOpenToken(token)}
-                  className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl text-left transition-colors hover:bg-[var(--sw-fill)] focus-visible:bg-[var(--sw-fill)]"
+                  className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl text-left transition-colors hover:bg-(--sw-fill) focus-visible:bg-(--sw-fill)"
                   aria-label={`${token.name}: ${balanceText} ${token.symbol}${usd !== null ? `, ${formatUsd(usd)}` : ""}`}
                 >
                   <TokenIcon symbol={token.symbol} url={tokenImages[token.symbol.toUpperCase()]} size="md" />
                   <span className="flex-1 min-w-0">
                     <span className="flex items-center gap-1.5">
-                      <span className="text-[15px] font-semibold text-[var(--sw-ink)] truncate">{token.name}</span>
+                      <span className="text-[15px] font-semibold text-(--sw-ink) truncate">{token.name}</span>
                       {isCustomToken && (
-                        <span className="text-[10px] font-semibold px-1.5 py-px rounded-full bg-[var(--sw-fill-strong)] text-[var(--sw-ink-soft)]">Custom</span>
+                        <span className="text-[10px] font-semibold px-1.5 py-px rounded-full bg-(--sw-fill-strong) text-(--sw-ink-soft)">Custom</span>
                       )}
                     </span>
-                    <span className="block text-xs text-[var(--sw-muted)] truncate">
+                    <span className="block text-xs text-(--sw-muted) truncate">
                       {usd !== null || !pricingEnabled ? token.symbol : `${token.symbol} · price unavailable`}
                     </span>
                   </span>
-                  <span className="text-right flex-shrink-0">
+                  <span className="text-right shrink-0">
                     {usd !== null ? (
                       <>
-                        <span className="block text-[15px] font-semibold text-[var(--sw-ink)] sw-num">{formatUsd(usd)}</span>
-                        <span className="block text-xs text-[var(--sw-muted)] sw-num">
+                        <span className="block text-[15px] font-semibold text-(--sw-ink) sw-num">{formatUsd(usd)}</span>
+                        <span className="block text-xs text-(--sw-muted) sw-num">
                           {balanceText} {token.symbol}
                         </span>
                       </>
                     ) : (
-                      <span className="block text-[15px] font-semibold text-[var(--sw-ink)] sw-num">
-                        {balanceText} <span className="text-[var(--sw-muted)] font-medium">{token.symbol}</span>
+                      <span className="block text-[15px] font-semibold text-(--sw-ink) sw-num">
+                        {balanceText} <span className="text-(--sw-muted) font-medium">{token.symbol}</span>
                       </span>
                     )}
                   </span>
@@ -724,17 +724,17 @@ function TokenListImpl({
       )}
 
       {showRemoveConfirm && (
-        <Modal onClose={() => setShowRemoveConfirm(null)} labelledBy="remove-token-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden p-6">
-          <h3 id="remove-token-title" className="text-lg font-bold text-[var(--sw-ink)] mb-1">
+        <Modal onClose={() => setShowRemoveConfirm(null)} labelledBy="remove-token-title" className="sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden p-6">
+          <h3 id="remove-token-title" className="text-lg font-bold text-(--sw-ink) mb-1">
             Remove this token?
           </h3>
-          <p className="text-sm text-[var(--sw-ink-soft)] mb-4">It disappears from your list. Your balance stays on-chain and you can add it again any time.</p>
-          <label className="flex items-center gap-2 mb-6 text-sm text-[var(--sw-ink-soft)] cursor-pointer">
+          <p className="text-sm text-(--sw-ink-soft) mb-4">It disappears from your list. Your balance stays on-chain and you can add it again any time.</p>
+          <label className="flex items-center gap-2 mb-6 text-sm text-(--sw-ink-soft) cursor-pointer">
             <input
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="w-4 h-4 accent-[var(--sw-accent)] rounded"
+              className="w-4 h-4 accent-(--sw-accent) rounded-sm"
             />
             Don&apos;t ask again
           </label>
@@ -744,7 +744,7 @@ function TokenListImpl({
             </button>
             <button
               onClick={() => removeToken(showRemoveConfirm)}
-              className="text-sm font-semibold py-3 rounded-[3px] uppercase tracking-[0.05em] text-white bg-[var(--sw-down)] hover:brightness-105 transition-all"
+              className="text-sm font-semibold py-3 rounded-[3px] uppercase tracking-wider text-white bg-(--sw-down) hover:brightness-105 transition-all"
             >
               Remove
             </button>
@@ -794,16 +794,16 @@ function TokenSheet({
   }
 
   return (
-    <Modal onClose={onClose} labelledBy="token-sheet-title" className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden">
+    <Modal onClose={onClose} labelledBy="token-sheet-title" className="sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden">
       <div className="px-5 pt-5 pb-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <TokenIcon symbol={token.symbol} url={image} size="lg" chainId={chainId} />
             <div className="min-w-0">
-              <h2 id="token-sheet-title" className="text-lg font-bold text-[var(--sw-ink)] truncate tracking-tight">
+              <h2 id="token-sheet-title" className="text-lg font-bold text-(--sw-ink) truncate tracking-tight">
                 {token.name}
               </h2>
-              <p className="text-sm text-[var(--sw-muted)]">
+              <p className="text-sm text-(--sw-muted)">
                 {token.symbol}
                 {price !== undefined && <> · {formatUsd(price)}</>}
               </p>
@@ -815,11 +815,11 @@ function TokenSheet({
         </div>
 
         <div className="mt-6">
-          <p className="text-sm text-[var(--sw-ink-soft)]">Balance</p>
-          <p className="text-3xl sw-display text-[var(--sw-ink)] break-all">
-            {formatTokenBalance(token.balance)} <span className="text-lg font-semibold text-[var(--sw-muted)] tracking-normal">{token.symbol}</span>
+          <p className="text-sm text-(--sw-ink-soft)">Balance</p>
+          <p className="text-3xl sw-display text-(--sw-ink) break-all">
+            {formatTokenBalance(token.balance)} <span className="text-lg font-semibold text-(--sw-muted) tracking-normal">{token.symbol}</span>
           </p>
-          {price !== undefined && <p className="text-sm text-[var(--sw-muted)] sw-num mt-0.5">{formatUsd(amount * price)}</p>}
+          {price !== undefined && <p className="text-sm text-(--sw-muted) sw-num mt-0.5">{formatUsd(amount * price)}</p>}
         </div>
 
         <div className={`grid gap-2 mt-6 ${onSwap ? "grid-cols-2" : "grid-cols-1"}`}>
@@ -836,12 +836,12 @@ function TokenSheet({
         </div>
 
         {!isNative && (
-          <div className="mt-6 pt-4 border-t border-[var(--sw-line-soft)]">
+          <div className="mt-6 pt-4 border-t border-(--sw-line-soft)">
             <p className="sw-label mb-1.5">Contract address</p>
             <div className="flex items-start gap-2">
               <AddressText address={token.address} className="text-xs flex-1" />
               <button onClick={copy} className="sw-icon-btn p-1.5" aria-label={copied ? "Copied" : "Copy contract address"}>
-                {copied ? <Check className="w-4 h-4 text-[var(--sw-up)]" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-4 h-4 text-(--sw-up)" /> : <Copy className="w-4 h-4" />}
               </button>
               {explorer && (
                 <a href={explorer} target="_blank" rel="noopener noreferrer" className="sw-icon-btn p-1.5" aria-label="View contract on explorer">
@@ -855,7 +855,7 @@ function TokenSheet({
         {isCustom && (
           <button
             onClick={onRemove}
-            className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-[var(--sw-down)] rounded-lg hover:bg-[var(--sw-down-bg)]"
+            className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-(--sw-down) rounded-lg hover:bg-(--sw-down-bg)"
           >
             <Trash2 className="w-4 h-4" aria-hidden="true" />
             Remove from list

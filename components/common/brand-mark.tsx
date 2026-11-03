@@ -54,7 +54,7 @@ export function Wordmark({
   const hide = hideTextBelow === "md" ? "hidden md:inline" : hideTextBelow === "sm" ? "hidden sm:inline" : "";
   return (
     <span
-      className={`inline-flex items-center font-bold leading-none text-[var(--sw-ink)] ${className}`}
+      className={`inline-flex items-center font-bold leading-none text-(--sw-ink) ${className}`}
       style={{ fontSize, gap: "0.22em", letterSpacing: fontSize <= 20 ? "-0.015em" : "-0.025em" }}
     >
       <span className="inline-flex" style={{ transform: "translateY(-0.13em)" }}>

@@ -60,14 +60,14 @@ export function QRDisplay({ qrCodeDataURL, execURL, stage, error, onClose, onRet
       onClose={onClose}
       labelledBy="qr-title"
       closeOnBackdrop={false}
-      className="sw-surface rounded-2xl border border-[var(--sw-line)] w-full max-w-sm sm:max-w-2xl max-h-[90dvh] flex flex-col overflow-hidden"
+      className="sw-surface rounded-2xl border border-(--sw-line) w-full max-w-sm sm:max-w-2xl max-h-[90dvh] flex flex-col overflow-hidden"
     >
       <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-2">
         <div>
-          <h2 id="qr-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)]">
+          <h2 id="qr-title" className="text-xl font-bold tracking-tight text-(--sw-ink)">
             Connect with your phone
           </h2>
-          <p className="text-sm text-[var(--sw-ink-soft)] mt-1">Your phone reads the card. Your wallet opens on this screen.</p>
+          <p className="text-sm text-(--sw-ink-soft) mt-1">Your phone reads the card. Your wallet opens on this screen.</p>
         </div>
         <button onClick={onClose} className="sw-icon-btn p-2 -mr-2 -mt-1" aria-label="Cancel and close">
           <X className="w-5 h-5" aria-hidden="true" />
@@ -93,9 +93,9 @@ export function QRDisplay({ qrCodeDataURL, execURL, stage, error, onClose, onRet
             {(stage === "phone-connected" || stage === "done") && (
               <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
                 {stage === "done" ? (
-                  <CheckCircle2 className="w-14 h-14 text-[var(--sw-up)] ob-pop-in" strokeWidth={1.75} />
+                  <CheckCircle2 className="w-14 h-14 text-(--sw-up) ob-pop-in" strokeWidth={1.75} />
                 ) : (
-                  <span className="w-16 h-16 rounded-full bg-[var(--sw-accent)] text-white flex items-center justify-center ob-pop-in">
+                  <span className="w-16 h-16 rounded-full bg-(--sw-accent) text-white flex items-center justify-center ob-pop-in">
                     <Nfc className="w-8 h-8 animate-pulse" />
                   </span>
                 )}
@@ -133,7 +133,7 @@ export function QRDisplay({ qrCodeDataURL, execURL, stage, error, onClose, onRet
             {stage === "error" && error ? (
               <div role="alert">
                 <div className="sw-callout sw-callout-danger flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 mt-px flex-shrink-0 text-[var(--sw-down)]" aria-hidden="true" />
+                  <AlertTriangle className="w-4 h-4 mt-px shrink-0 text-(--sw-down)" aria-hidden="true" />
                   <span>{error}</span>
                 </div>
                 <div className="mt-3 flex flex-col gap-1">
@@ -145,7 +145,7 @@ export function QRDisplay({ qrCodeDataURL, execURL, stage, error, onClose, onRet
                   {onRegenerate && (
                     <button
                       onClick={onRegenerate}
-                      className="w-full py-3 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+                      className="w-full py-3 text-sm font-semibold text-(--sw-ink-soft) hover:text-(--sw-ink) transition-colors"
                     >
                       Start over with a new code
                     </button>
@@ -153,11 +153,11 @@ export function QRDisplay({ qrCodeDataURL, execURL, stage, error, onClose, onRet
                 </div>
               </div>
             ) : statusText ? (
-              <span className="inline-flex items-center gap-2 rounded-full bg-[var(--sw-fill)] px-3 py-1.5 text-xs font-semibold text-[var(--sw-ink)]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-(--sw-fill) px-3 py-1.5 text-xs font-semibold text-(--sw-ink)">
                 {stage === "done" ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--sw-up)]" aria-hidden="true" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-(--sw-up)" aria-hidden="true" />
                 ) : (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--sw-accent)]" aria-hidden="true" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-(--sw-accent)" aria-hidden="true" />
                 )}
                 {statusText}
               </span>
@@ -171,21 +171,21 @@ export function QRDisplay({ qrCodeDataURL, execURL, stage, error, onClose, onRet
               return (
                 <li key={step.key} className="flex items-start gap-3" aria-current={st === "active" ? "step" : undefined}>
                   <span
-                    className={`flex-shrink-0 w-6 h-6 rounded-full text-xs font-bold sw-num flex items-center justify-center transition-colors ${
+                    className={`shrink-0 w-6 h-6 rounded-full text-xs font-bold sw-num flex items-center justify-center transition-colors ${
                       st === "done"
-                        ? "bg-[var(--sw-up)] text-white"
+                        ? "bg-(--sw-up) text-white"
                         : st === "active"
-                          ? "bg-[var(--sw-ink)] text-[var(--sw-paper)]"
-                          : "bg-[var(--sw-fill-strong)] text-[var(--sw-muted)]"
+                          ? "bg-(--sw-ink) text-(--sw-paper)"
+                          : "bg-(--sw-fill-strong) text-(--sw-muted)"
                     }`}
                   >
                     {st === "done" ? <Check className="w-3.5 h-3.5" strokeWidth={3} aria-hidden="true" /> : i + 1}
                   </span>
                   <span className="text-sm pt-0.5">
-                    <span className={`font-semibold ${st === "todo" ? "text-[var(--sw-muted)]" : "text-[var(--sw-ink)]"}`}>
+                    <span className={`font-semibold ${st === "todo" ? "text-(--sw-muted)" : "text-(--sw-ink)"}`}>
                       {step.title}
                     </span>
-                    <span className="block text-xs text-[var(--sw-muted)] mt-0.5 leading-snug">{step.hint}</span>
+                    <span className="block text-xs text-(--sw-muted) mt-0.5 leading-snug">{step.hint}</span>
                   </span>
                 </li>
               );

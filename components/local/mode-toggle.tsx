@@ -39,7 +39,7 @@ export function ModeToggle({ onModeChange }: ModeToggleProps) {
       <p id="connect-mode-label" className="sw-uplabel mb-3">
         Connect with
       </p>
-      <div role="radiogroup" aria-labelledby="connect-mode-label" className="flex gap-6 border-b border-[var(--sw-line)]">
+      <div role="radiogroup" aria-labelledby="connect-mode-label" className="flex gap-6 border-b border-(--sw-line)">
         {OPTIONS.map(({ mode, label, Icon }) => {
           const active = connectionMode === mode;
           return (
@@ -50,7 +50,7 @@ export function ModeToggle({ onModeChange }: ModeToggleProps) {
               aria-checked={active}
               onClick={() => handleModeChange(mode)}
               disabled={isChanging}
-              className={`sw-tab text-sm pb-3 inline-flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sw-accent)] ${
+              className={`sw-tab text-sm pb-3 inline-flex items-center gap-2 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--sw-accent) ${
                 active ? "sw-tab-active" : ""
               }`}
             >

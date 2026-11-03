@@ -13,8 +13,8 @@ export function PriceDisplay({ price, symbol }: PriceDisplayProps) {
   if (!pricingEnabled) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-[var(--sw-muted)]">Price unavailable</span>
-        <span className="text-xs text-[var(--sw-muted)]">
+        <span className="text-(--sw-muted)">Price unavailable</span>
+        <span className="text-xs text-(--sw-muted)">
           (Hosted version)
         </span>
       </div>
@@ -22,7 +22,7 @@ export function PriceDisplay({ price, symbol }: PriceDisplayProps) {
   }
 
   return (
-    <span className="text-[var(--sw-ink-soft)] sw-num">
+    <span className="text-(--sw-ink-soft) sw-num">
       ${price.toFixed(2)} USD
     </span>
   );

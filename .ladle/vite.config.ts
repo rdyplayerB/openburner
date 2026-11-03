@@ -37,6 +37,8 @@ function storyMocks(): Plugin {
     async resolveId(source, importer, options) {
       // Mocks may import the real module they wrap.
       if (!importer || importer.includes(`${path.sep}.ladle${path.sep}mocks${path.sep}`)) return null;
+      // A /@fs/ URL is already resolved: the browser fetching what a mock imported.
+      if (source.startsWith("/@fs/")) return null;
       const resolved = await this.resolve(source, importer, { ...options, skipSelf: true });
       const target = resolved && MOCKS[resolved.id.split("?")[0]];
       return target || null;

@@ -16,7 +16,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg sw-surface border border-[var(--sw-line)] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-all duration-150 active:scale-95"
+      className="p-2 rounded-lg sw-surface border border-(--sw-line) text-(--sw-muted) hover:text-(--sw-ink) transition-all duration-150 active:scale-95"
       title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
       aria-label="Toggle theme"
     >

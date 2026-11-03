@@ -89,11 +89,11 @@ export function WcConnectModal({
     return (
       <Shell onClose={onClose}>
         <div className="pt-2 pb-1 text-center">
-          <span className="w-12 h-12 mx-auto mb-4 rounded-xl bg-[var(--sw-fill-strong)] text-[var(--sw-ink-soft)] flex items-center justify-center">
+          <span className="w-12 h-12 mx-auto mb-4 rounded-xl bg-(--sw-fill-strong) text-(--sw-ink-soft) flex items-center justify-center">
             <Globe className="w-6 h-6" aria-hidden="true" />
           </span>
-          <p className="text-base font-semibold text-[var(--sw-ink)] mb-1">WalletConnect isn&apos;t set up</p>
-          <p className="text-sm text-[var(--sw-ink-soft)] leading-relaxed mb-5">
+          <p className="text-base font-semibold text-(--sw-ink) mb-1">WalletConnect isn&apos;t set up</p>
+          <p className="text-sm text-(--sw-ink-soft) leading-relaxed mb-5">
             Add a WalletConnect project ID to connect to dApps. Get a free one at{" "}
             <a href="https://cloud.reown.com" target="_blank" rel="noopener noreferrer" className="sw-link underline">
               cloud.reown.com
@@ -112,7 +112,7 @@ export function WcConnectModal({
 
   return (
     <Shell onClose={onClose}>
-      <div className="flex gap-6 border-b border-[var(--sw-line)] mb-5" role="tablist" aria-label="Connection method">
+      <div className="flex gap-6 border-b border-(--sw-line) mb-5" role="tablist" aria-label="Connection method">
         <button
           role="tab"
           aria-selected={tab === "scan"}
@@ -143,7 +143,7 @@ export function WcConnectModal({
               <span className="absolute bottom-0 right-0 w-7 h-7 border-b-[3px] border-r-[3px] border-white rounded-br-lg" />
             </div>
           </div>
-          <p className="text-sm text-[var(--sw-ink-soft)] text-center mt-3">
+          <p className="text-sm text-(--sw-ink-soft) text-center mt-3">
             {camError || "Point your camera at the dApp's WalletConnect QR code."}
           </p>
           {camError && (
@@ -179,7 +179,7 @@ export function WcConnectModal({
               className="sw-field-input text-sm sw-mono resize-none block"
             />
           </div>
-          <p className="text-xs text-[var(--sw-muted)] mt-2">
+          <p className="text-xs text-(--sw-muted) mt-2">
             In the dApp, choose WalletConnect and copy the link under the QR code.
           </p>
           <button
@@ -204,7 +204,7 @@ export function WcConnectModal({
 
       {error && (
         <div role="alert" className="sw-callout sw-callout-danger flex items-start gap-2 mt-4">
-          <AlertTriangle className="w-4 h-4 mt-px flex-shrink-0 text-[var(--sw-down)]" aria-hidden="true" />
+          <AlertTriangle className="w-4 h-4 mt-px shrink-0 text-(--sw-down)" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
@@ -217,12 +217,12 @@ function Shell({ children, onClose }: { children: React.ReactNode; onClose: () =
     <Modal onClose={onClose} labelledBy="wc-connect-title">
       <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
         <div>
-          <h2 id="wc-connect-title" className="text-lg font-bold tracking-tight text-[var(--sw-ink)]">
+          <h2 id="wc-connect-title" className="text-lg font-bold tracking-tight text-(--sw-ink)">
             Connect to a dApp
           </h2>
-          <p className="text-sm text-[var(--sw-ink-soft)] mt-0.5">Use WalletConnect to sign in with your Burner.</p>
+          <p className="text-sm text-(--sw-ink-soft) mt-0.5">Use WalletConnect to sign in with your Burner.</p>
         </div>
-        <button onClick={onClose} className="sw-icon-btn p-1.5 -mr-1.5 flex-shrink-0" aria-label="Close">
+        <button onClick={onClose} className="sw-icon-btn p-1.5 -mr-1.5 shrink-0" aria-label="Close">
           <X className="w-5 h-5" />
         </button>
       </div>

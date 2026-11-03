@@ -19,8 +19,8 @@ export function AddressText({ address, className = "" }: { address: string; clas
         const strong = i === 0 || i === last;
         return (
           <span key={i} className={`inline-block whitespace-nowrap ${i < last ? "mr-[0.35em]" : ""}`}>
-            {i === 0 && <span className="text-[var(--sw-muted)]">0x</span>}
-            <span className={strong ? "text-[var(--sw-ink)] font-semibold" : "text-[var(--sw-ink-soft)]"}>{g}</span>
+            {i === 0 && <span className="text-(--sw-muted)">0x</span>}
+            <span className={strong ? "text-(--sw-ink) font-semibold" : "text-(--sw-ink-soft)"}>{g}</span>
           </span>
         );
       })}

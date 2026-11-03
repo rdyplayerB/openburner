@@ -211,7 +211,7 @@ export function RecipientField({
         {state.address ? (
           <Identicon address={state.address} size={22} />
         ) : (
-          <span className="w-[22px] h-[22px] rounded-full bg-[var(--sw-fill-strong)] flex-shrink-0" aria-hidden="true" />
+          <span className="w-[22px] h-[22px] rounded-full bg-(--sw-fill-strong) shrink-0" aria-hidden="true" />
         )}
         <input
           ref={inputRef}
@@ -246,27 +246,27 @@ export function RecipientField({
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
         ) : (
-          <button type="button" onClick={paste} className="sw-link text-xs flex items-center gap-1 flex-shrink-0">
+          <button type="button" onClick={paste} className="sw-link text-xs flex items-center gap-1 shrink-0">
             <ClipboardPaste className="w-3.5 h-3.5" aria-hidden="true" />
             Paste
           </button>
         )}
       </div>
 
-      <div id={`${id}-hint`} className="min-h-[1.25rem] mt-1.5" aria-live="polite">
+      <div id={`${id}-hint`} className="min-h-5 mt-1.5" aria-live="polite">
         {state.resolving ? (
-          <p className="text-xs text-[var(--sw-muted)] flex items-center gap-1.5">
+          <p className="text-xs text-(--sw-muted) flex items-center gap-1.5">
             <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
             Looking up {state.trimmed}…
           </p>
         ) : problem ? (
-          <p className="text-xs text-[var(--sw-down)]">{problem}</p>
+          <p className="text-xs text-(--sw-down)">{problem}</p>
         ) : state.ensName && state.address ? (
           <p className="text-xs">
             <AddressText address={state.address} className="text-[11px]" />
           </p>
         ) : pasteFailed ? (
-          <p className="text-xs text-[var(--sw-muted)]">Couldn&apos;t read the clipboard. Paste into the field instead.</p>
+          <p className="text-xs text-(--sw-muted)">Couldn&apos;t read the clipboard. Paste into the field instead.</p>
         ) : null}
       </div>
 
@@ -274,7 +274,7 @@ export function RecipientField({
         <div className="mt-1">
           <div className="flex items-center justify-between mb-1">
             <p className="sw-label">Recent</p>
-            <button type="button" onClick={onClearRecents} className="text-xs text-[var(--sw-muted)] hover:text-[var(--sw-ink)]">
+            <button type="button" onClick={onClearRecents} className="text-xs text-(--sw-muted) hover:text-(--sw-ink)">
               Clear
             </button>
           </div>
@@ -287,12 +287,12 @@ export function RecipientField({
                     state.setInput(r.address);
                     state.setTouched(true);
                   }}
-                  className="w-full flex items-center gap-3 py-2 px-2 -mx-2 rounded-lg hover:bg-[var(--sw-fill)] transition-colors text-left"
+                  className="w-full flex items-center gap-3 py-2 px-2 -mx-2 rounded-lg hover:bg-(--sw-fill) transition-colors text-left"
                 >
                   <Identicon address={r.address} size={28} />
                   <span className="min-w-0 flex-1">
-                    {r.ens && <span className="block text-sm font-semibold text-[var(--sw-ink)] truncate">{r.ens}</span>}
-                    <span className={`block sw-mono ${r.ens ? "text-xs text-[var(--sw-muted)]" : "text-sm text-[var(--sw-ink)]"}`}>
+                    {r.ens && <span className="block text-sm font-semibold text-(--sw-ink) truncate">{r.ens}</span>}
+                    <span className={`block sw-mono ${r.ens ? "text-xs text-(--sw-muted)" : "text-sm text-(--sw-ink)"}`}>
                       {shortAddress(r.address)}
                     </span>
                   </span>
@@ -312,7 +312,7 @@ export function RecipientReview({ address, ens }: { address: string; ens?: strin
     <div className="flex items-start gap-3">
       <Identicon address={address} size={36} className="mt-0.5" />
       <div className="min-w-0 flex-1">
-        {ens && <p className="text-sm font-semibold text-[var(--sw-ink)] truncate mb-0.5">{ens}</p>}
+        {ens && <p className="text-sm font-semibold text-(--sw-ink) truncate mb-0.5">{ens}</p>}
         <AddressText address={address} className="text-[13px]" />
       </div>
     </div>
@@ -578,10 +578,10 @@ export function SendToken({
       labelledBy="send-title"
       closeOnBackdrop={!isSigning}
       initialFocusRef={amountRef}
-      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden flex flex-col max-h-[90dvh]"
+      className="sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden flex flex-col max-h-[90dvh]"
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 flex-shrink-0">
+      <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 shrink-0">
         <div className="flex items-center gap-1 min-w-0">
           {review && (
             <button
@@ -593,7 +593,7 @@ export function SendToken({
               <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             </button>
           )}
-          <h2 id="send-title" className={`text-lg font-bold text-[var(--sw-ink)] tracking-tight ${review ? "" : "pl-1"}`}>
+          <h2 id="send-title" className={`text-lg font-bold text-(--sw-ink) tracking-tight ${review ? "" : "pl-1"}`}>
             {review ? "Review" : "Send"}
           </h2>
         </div>
@@ -645,10 +645,10 @@ export function SendToken({
                 >
                   <TokenIcon symbol={token.symbol} url={tokenImages[token.symbol.toUpperCase()]} size="sm" chainId={chainId} />
                   {token.symbol}
-                  <ChevronDown className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
+                  <ChevronDown className="w-4 h-4 text-(--sw-muted)" aria-hidden="true" />
                 </button>
               ) : (
-                <span className="sw-chip pl-1 pr-3 py-1 text-sm hover:!bg-[var(--sw-fill-strong)]">
+                <span className="sw-chip pl-1 pr-3 py-1 text-sm hover:bg-(--sw-fill-strong)!">
                   <TokenIcon symbol={token.symbol} url={tokenImages[token.symbol.toUpperCase()]} size="sm" chainId={chainId} />
                   {token.symbol}
                 </span>
@@ -676,7 +676,7 @@ export function SendToken({
               label={usdMode ? "Amount in US dollars" : `Amount in ${token.symbol}`}
             />
 
-            <p className="text-sm text-[var(--sw-ink-soft)] sw-num mt-1 min-h-[1.25rem]">
+            <p className="text-sm text-(--sw-ink-soft) sw-num mt-1 min-h-5">
               {usdMode && hasPrice
                 ? amount
                   ? `≈ ${formatTokenBalance(amount)} ${token.symbol}`
@@ -687,11 +687,11 @@ export function SendToken({
             </p>
 
             <div className="flex items-center gap-1.5 text-xs mt-2 mb-6">
-              <span className={overBalance ? "text-[var(--sw-down)]" : "text-[var(--sw-muted)]"}>
+              <span className={overBalance ? "text-(--sw-down)" : "text-(--sw-muted)"}>
                 {overBalance ? "More than your balance of " : "Balance "}
                 <span className="sw-num">{formatTokenBalance(token.balance)}</span> {token.symbol}
               </span>
-              <span className="text-[var(--sw-muted)]" aria-hidden="true">
+              <span className="text-(--sw-muted)" aria-hidden="true">
                 ·
               </span>
               <button
@@ -719,7 +719,7 @@ export function SendToken({
           </div>
 
           {/* Action, always in reach */}
-          <div className="px-5 pt-3 pb-5 border-t border-[var(--sw-line-soft)] flex-shrink-0">
+          <div className="px-5 pt-3 pb-5 border-t border-(--sw-line-soft) shrink-0">
             {error && (
               <div role="alert" className="sw-callout sw-callout-danger mb-3">
                 {error}
@@ -784,11 +784,11 @@ function AmountEntry({
 }) {
   const len = (prefix?.length ?? 0) + Math.max(value.length, 1);
   const size = len <= 7 ? "text-5xl" : len <= 11 ? "text-4xl" : len <= 15 ? "text-3xl" : "text-2xl";
-  const color = invalid ? "text-[var(--sw-down)]" : "text-[var(--sw-ink)]";
+  const color = invalid ? "text-(--sw-down)" : "text-(--sw-ink)";
 
   return (
     <div className={`flex items-baseline gap-2 min-w-0 overflow-hidden ${size} transition-[font-size] duration-150`}>
-      {prefix && <span className={`font-bold tracking-tight ${value ? color : "text-[var(--sw-muted)]"}`}>{prefix}</span>}
+      {prefix && <span className={`font-bold tracking-tight ${value ? color : "text-(--sw-muted)"}`}>{prefix}</span>}
       {/* The hidden twin sizes the input to its content, so the unit sits right after the number. */}
       <span className="inline-grid min-w-0 max-w-full">
         <span className="invisible whitespace-pre font-bold tracking-[-0.03em] tabular-nums [grid-area:1/1] pr-1" aria-hidden="true">
@@ -808,7 +808,7 @@ function AmountEntry({
           className={`sw-amount-input [grid-area:1/1] ${color}`}
         />
       </span>
-      {suffix && <span className="text-xl font-semibold text-[var(--sw-muted)] flex-shrink-0">{suffix}</span>}
+      {suffix && <span className="text-xl font-semibold text-(--sw-muted) shrink-0">{suffix}</span>}
     </div>
   );
 }
@@ -860,18 +860,18 @@ function ReviewStep({
         <div className="flex flex-col items-center text-center pt-2 pb-5">
           <TokenIcon symbol={token.symbol} url={tokenImage} size="lg" chainId={chainId} />
           <p
-            className={`mt-3 font-bold tracking-tight text-[var(--sw-ink)] break-all tabular-nums ${
+            className={`mt-3 font-bold tracking-tight text-(--sw-ink) break-all tabular-nums ${
               review.amount.length <= 9 ? "text-4xl" : review.amount.length <= 14 ? "text-3xl" : "text-2xl"
             }`}
           >
-            {review.amount} <span className="text-xl font-semibold text-[var(--sw-ink-soft)]">{token.symbol}</span>
+            {review.amount} <span className="text-xl font-semibold text-(--sw-ink-soft)">{token.symbol}</span>
           </p>
           {amountUsd !== null && isFinite(amountUsd) && (
-            <p className="text-sm text-[var(--sw-ink-soft)] sw-num mt-1">≈ {formatUsd(amountUsd)}</p>
+            <p className="text-sm text-(--sw-ink-soft) sw-num mt-1">≈ {formatUsd(amountUsd)}</p>
           )}
         </div>
 
-        <div className="rounded-xl bg-[var(--sw-fill)] p-3.5 mb-3">
+        <div className="rounded-xl bg-(--sw-fill) p-3.5 mb-3">
           <p className="sw-label mb-2">To</p>
           <RecipientReview address={review.to} ens={review.ens} />
         </div>
@@ -890,27 +890,27 @@ function ReviewStep({
 
         <dl className="sw-list text-sm">
           <div className="flex items-center justify-between gap-3 py-3">
-            <dt className="text-[var(--sw-ink-soft)]">Network</dt>
-            <dd className="flex items-center gap-2 font-medium text-[var(--sw-ink)]">
+            <dt className="text-(--sw-ink-soft)">Network</dt>
+            <dd className="flex items-center gap-2 font-medium text-(--sw-ink)">
               <ChainLogo chainId={chainId} name={network} className="w-4 h-4" />
               {network}
             </dd>
           </div>
           <div className="flex items-center justify-between gap-3 py-3">
-            <dt className="text-[var(--sw-ink-soft)]">Network fee (max)</dt>
+            <dt className="text-(--sw-ink-soft)">Network fee (max)</dt>
             <dd className="text-right">
-              <span className="sw-num text-[var(--sw-ink)]">
+              <span className="sw-num text-(--sw-ink)">
                 {formatTokenBalance(fee)} {nativeSymbol}
               </span>
               {feeUsd !== null && isFinite(feeUsd) && (
-                <span className="block text-xs text-[var(--sw-muted)] sw-num">≈ {formatUsd(feeUsd)}</span>
+                <span className="block text-xs text-(--sw-muted) sw-num">≈ {formatUsd(feeUsd)}</span>
               )}
             </dd>
           </div>
           {total && (
             <div className="flex items-center justify-between gap-3 py-3">
-              <dt className="font-semibold text-[var(--sw-ink)]">Total (max)</dt>
-              <dd className="sw-num font-semibold text-[var(--sw-ink)]">
+              <dt className="font-semibold text-(--sw-ink)">Total (max)</dt>
+              <dd className="sw-num font-semibold text-(--sw-ink)">
                 {formatTokenBalance(total)} {nativeSymbol}
               </dd>
             </div>
@@ -918,7 +918,7 @@ function ReviewStep({
         </dl>
       </div>
 
-      <div className="px-5 pt-3 pb-5 border-t border-[var(--sw-line-soft)] flex-shrink-0">
+      <div className="px-5 pt-3 pb-5 border-t border-(--sw-line-soft) shrink-0">
         {error && (
           <div role="alert" className="sw-callout sw-callout-danger mb-3">
             {error}
@@ -927,7 +927,7 @@ function ReviewStep({
         <button onClick={onConfirm} disabled={isSigning} className="sw-btn-primary w-full py-3.5 text-sm">
           Confirm and sign
         </button>
-        <p className="text-xs text-[var(--sw-muted)] text-center mt-2.5">
+        <p className="text-xs text-(--sw-muted) text-center mt-2.5">
           You&apos;ll enter your PIN, then tap your Burner.
         </p>
       </div>

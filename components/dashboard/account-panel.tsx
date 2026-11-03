@@ -62,18 +62,18 @@ export function AccountPanel(p: AccountPanelProps) {
   const others = p.otherTokenCount;
 
   return (
-    <section aria-label="Account" className="sw-surface rounded-2xl border border-[var(--sw-line)] p-5 sm:p-6">
+    <section aria-label="Account" className="sw-surface rounded-2xl border border-(--sw-line) p-5 sm:p-6">
       {/* Identity */}
       <div className="flex items-center gap-3">
         <Identicon address={p.address} size={40} />
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-[var(--sw-ink)] truncate">{ens ?? shortAddress(p.address)}</p>
-          <div className="flex items-center gap-1 text-xs text-[var(--sw-muted)]">
+          <p className="text-[15px] font-semibold text-(--sw-ink) truncate">{ens ?? shortAddress(p.address)}</p>
+          <div className="flex items-center gap-1 text-xs text-(--sw-muted)">
             <span className="sw-mono truncate">{ens ? shortAddress(p.address) : "Your Burner wallet"}</span>
           </div>
         </div>
         <button onClick={copy} className="sw-icon-btn p-2" aria-label={copied ? "Address copied" : "Copy wallet address"} title="Copy address">
-          {copied ? <Check className="w-4 h-4 text-[var(--sw-up)]" /> : <Copy className="w-4 h-4" />}
+          {copied ? <Check className="w-4 h-4 text-(--sw-up)" /> : <Copy className="w-4 h-4" />}
         </button>
         {p.explorerUrl && (
           <a
@@ -91,11 +91,11 @@ export function AccountPanel(p: AccountPanelProps) {
 
       {/* Balance */}
       <div className="mt-7 mb-6" aria-live="polite">
-        <p className="text-sm text-[var(--sw-ink-soft)] mb-1">{showUsd ? "Total balance" : "Balance"}</p>
+        <p className="text-sm text-(--sw-ink-soft) mb-1">{showUsd ? "Total balance" : "Balance"}</p>
         {!p.hasData ? (
           p.error ? (
             <div>
-              <p className="text-lg font-semibold text-[var(--sw-ink)]">Couldn&apos;t load your balance</p>
+              <p className="text-lg font-semibold text-(--sw-ink)">Couldn&apos;t load your balance</p>
               <button onClick={p.onRetry} className="sw-link text-sm mt-1">
                 Try again
               </button>
@@ -111,16 +111,16 @@ export function AccountPanel(p: AccountPanelProps) {
             {p.pricesPending ? (
               <div className="sw-skeleton h-12 w-44 my-1" aria-label="Loading prices" />
             ) : showUsd ? (
-              <p className="text-5xl sm:text-[3.5rem] leading-none sw-display text-[var(--sw-ink)] py-1">
+              <p className="text-5xl sm:text-[3.5rem] leading-none sw-display text-(--sw-ink) py-1">
                 {formatUsd(animatedUsd ?? p.totalUsd ?? 0)}
               </p>
             ) : (
-              <p className="leading-none sw-display text-[var(--sw-ink)] py-1 break-all">
+              <p className="leading-none sw-display text-(--sw-ink) py-1 break-all">
                 <span className="text-5xl sm:text-[3.5rem]">{formatTokenBalance(p.nativeBalance)}</span>
-                <span className="text-2xl font-semibold text-[var(--sw-muted)] ml-2 tracking-normal">{p.nativeSymbol}</span>
+                <span className="text-2xl font-semibold text-(--sw-muted) ml-2 tracking-normal">{p.nativeSymbol}</span>
               </p>
             )}
-            <p className="text-sm text-[var(--sw-muted)] mt-2">
+            <p className="text-sm text-(--sw-muted) mt-2">
               {showUsd || p.pricesPending ? (
                 <>
                   <span className="sw-num">{formatTokenBalance(p.nativeBalance)}</span> {p.nativeSymbol}
@@ -129,7 +129,7 @@ export function AccountPanel(p: AccountPanelProps) {
               ) : (
                 others > 0 && `+ ${others} other token${others === 1 ? "" : "s"}`
               )}
-              {p.error && <span className="text-[var(--sw-down)]"> · last known</span>}
+              {p.error && <span className="text-(--sw-down)"> · last known</span>}
             </p>
           </>
         )}

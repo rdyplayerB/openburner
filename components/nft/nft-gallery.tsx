@@ -187,17 +187,17 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[var(--sw-line)]">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-(--sw-line)">
         <div className="flex items-center gap-2">
           <span className="sw-uplabel">Collectibles</span>
           {nfts.length > 0 && (
-            <span className="text-xs text-[var(--sw-muted)] sw-num">{nfts.length}</span>
+            <span className="text-xs text-(--sw-muted) sw-num">{nfts.length}</span>
           )}
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowAddForm((s) => !s)}
-            className="p-2 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
+            className="p-2 text-(--sw-muted) hover:text-(--sw-ink) transition-colors"
             title="Add NFT by contract"
             aria-label="Add NFT by contract"
             aria-expanded={showAddForm}
@@ -207,7 +207,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
           <button
             onClick={loadNfts}
             disabled={isLoading}
-            className="p-2 text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors disabled:opacity-50"
+            className="p-2 text-(--sw-muted) hover:text-(--sw-ink) transition-colors disabled:opacity-50"
             title="Refresh"
             aria-label="Refresh collectibles"
           >
@@ -218,8 +218,8 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
 
       {/* Manual add form */}
       {showAddForm && (
-        <div className="mx-4 mb-3 mt-3 p-3 rounded-lg border border-[var(--sw-line)] space-y-3">
-          <p className="text-xs text-[var(--sw-ink-soft)]">
+        <div className="mx-4 mb-3 mt-3 p-3 rounded-lg border border-(--sw-line) space-y-3">
+          <p className="text-xs text-(--sw-ink-soft)">
             Add an NFT you own by contract address (ERC-721 or ERC-1155).
           </p>
           <input
@@ -238,7 +238,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
             aria-label="Token ID"
             className="sw-input w-full text-sm"
           />
-          {addError && <p className="text-xs text-[var(--sw-down)]">{addError}</p>}
+          {addError && <p className="text-xs text-(--sw-down)">{addError}</p>}
           <button
             onClick={handleManualAdd}
             disabled={isAdding}
@@ -259,7 +259,7 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
       {nfts.length > 4 && (
         <div className="px-4 mb-3 mt-3">
           <div className="relative">
-            <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--sw-muted)]" />
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-(--sw-muted)" />
             <input
               type="text"
               value={searchQuery}
@@ -274,9 +274,9 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
 
       {/* Auto-discovery note */}
       {!autoConfigured && nfts.length === 0 && !isLoading && (
-        <div className="mx-4 mb-3 mt-3 flex items-start gap-2.5 p-3 rounded-lg border border-[var(--sw-line)]">
-          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--sw-accent)] flex-shrink-0" />
-          <p className="text-xs text-[var(--sw-ink-soft)]">
+        <div className="mx-4 mb-3 mt-3 flex items-start gap-2.5 p-3 rounded-lg border border-(--sw-line)">
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-(--sw-accent) shrink-0" />
+          <p className="text-xs text-(--sw-ink-soft)">
             {isNftAutoDiscoverySupported(chainId)
               ? "Automatic NFT discovery isn't configured. Add an Alchemy API key to auto-load your gallery, or add NFTs manually above."
               : `Automatic NFT discovery isn't available on ${chainName}. Add NFTs manually by contract address above.`}
@@ -291,29 +291,29 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="aspect-square rounded-lg bg-[var(--sw-line-soft)] animate-pulse"
+                className="aspect-square rounded-lg bg-(--sw-line-soft) animate-pulse"
               />
             ))}
           </div>
         ) : error && nfts.length === 0 ? (
           <div className="py-10 text-center">
-            <p className="text-sm text-[var(--sw-down)] mb-2">{error}</p>
+            <p className="text-sm text-(--sw-down) mb-2">{error}</p>
             <button
               onClick={loadNfts}
-              className="text-xs font-medium text-[var(--sw-accent)] hover:underline"
+              className="text-xs font-medium text-(--sw-accent) hover:underline"
             >
               Try again
             </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-10 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-lg bg-[var(--sw-line-soft)] flex items-center justify-center mb-3">
-              <Images className="w-7 h-7 text-[var(--sw-muted)]" />
+            <div className="w-14 h-14 rounded-lg bg-(--sw-line-soft) flex items-center justify-center mb-3">
+              <Images className="w-7 h-7 text-(--sw-muted)" />
             </div>
-            <p className="text-sm font-semibold text-[var(--sw-ink)] mb-1">
+            <p className="text-sm font-semibold text-(--sw-ink) mb-1">
               {searchQuery ? "No matches" : "No collectibles yet"}
             </p>
-            <p className="text-xs text-[var(--sw-muted)] mb-4 max-w-[15rem]">
+            <p className="text-xs text-(--sw-muted) mb-4 max-w-60">
               {searchQuery
                 ? "Try a different search."
                 : `NFTs you hold on ${chainName} will appear here.`}
@@ -334,22 +334,22 @@ export function NftGallery({ onReceive }: { onReceive?: () => void }) {
               <button
                 key={nftKey(nft)}
                 onClick={() => setSelected(nft)}
-                className="ob-fade-in group text-left rounded-lg overflow-hidden border border-[var(--sw-line)] hover:border-[var(--sw-accent)] transition-colors"
+                className="ob-fade-in group text-left rounded-lg overflow-hidden border border-(--sw-line) hover:border-(--sw-accent) transition-colors"
               >
                 <div className="relative">
                   <NftMedia nft={nft} className="w-full aspect-square" rounded="rounded-none" />
                   {nft.tokenType === "ERC1155" && nft.balance && parseInt(nft.balance, 10) > 1 && (
-                    <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold sw-mono bg-[var(--sw-ink)] text-[var(--sw-paper)]">
+                    <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-xs text-[10px] font-bold sw-mono bg-(--sw-ink) text-(--sw-paper)">
                       ×{nft.balance}
                     </span>
                   )}
                 </div>
                 <div className="p-2">
-                  <p className="text-xs font-semibold text-[var(--sw-ink)] truncate">
+                  <p className="text-xs font-semibold text-(--sw-ink) truncate">
                     {nft.name}
                   </p>
                   {nft.collectionName && (
-                    <p className="text-[10px] text-[var(--sw-muted)] truncate">
+                    <p className="text-[10px] text-(--sw-muted) truncate">
                       {nft.collectionName}
                     </p>
                   )}

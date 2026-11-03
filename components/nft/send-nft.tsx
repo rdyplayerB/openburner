@@ -210,25 +210,25 @@ export function SendNft({
         <div className="px-5 pt-6 pb-5 text-center" role={view === "failed" ? "alert" : "status"} aria-live="polite">
           <div className="relative w-24 h-24 mx-auto mb-4">
             <NftMedia nft={nft} className="w-24 h-24" rounded="rounded-xl" />
-            <span className="absolute -right-2 -bottom-2 w-8 h-8 rounded-full bg-[var(--sw-surface)] flex items-center justify-center">
+            <span className="absolute -right-2 -bottom-2 w-8 h-8 rounded-full bg-(--sw-surface) flex items-center justify-center">
               {view === "confirming" ? (
-                <Loader2 className="w-6 h-6 animate-spin text-[var(--sw-accent)]" aria-hidden="true" />
+                <Loader2 className="w-6 h-6 animate-spin text-(--sw-accent)" aria-hidden="true" />
               ) : view === "done" ? (
-                <CheckCircle2 className="w-7 h-7 text-[var(--sw-up)]" aria-hidden="true" />
+                <CheckCircle2 className="w-7 h-7 text-(--sw-up)" aria-hidden="true" />
               ) : view === "failed" ? (
-                <XCircle className="w-7 h-7 text-[var(--sw-down)]" aria-hidden="true" />
+                <XCircle className="w-7 h-7 text-(--sw-down)" aria-hidden="true" />
               ) : (
-                <Clock className="w-6 h-6 text-[var(--sw-warn)]" aria-hidden="true" />
+                <Clock className="w-6 h-6 text-(--sw-warn)" aria-hidden="true" />
               )}
             </span>
           </div>
-          <h2 id="nft-status-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)]">
+          <h2 id="nft-status-title" className="text-xl font-bold tracking-tight text-(--sw-ink)">
             {copy.title}
           </h2>
-          <p className="text-sm text-[var(--sw-ink-soft)] mt-1 mb-5 leading-relaxed max-w-[19rem] mx-auto">{copy.body}</p>
+          <p className="text-sm text-(--sw-ink-soft) mt-1 mb-5 leading-relaxed max-w-76 mx-auto">{copy.body}</p>
 
           {review && (
-            <div className="rounded-xl bg-[var(--sw-fill)] p-3.5 mb-5 text-left">
+            <div className="rounded-xl bg-(--sw-fill) p-3.5 mb-5 text-left">
               <p className="sw-label mb-2">To</p>
               <RecipientReview address={review.to} ens={review.ens} />
             </div>
@@ -254,7 +254,7 @@ export function SendNft({
             </button>
           </div>
           {view === "confirming" && (
-            <p className="text-xs text-[var(--sw-muted)] mt-3">You can close this. It&apos;ll show up in your activity.</p>
+            <p className="text-xs text-(--sw-muted) mt-3">You can close this. It&apos;ll show up in your activity.</p>
           )}
         </div>
       </Modal>
@@ -289,10 +289,10 @@ export function SendNft({
       onClose={() => !isSigning && onClose()}
       labelledBy="send-nft-title"
       closeOnBackdrop={!isSigning}
-      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden flex flex-col max-h-[90dvh]"
+      className="sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden flex flex-col max-h-[90dvh]"
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 flex-shrink-0">
+      <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 shrink-0">
         <div className="flex items-center gap-1 min-w-0">
           {inReview && (
             <button
@@ -304,7 +304,7 @@ export function SendNft({
               <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             </button>
           )}
-          <h2 id="send-nft-title" className={`text-lg font-bold tracking-tight text-[var(--sw-ink)] ${inReview ? "" : "pl-1"}`}>
+          <h2 id="send-nft-title" className={`text-lg font-bold tracking-tight text-(--sw-ink) ${inReview ? "" : "pl-1"}`}>
             {inReview ? "Review" : "Send NFT"}
           </h2>
         </div>
@@ -318,14 +318,14 @@ export function SendNft({
           <div className="px-5 pb-4 overflow-y-auto overscroll-contain min-h-0 flex-auto">
             <div className="flex flex-col items-center text-center pt-1 pb-5">
               <NftMedia nft={nft} className="w-28 h-28" rounded="rounded-xl" />
-              <p className="mt-3 text-lg font-bold tracking-tight text-[var(--sw-ink)] max-w-full truncate">
+              <p className="mt-3 text-lg font-bold tracking-tight text-(--sw-ink) max-w-full truncate">
                 {isMultiEdition && <span className="tabular-nums">{review.quantity} × </span>}
                 {nft.name}
               </p>
-              {nft.collectionName && <p className="text-sm text-[var(--sw-ink-soft)] truncate max-w-full">{nft.collectionName}</p>}
+              {nft.collectionName && <p className="text-sm text-(--sw-ink-soft) truncate max-w-full">{nft.collectionName}</p>}
             </div>
 
-            <div className="rounded-xl bg-[var(--sw-fill)] p-3.5 mb-3">
+            <div className="rounded-xl bg-(--sw-fill) p-3.5 mb-3">
               <p className="sw-label mb-2">To</p>
               <RecipientReview address={review.to} ens={review.ens} />
             </div>
@@ -344,28 +344,28 @@ export function SendNft({
 
             <dl className="sw-list text-sm">
               <div className="flex items-center justify-between gap-3 py-3">
-                <dt className="text-[var(--sw-ink-soft)]">Network</dt>
-                <dd className="flex items-center gap-2 font-medium text-[var(--sw-ink)]">
+                <dt className="text-(--sw-ink-soft)">Network</dt>
+                <dd className="flex items-center gap-2 font-medium text-(--sw-ink)">
                   <ChainLogo chainId={chainId} name={network} className="w-4 h-4" />
                   {network}
                 </dd>
               </div>
               {fee && (
                 <div className="flex items-center justify-between gap-3 py-3">
-                  <dt className="text-[var(--sw-ink-soft)]">Network fee (max)</dt>
-                  <dd className="sw-num text-[var(--sw-ink)]">
+                  <dt className="text-(--sw-ink-soft)">Network fee (max)</dt>
+                  <dd className="sw-num text-(--sw-ink)">
                     {formatTokenBalance(fee)} {nativeSymbol}
                   </dd>
                 </div>
               )}
               <div className="flex items-center justify-between gap-3 py-3">
-                <dt className="text-[var(--sw-ink-soft)]">Standard</dt>
-                <dd className="sw-mono text-xs text-[var(--sw-ink)]">{nft.tokenType}</dd>
+                <dt className="text-(--sw-ink-soft)">Standard</dt>
+                <dd className="sw-mono text-xs text-(--sw-ink)">{nft.tokenType}</dd>
               </div>
             </dl>
           </div>
 
-          <div className="px-5 pt-3 pb-5 border-t border-[var(--sw-line-soft)] flex-shrink-0">
+          <div className="px-5 pt-3 pb-5 border-t border-(--sw-line-soft) shrink-0">
             {error && (
               <div role="alert" className="sw-callout sw-callout-danger mb-3">
                 {error}
@@ -382,7 +382,7 @@ export function SendNft({
             >
               Confirm and sign
             </button>
-            <p className="text-xs text-[var(--sw-muted)] text-center mt-2.5">
+            <p className="text-xs text-(--sw-muted) text-center mt-2.5">
               You&apos;ll enter your PIN, then tap your Burner.
             </p>
           </div>
@@ -398,12 +398,12 @@ export function SendNft({
         >
           <div className="px-5 pb-4 overflow-y-auto overscroll-contain min-h-0 flex-auto space-y-5">
             {/* NFT preview */}
-            <div className="flex items-center gap-3 rounded-xl bg-[var(--sw-fill)] p-3">
-              <NftMedia nft={nft} className="w-14 h-14 flex-shrink-0" rounded="rounded-lg" />
+            <div className="flex items-center gap-3 rounded-xl bg-(--sw-fill) p-3">
+              <NftMedia nft={nft} className="w-14 h-14 shrink-0" rounded="rounded-lg" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[var(--sw-ink)] truncate">{nft.name}</p>
-                {nft.collectionName && <p className="text-xs text-[var(--sw-ink-soft)] truncate">{nft.collectionName}</p>}
-                <p className="text-xs text-[var(--sw-muted)] mt-0.5">
+                <p className="text-sm font-semibold text-(--sw-ink) truncate">{nft.name}</p>
+                {nft.collectionName && <p className="text-xs text-(--sw-ink-soft) truncate">{nft.collectionName}</p>}
+                <p className="text-xs text-(--sw-muted) mt-0.5">
                   <span className="sw-mono">{nft.tokenType}</span>
                   {isMultiEdition ? ` · You own ${ownedQty}` : ""}
                 </p>
@@ -436,7 +436,7 @@ export function SendNft({
                   />
                 </div>
                 {!qtyValid && quantity !== "" && (
-                  <p className="text-xs text-[var(--sw-down)] mt-1.5">Enter a number from 1 to {ownedQty}.</p>
+                  <p className="text-xs text-(--sw-down) mt-1.5">Enter a number from 1 to {ownedQty}.</p>
                 )}
               </div>
             )}
@@ -453,7 +453,7 @@ export function SendNft({
             />
           </div>
 
-          <div className="px-5 pt-3 pb-5 border-t border-[var(--sw-line-soft)] flex-shrink-0">
+          <div className="px-5 pt-3 pb-5 border-t border-(--sw-line-soft) shrink-0">
             {error && (
               <div role="alert" className="sw-callout sw-callout-danger mb-3">
                 {error}

@@ -46,16 +46,16 @@ export function NftDetailModal({
     <Modal
       onClose={onClose}
       labelledBy="nft-detail-title"
-      className="sw-surface rounded-xl border border-[var(--sw-line)] max-w-sm sm:max-w-md w-full mx-2 max-h-[90dvh] overflow-y-auto overscroll-contain"
+      className="sw-surface rounded-xl border border-(--sw-line) max-w-sm sm:max-w-md w-full mx-2 max-h-[90dvh] overflow-y-auto overscroll-contain"
     >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4 sw-surface border-b border-[var(--sw-line)]">
-          <h2 id="nft-detail-title" className="text-lg font-bold text-[var(--sw-ink)] truncate pr-2">
+        <div className="sticky top-0 z-10 flex items-center justify-between p-4 sw-surface border-b border-(--sw-line)">
+          <h2 id="nft-detail-title" className="text-lg font-bold text-(--sw-ink) truncate pr-2">
             {nft.name}
           </h2>
           <button
             onClick={onClose}
-            className="text-[var(--sw-muted)] hover:text-[var(--sw-ink)] flex-shrink-0"
+            className="text-(--sw-muted) hover:text-(--sw-ink) shrink-0"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -75,13 +75,13 @@ export function NftDetailModal({
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               {nft.collectionName && (
-                <p className="text-sm font-semibold text-[var(--sw-ink)] truncate">
+                <p className="text-sm font-semibold text-(--sw-ink) truncate">
                   {nft.collectionName}
                 </p>
               )}
-              <p className="text-xs text-[var(--sw-muted)] sw-mono">Token #{nft.tokenId}</p>
+              <p className="text-xs text-(--sw-muted) sw-mono">Token #{nft.tokenId}</p>
             </div>
-            <span className="flex-shrink-0 px-2 py-1 rounded-sm text-[11px] font-medium sw-mono border border-[var(--sw-line)] text-[var(--sw-ink-soft)]">
+            <span className="shrink-0 px-2 py-1 rounded-xs text-[11px] font-medium sw-mono border border-(--sw-line) text-(--sw-ink-soft)">
               {nft.tokenType}
               {nft.tokenType === "ERC1155" && nft.balance ? ` · ${nft.balance}` : ""}
             </span>
@@ -91,7 +91,7 @@ export function NftDetailModal({
           {nft.description && (
             <div>
               <p className="sw-uplabel mb-1">Description</p>
-              <p className="text-sm text-[var(--sw-ink-soft)] whitespace-pre-line break-words">
+              <p className="text-sm text-(--sw-ink-soft) whitespace-pre-line wrap-break-word">
                 {nft.description}
               </p>
             </div>
@@ -107,14 +107,14 @@ export function NftDetailModal({
                   .map((attr, i) => (
                     <div
                       key={i}
-                      className="rounded-lg border border-[var(--sw-line)] px-3 py-2"
+                      className="rounded-lg border border-(--sw-line) px-3 py-2"
                     >
                       {attr.trait_type && (
-                        <p className="text-[10px] font-medium uppercase tracking-wide truncate text-[var(--sw-accent)]">
+                        <p className="text-[10px] font-medium uppercase tracking-wide truncate text-(--sw-accent)">
                           {attr.trait_type}
                         </p>
                       )}
-                      <p className="text-xs font-semibold text-[var(--sw-ink)] truncate sw-mono">
+                      <p className="text-xs font-semibold text-(--sw-ink) truncate sw-mono">
                         {String(attr.value ?? "—")}
                       </p>
                     </div>
@@ -129,13 +129,13 @@ export function NftDetailModal({
             <button
               onClick={copyContract}
               aria-label={copied ? "Contract address copied" : "Copy contract address"}
-              className="flex items-center gap-2 text-xs sw-mono text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+              className="flex items-center gap-2 text-xs sw-mono text-(--sw-ink-soft) hover:text-(--sw-ink) transition-colors"
             >
               <span className="break-all text-left">{nft.contractAddress}</span>
               {copied ? (
-                <CheckCircle className="w-3.5 h-3.5 text-[var(--sw-up)] flex-shrink-0" />
+                <CheckCircle className="w-3.5 h-3.5 text-(--sw-up) shrink-0" />
               ) : (
-                <Copy className="w-3.5 h-3.5 flex-shrink-0" />
+                <Copy className="w-3.5 h-3.5 shrink-0" />
               )}
             </button>
           </div>

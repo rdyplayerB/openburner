@@ -269,18 +269,18 @@ export function WalletDashboard() {
     { id: "activity", label: "Activity", badge: pendingCount || undefined },
   ];
 
-  const menuItem = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-[var(--sw-ink)] hover:bg-[var(--sw-fill)] transition-colors";
+  const menuItem = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium text-(--sw-ink) hover:bg-(--sw-fill) transition-colors";
 
   return (
     <div className="min-h-screen pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-[var(--sw-line-soft)] bg-[color-mix(in_srgb,var(--sw-paper)_88%,transparent)] backdrop-blur-md pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-40 border-b border-(--sw-line-soft) bg-[color-mix(in_srgb,var(--sw-paper)_88%,transparent)] backdrop-blur-md pt-[env(safe-area-inset-top)]">
         <div className="max-w-6xl mx-auto px-4 lg:px-8 h-16 flex items-center gap-3">
-          <a href="https://openburner.xyz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 flex-shrink-0" aria-label="OpenBurner website">
+          <a href="https://openburner.xyz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 shrink-0" aria-label="OpenBurner website">
             <span className="md:hidden"><BrandMark size={28} /></span>
             <span className="hidden md:inline-flex"><Wordmark fontSize={18} /></span>
           </a>
-          <span className="hidden md:block w-px h-6 bg-[var(--sw-line)] mx-1" aria-hidden="true" />
+          <span className="hidden md:block w-px h-6 bg-(--sw-line) mx-1" aria-hidden="true" />
           <NetworkMenu />
 
           <div className="ml-auto flex items-center gap-1">
@@ -301,7 +301,7 @@ export function WalletDashboard() {
               </button>
 
               {showMenu && (
-                <div className="ob-pop-in absolute right-0 top-full mt-2 w-64 sw-surface rounded-xl border border-[var(--sw-line)] z-50 p-1.5 shadow-xl" role="menu">
+                <div className="ob-pop-in absolute right-0 top-full mt-2 w-64 sw-surface rounded-xl border border-(--sw-line) z-50 p-1.5 shadow-xl" role="menu">
                   <button
                     role="menuitem"
                     onClick={() => {
@@ -310,7 +310,7 @@ export function WalletDashboard() {
                     }}
                     className={menuItem}
                   >
-                    {isDarkMode ? <Sun className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" /> : <Moon className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />}
+                    {isDarkMode ? <Sun className="w-4 h-4 text-(--sw-ink-soft)" aria-hidden="true" /> : <Moon className="w-4 h-4 text-(--sw-ink-soft)" aria-hidden="true" />}
                     {isDarkMode ? "Light mode" : "Dark mode"}
                   </button>
                   <button
@@ -321,7 +321,7 @@ export function WalletDashboard() {
                     }}
                     className={menuItem}
                   >
-                    <ScanLine className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />
+                    <ScanLine className="w-4 h-4 text-(--sw-ink-soft)" aria-hidden="true" />
                     Connect to a dApp
                   </button>
                   <button
@@ -333,29 +333,29 @@ export function WalletDashboard() {
                     }}
                     className={menuItem}
                   >
-                    <Settings className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />
+                    <Settings className="w-4 h-4 text-(--sw-ink-soft)" aria-hidden="true" />
                     Settings
                   </button>
                   <a role="menuitem" href="https://openburner.xyz" target="_blank" rel="noopener noreferrer" className={menuItem}>
-                    <ExternalLink className="w-4 h-4 text-[var(--sw-ink-soft)]" aria-hidden="true" />
+                    <ExternalLink className="w-4 h-4 text-(--sw-ink-soft)" aria-hidden="true" />
                     openburner.xyz
                   </a>
 
                   {wcSessions.length > 0 && (
-                    <div className="border-t border-[var(--sw-line-soft)] mt-1.5 pt-2 px-3 pb-1">
+                    <div className="border-t border-(--sw-line-soft) mt-1.5 pt-2 px-3 pb-1">
                       <p className="sw-label mb-1">Connected dApps</p>
                       <WcSessionsList compact />
                     </div>
                   )}
 
-                  <div className="border-t border-[var(--sw-line-soft)] mt-1.5 pt-1.5">
+                  <div className="border-t border-(--sw-line-soft) mt-1.5 pt-1.5">
                     <button
                       role="menuitem"
                       onClick={() => {
                         disconnect();
                         setShowMenu(false);
                       }}
-                      className={`${menuItem} !text-[var(--sw-down)] hover:!bg-[var(--sw-down-bg)]`}
+                      className={`${menuItem} text-(--sw-down)! hover:bg-(--sw-down-bg)!`}
                     >
                       <LogOut className="w-4 h-4" aria-hidden="true" />
                       Disconnect card
@@ -372,7 +372,7 @@ export function WalletDashboard() {
         {/* Gateway link dropped — guide the user to reload their phone (same session) */}
         {gatewayState === "executor-away" && (
           <div role="alert" className="sw-callout sw-callout-warn mb-4 flex items-start gap-3">
-            <WifiOff className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--sw-warn)]" aria-hidden="true" />
+            <WifiOff className="w-4 h-4 mt-0.5 shrink-0 text-(--sw-warn)" aria-hidden="true" />
             <p>
               <span className="font-semibold">Your phone disconnected.</span> It probably went to sleep. Reload the HaLo
               Gateway page on your phone — it rejoins this session without a new scan, and any pending signature resumes.
@@ -403,8 +403,8 @@ export function WalletDashboard() {
             />
           </div>
 
-          <section className="sw-surface rounded-2xl border border-[var(--sw-line)] min-w-0 overflow-hidden" aria-label="Assets and activity">
-            <div className="flex gap-6 border-b border-[var(--sw-line-soft)] px-5" role="tablist" aria-label="Assets">
+          <section className="sw-surface rounded-2xl border border-(--sw-line) min-w-0 overflow-hidden" aria-label="Assets and activity">
+            <div className="flex gap-6 border-b border-(--sw-line-soft) px-5" role="tablist" aria-label="Assets">
               {tabs.map((t) => (
                 <button
                   key={t.id}
@@ -420,7 +420,7 @@ export function WalletDashboard() {
                 >
                   {t.label}
                   {t.badge ? (
-                    <span className="min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-[var(--sw-warn-bg)] text-[var(--sw-warn)] text-[10px] font-bold flex items-center justify-center">
+                    <span className="min-w-4.5 h-4.5 px-1 rounded-full bg-(--sw-warn-bg) text-(--sw-warn) text-[10px] font-bold flex items-center justify-center">
                       {t.badge}
                     </span>
                   ) : null}
@@ -531,21 +531,21 @@ function DappStack({ sessions, onClick }: { sessions: any[]; onClick: () => void
         const icon = s?.peer?.metadata?.icons?.[0];
         return (
           <span key={s.topic} className={`relative ${i > 0 ? "-ml-2" : ""}`} style={{ zIndex: shown.length - i }}>
-            <span className="block w-6 h-6 rounded-full overflow-hidden bg-[var(--sw-fill-strong)] ring-2 ring-[var(--sw-paper)]">
+            <span className="block w-6 h-6 rounded-full overflow-hidden bg-(--sw-fill-strong) ring-2 ring-(--sw-paper)">
               {icon ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={icon} alt="" className="w-full h-full object-cover" />
               ) : (
-                <Globe className="w-4 h-4 m-1 text-[var(--sw-muted)]" aria-hidden="true" />
+                <Globe className="w-4 h-4 m-1 text-(--sw-muted)" aria-hidden="true" />
               )}
             </span>
             {i === shown.length - 1 && (
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--sw-up)] ring-2 ring-[var(--sw-paper)]" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-(--sw-up) ring-2 ring-(--sw-paper)" />
             )}
           </span>
         );
       })}
-      {extra > 0 && <span className="ml-1 text-[11px] font-semibold text-[var(--sw-muted)]">+{extra}</span>}
+      {extra > 0 && <span className="ml-1 text-[11px] font-semibold text-(--sw-muted)">+{extra}</span>}
     </button>
   );
 }

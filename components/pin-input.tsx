@@ -124,13 +124,13 @@ export function PinInput({
       ) : (
         <div className="px-5 pt-6 pb-5">
           <div className="text-center mb-5">
-            <span className="mx-auto mb-3 w-10 h-10 rounded-full bg-[var(--sw-fill-strong)] text-[var(--sw-ink)] flex items-center justify-center">
+            <span className="mx-auto mb-3 w-10 h-10 rounded-full bg-(--sw-fill-strong) text-(--sw-ink) flex items-center justify-center">
               <Lock className="w-4 h-4" aria-hidden="true" />
             </span>
-            <h3 id="pin-title" className="text-xl font-bold text-[var(--sw-ink)] tracking-tight">
+            <h3 id="pin-title" className="text-xl font-bold text-(--sw-ink) tracking-tight">
               {title}
             </h3>
-            <p className="text-sm text-[var(--sw-ink-soft)] mt-1">Then tap your Burner to sign.</p>
+            <p className="text-sm text-(--sw-ink-soft) mt-1">Then tap your Burner to sign.</p>
           </div>
 
           {error && (
@@ -157,9 +157,9 @@ export function PinInput({
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={index === 0 ? handlePaste : undefined}
-                className={`w-11 h-14 text-center text-2xl font-bold sw-mono bg-[var(--sw-fill)] text-[var(--sw-ink)] rounded-xl border-2 focus:outline-none transition-colors ${
-                  digit ? "border-[var(--sw-ink)]" : "border-transparent"
-                } focus:border-[var(--sw-accent)]`}
+                className={`w-11 h-14 text-center text-2xl font-bold sw-mono bg-(--sw-fill) text-(--sw-ink) rounded-xl border-2 focus:outline-hidden transition-colors ${
+                  digit ? "border-(--sw-ink)" : "border-transparent"
+                } focus:border-(--sw-accent)`}
               />
             ))}
           </div>
@@ -167,11 +167,11 @@ export function PinInput({
           <button onClick={handleSubmit} disabled={!isComplete} className="sw-btn-primary w-full py-3.5 text-sm">
             Continue
           </button>
-          <button onClick={onCancel} className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)]">
+          <button onClick={onCancel} className="w-full py-3 mt-1 text-sm font-semibold text-(--sw-ink-soft) hover:text-(--sw-ink)">
             Cancel
           </button>
 
-          <p className="text-xs text-center text-[var(--sw-muted)] mt-2">Sent directly to your Burner, never stored.</p>
+          <p className="text-xs text-center text-(--sw-muted) mt-2">Sent directly to your Burner, never stored.</p>
         </div>
       )}
     </Modal>

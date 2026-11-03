@@ -682,16 +682,16 @@ export function SwapToken({
       labelledBy="swap-title"
       closeOnBackdrop={!busy}
       closeOnEscape={!busy}
-      className="sw-surface w-full max-w-md max-h-[90dvh] rounded-xl border border-[var(--sw-line)] overflow-hidden flex flex-col"
+      className="sw-surface w-full max-w-md max-h-[90dvh] rounded-xl border border-(--sw-line) overflow-hidden flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-3 flex-shrink-0">
+      <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-3 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <h2 id="swap-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">
+          <h2 id="swap-title" className="text-lg font-bold text-(--sw-ink) tracking-tight">
             Swap
           </h2>
           <span className="sw-chip pl-1 pr-2.5 py-1 text-xs min-w-0">
-            <ChainLogo chainId={chainId} name={chainName} className="w-4 h-4 flex-shrink-0" />
+            <ChainLogo chainId={chainId} name={chainName} className="w-4 h-4 shrink-0" />
             <span className="truncate">{network}</span>
           </span>
         </div>
@@ -716,13 +716,13 @@ export function SwapToken({
       {/* Scrollable body keeps the action button reachable with the keyboard open */}
       <div className="px-5 pb-2 overflow-y-auto overscroll-contain min-h-0 flex-auto">
         {/* You pay */}
-        <div className="rounded-2xl border border-transparent bg-[var(--sw-fill)] p-4 transition-colors focus-within:border-[var(--sw-accent)]">
+        <div className="rounded-2xl border border-transparent bg-(--sw-fill) p-4 transition-colors focus-within:border-(--sw-accent)">
           <div className="flex items-center justify-between gap-2">
             <label htmlFor="swap-from-amount" className="sw-label">
               You pay
             </label>
             {fromToken && (
-              <span className="text-xs text-[var(--sw-muted)] sw-num flex items-center gap-2">
+              <span className="text-xs text-(--sw-muted) sw-num flex items-center gap-2">
                 <span>Balance {formatSwapBalance(fromBalance, STABLES.has(fromToken.symbol.toUpperCase()))}</span>
                 <button
                   onClick={handleMaxAmount}
@@ -746,7 +746,7 @@ export function SwapToken({
               disabled={busy}
               placeholder="0"
               aria-invalid={insufficient || undefined}
-              className={`sw-amount-input text-3xl flex-1 ${insufficient ? '!text-[var(--sw-down)]' : ''}`}
+              className={`sw-amount-input text-3xl flex-1 ${insufficient ? 'text-(--sw-down)!' : ''}`}
             />
             <TokenChip
               token={fromToken}
@@ -756,15 +756,15 @@ export function SwapToken({
               label={fromToken ? `Change token to pay, currently ${fromToken.symbol}` : 'Select token to pay'}
             />
           </div>
-          <div className="text-xs text-[var(--sw-muted)] sw-num mt-1.5 min-h-[1rem]">{fromUsd !== null ? usd(fromUsd) : ''}</div>
+          <div className="text-xs text-(--sw-muted) sw-num mt-1.5 min-h-4">{fromUsd !== null ? usd(fromUsd) : ''}</div>
         </div>
 
         {/* Flip */}
-        <div className="flex justify-center -my-[14px] relative z-10">
+        <div className="flex justify-center my-[-14px] relative z-10">
           <button
             onClick={() => swapTokens()}
             disabled={busy}
-            className="w-9 h-9 rounded-xl bg-[var(--sw-surface)] ring-4 ring-[var(--sw-surface)] border border-[var(--sw-line)] text-[var(--sw-ink)] flex items-center justify-center hover:bg-[var(--sw-fill-strong)] transition-colors"
+            className="w-9 h-9 rounded-xl bg-(--sw-surface) ring-4 ring-(--sw-surface) border border-(--sw-line) text-(--sw-ink) flex items-center justify-center hover:bg-(--sw-fill-strong) transition-colors"
             aria-label="Switch pay and receive tokens"
           >
             <ArrowDownUp className="w-4 h-4" />
@@ -772,13 +772,13 @@ export function SwapToken({
         </div>
 
         {/* You receive (read-only: quotes are exact-in) */}
-        <div className="rounded-2xl bg-[var(--sw-fill)] p-4">
+        <div className="rounded-2xl bg-(--sw-fill) p-4">
           <div className="flex items-center justify-between gap-2">
             <span id="swap-to-label" className="sw-label">
               You receive
             </span>
             {toToken && (
-              <span className="text-xs text-[var(--sw-muted)] sw-num">
+              <span className="text-xs text-(--sw-muted) sw-num">
                 Balance {formatSwapBalance(balanceOf(toToken), STABLES.has(toToken.symbol.toUpperCase()))}
               </span>
             )}
@@ -789,7 +789,7 @@ export function SwapToken({
                 <span className="sw-skeleton block h-8 w-32" aria-label="Getting quote" />
               ) : (
                 <output
-                  className={`sw-amount-input text-3xl block truncate ${quote && toAmount ? '' : 'text-[var(--sw-muted)] opacity-60'}`}
+                  className={`sw-amount-input text-3xl block truncate ${quote && toAmount ? '' : 'text-(--sw-muted) opacity-60'}`}
                   title={toAmount || undefined}
                 >
                   {quote && toAmount ? formatSwapBalance(toAmount, STABLES.has(toToken?.symbol.toUpperCase() ?? '')) : '0'}
@@ -804,7 +804,7 @@ export function SwapToken({
               label={toToken ? `Change token to receive, currently ${toToken.symbol}` : 'Select token to receive'}
             />
           </div>
-          <div className="text-xs text-[var(--sw-muted)] sw-num mt-1.5 min-h-[1rem]">{toUsd !== null ? usd(toUsd) : ''}</div>
+          <div className="text-xs text-(--sw-muted) sw-num mt-1.5 min-h-4">{toUsd !== null ? usd(toUsd) : ''}</div>
         </div>
 
         {/* Summary: rate, expandable details */}
@@ -815,13 +815,13 @@ export function SwapToken({
                 onClick={() => setShowDetails((v) => !v)}
                 aria-expanded={showDetails}
                 aria-controls="swap-details"
-                className="flex items-center gap-1.5 text-sm text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] sw-num min-w-0"
+                className="flex items-center gap-1.5 text-sm text-(--sw-ink-soft) hover:text-(--sw-ink) sw-num min-w-0"
               >
                 <span className="truncate">{rateLabel}</span>
-                <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${showDetails ? 'rotate-180' : ''}`} aria-hidden="true" />
+                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${showDetails ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
               {expired && (
-                <span className="text-xs text-[var(--sw-muted)] flex-shrink-0">
+                <span className="text-xs text-(--sw-muted) shrink-0">
                   Quote expired ·{' '}
                   <button onClick={fetchQuote} className="sw-link text-xs">
                     Refresh
@@ -883,7 +883,7 @@ export function SwapToken({
       </div>
 
       {/* Primary action: always visible */}
-      <div className="px-5 pt-3 pb-5 flex-shrink-0 border-t border-[var(--sw-line-soft)]">
+      <div className="px-5 pt-3 pb-5 shrink-0 border-t border-(--sw-line-soft)">
         <button onClick={cta.onClick} disabled={cta.disabled} className="sw-btn-primary w-full py-3.5 text-sm">
           {cta.label}
         </button>
@@ -926,13 +926,13 @@ export function SwapToken({
             setAddTokenError(null);
           }}
           labelledBy="swap-add-token-title"
-          className="sw-surface rounded-xl border border-[var(--sw-line)] w-full max-w-sm overflow-hidden"
+          className="sw-surface rounded-xl border border-(--sw-line) w-full max-w-sm overflow-hidden"
         >
           <div className="px-5 pt-5 pb-5">
-            <h3 id="swap-add-token-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">
+            <h3 id="swap-add-token-title" className="text-lg font-bold text-(--sw-ink) tracking-tight">
               Add a token
             </h3>
-            <p className="text-sm text-[var(--sw-ink-soft)] mt-1 mb-4">
+            <p className="text-sm text-(--sw-ink-soft) mt-1 mb-4">
               Paste the token&apos;s contract address on {network}.
             </p>
             <label htmlFor="swap-add-token-address" className="sw-label block mb-1.5">
@@ -973,7 +973,7 @@ export function SwapToken({
                 if (addTokenContext) setShowTokenSelector(addTokenContext);
                 setAddTokenContext(null);
               }}
-              className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)]"
+              className="w-full py-3 mt-1 text-sm font-semibold text-(--sw-ink-soft) hover:text-(--sw-ink)"
             >
               Cancel
             </button>
@@ -985,10 +985,10 @@ export function SwapToken({
         <Modal
           onClose={() => setShowSettings(false)}
           labelledBy="swap-settings-title"
-          className="sw-surface rounded-xl border border-[var(--sw-line)] w-full max-w-sm overflow-hidden"
+          className="sw-surface rounded-xl border border-(--sw-line) w-full max-w-sm overflow-hidden"
         >
           <div className="px-5 pt-5 pb-5">
-            <h3 id="swap-settings-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight mb-4">
+            <h3 id="swap-settings-title" className="text-lg font-bold text-(--sw-ink) tracking-tight mb-4">
               Swap settings
             </h3>
 
@@ -1005,14 +1005,14 @@ export function SwapToken({
                         setCustomSlippage('');
                       }}
                       aria-pressed={active}
-                      className={`sw-chip px-3.5 py-2 text-sm ${active ? '!bg-[var(--sw-ink)] !text-[var(--sw-paper)]' : ''}`}
+                      className={`sw-chip px-3.5 py-2 text-sm ${active ? 'bg-(--sw-ink)! text-(--sw-paper)!' : ''}`}
                     >
                       {p}%
                     </button>
                   );
                 })}
                 <div
-                  className={`sw-field flex items-center px-3 py-1.5 w-24 ${!slippageIsPreset ? '!border-[var(--sw-ink)]' : ''}`}
+                  className={`sw-field flex items-center px-3 py-1.5 w-24 ${!slippageIsPreset ? 'border-(--sw-ink)!' : ''}`}
                 >
                   <input
                     type="text"
@@ -1029,26 +1029,26 @@ export function SwapToken({
                     placeholder="Custom"
                     className="sw-field-input text-sm sw-num"
                   />
-                  <span className="text-sm text-[var(--sw-muted)]">%</span>
+                  <span className="text-sm text-(--sw-muted)">%</span>
                 </div>
               </div>
-              <p className="text-xs text-[var(--sw-muted)] mt-2 leading-relaxed">
+              <p className="text-xs text-(--sw-muted) mt-2 leading-relaxed">
                 The swap cancels if the price moves against you by more than this.
               </p>
               {settings.slippagePercentage > 5 && (
                 <div className="sw-callout sw-callout-warn mt-2">High slippage: you may get a much worse price.</div>
               )}
               {customSlippage !== '' && (parseFloat(customSlippage) < 0.1 || parseFloat(customSlippage) > 50) && (
-                <p className="text-xs text-[var(--sw-down)] mt-2">Enter a value from 0.1 to 50.</p>
+                <p className="text-xs text-(--sw-down) mt-2">Enter a value from 0.1 to 50.</p>
               )}
             </fieldset>
 
-            <div className="flex items-start justify-between gap-4 mt-6 pt-5 border-t border-[var(--sw-line-soft)]">
+            <div className="flex items-start justify-between gap-4 mt-6 pt-5 border-t border-(--sw-line-soft)">
               <div>
-                <p id="swap-auto-approve-label" className="text-sm font-semibold text-[var(--sw-ink)]">
+                <p id="swap-auto-approve-label" className="text-sm font-semibold text-(--sw-ink)">
                   Approve automatically
                 </p>
-                <p className="text-xs text-[var(--sw-muted)] mt-1 leading-relaxed">
+                <p className="text-xs text-(--sw-muted) mt-1 leading-relaxed">
                   {settings.autoApprove
                     ? 'Grants an unlimited allowance the first time you swap a token, so later swaps need one tap.'
                     : 'Approves only the exact amount, before each swap that needs it.'}
@@ -1059,12 +1059,12 @@ export function SwapToken({
                 aria-checked={settings.autoApprove}
                 aria-labelledby="swap-auto-approve-label"
                 onClick={() => updateSettings({ autoApprove: !settings.autoApprove })}
-                className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${
-                  settings.autoApprove ? 'bg-[var(--sw-ink)]' : 'bg-[var(--sw-fill-strong)]'
+                className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${
+                  settings.autoApprove ? 'bg-(--sw-ink)' : 'bg-(--sw-fill-strong)'
                 }`}
               >
                 <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--sw-surface)] shadow-sm transition-transform ${
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-(--sw-surface) shadow-xs transition-transform ${
                     settings.autoApprove ? 'translate-x-5' : ''
                   }`}
                 />
@@ -1108,17 +1108,17 @@ function TokenChip({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className={`sw-chip py-1.5 text-sm flex-shrink-0 disabled:opacity-60 ${token ? 'pl-1.5 pr-2.5' : 'px-3.5'}`}
+      className={`sw-chip py-1.5 text-sm shrink-0 disabled:opacity-60 ${token ? 'pl-1.5 pr-2.5' : 'px-3.5'}`}
     >
       {token ? (
         <>
           <TokenIcon symbol={token.symbol} url={image} size="sm" />
-          <span className="max-w-[6rem] truncate">{token.symbol}</span>
+          <span className="max-w-24 truncate">{token.symbol}</span>
         </>
       ) : (
         <span>Select token</span>
       )}
-      <ChevronDown className="w-4 h-4 text-[var(--sw-muted)]" aria-hidden="true" />
+      <ChevronDown className="w-4 h-4 text-(--sw-muted)" aria-hidden="true" />
     </button>
   );
 }
@@ -1126,10 +1126,10 @@ function TokenChip({
 function DetailRow({ label, value, tone }: { label: string; value: string; tone?: 'warn' | 'down' }) {
   return (
     <div className="flex items-center justify-between gap-3 py-2.5">
-      <dt className="text-[var(--sw-muted)]">{label}</dt>
+      <dt className="text-(--sw-muted)">{label}</dt>
       <dd
         className={`sw-num text-right break-all ${
-          tone === 'down' ? 'text-[var(--sw-down)] font-semibold' : tone === 'warn' ? 'text-[var(--sw-warn)] font-semibold' : 'text-[var(--sw-ink)]'
+          tone === 'down' ? 'text-(--sw-down) font-semibold' : tone === 'warn' ? 'text-(--sw-warn) font-semibold' : 'text-(--sw-ink)'
         }`}
       >
         {value}

@@ -39,7 +39,7 @@ export function Identicon({ address, size = 32, className = "" }: { address: str
       width={size}
       height={size}
       viewBox="0 0 5 5"
-      className={`rounded-full flex-shrink-0 ${className}`}
+      className={`rounded-full shrink-0 ${className}`}
       shapeRendering="crispEdges"
       aria-hidden="true"
     >

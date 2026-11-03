@@ -35,7 +35,7 @@ export function TokenIcon({
   const s = SIZES[size];
 
   return (
-    <span className={`relative inline-flex flex-shrink-0 ${s.box}`} aria-hidden="true">
+    <span className={`relative inline-flex shrink-0 ${s.box}`} aria-hidden="true">
       {url && !broken ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -43,16 +43,16 @@ export function TokenIcon({
           alt=""
           loading="lazy"
           decoding="async"
-          className={`${s.box} rounded-full object-cover bg-[var(--sw-fill)]`}
+          className={`${s.box} rounded-full object-cover bg-(--sw-fill)`}
           onError={() => setBroken(true)}
         />
       ) : (
-        <span className={`${s.box} rounded-full sw-mark !rounded-full flex items-center justify-center font-bold ${s.text}`}>
+        <span className={`${s.box} rounded-full sw-mark rounded-full! flex items-center justify-center font-bold ${s.text}`}>
           {(symbol || "?").charAt(0).toUpperCase()}
         </span>
       )}
       {chainId !== undefined && (
-        <span className={`absolute ${s.badge} rounded-full ring-2 ring-[var(--sw-surface)] bg-[var(--sw-surface)] overflow-hidden`}>
+        <span className={`absolute ${s.badge} rounded-full ring-2 ring-(--sw-surface) bg-(--sw-surface) overflow-hidden`}>
           <ChainLogo chainId={chainId} className="w-full h-full" />
         </span>
       )}
@@ -81,7 +81,7 @@ export function ChainLogo({
   if (!chain?.logo || broken) {
     return (
       <span
-        className={`${className} inline-flex items-center justify-center rounded-full bg-[var(--sw-fill-strong)] text-[var(--sw-ink)] text-[9px] font-bold`}
+        className={`${className} inline-flex items-center justify-center rounded-full bg-(--sw-fill-strong) text-(--sw-ink) text-[9px] font-bold`}
         aria-hidden="true"
       >
         {label.charAt(0)}

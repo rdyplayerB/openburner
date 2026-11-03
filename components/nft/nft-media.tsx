@@ -32,7 +32,7 @@ export function NftMedia({
     return (
       <video
         src={nft.animationUrl}
-        className={`${className} ${rounded} object-cover bg-[var(--sw-line-soft)]`}
+        className={`${className} ${rounded} object-cover bg-(--sw-line-soft)`}
         autoPlay
         loop
         muted
@@ -46,7 +46,7 @@ export function NftMedia({
   if (!image || errored) {
     return (
       <div
-        className={`${className} ${rounded} flex flex-col items-center justify-center gap-1.5 bg-[var(--sw-line-soft)] text-[var(--sw-muted)]`}
+        className={`${className} ${rounded} flex flex-col items-center justify-center gap-1.5 bg-(--sw-line-soft) text-(--sw-muted)`}
       >
         <ImageOff className="w-6 h-6" />
         <span className="text-[10px] font-medium">No image</span>
@@ -60,7 +60,7 @@ export function NftMedia({
       src={image}
       alt={nft.name}
       loading="lazy"
-      className={`${className} ${rounded} object-cover bg-[var(--sw-line-soft)]`}
+      className={`${className} ${rounded} object-cover bg-(--sw-line-soft)`}
       onError={() => setErrored(true)}
     />
   );

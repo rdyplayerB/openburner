@@ -44,16 +44,16 @@ export function ErrorModal({ error, mode, onClose, onTryAgain }: ErrorModalProps
   return (
     <Modal onClose={onClose} labelledBy="local-error-title">
       <div className="px-5 pt-6 pb-5" role="alert">
-        <span className="mx-auto mb-3 w-11 h-11 rounded-full bg-[var(--sw-down-bg)] text-[var(--sw-down)] flex items-center justify-center">
+        <span className="mx-auto mb-3 w-11 h-11 rounded-full bg-(--sw-down-bg) text-(--sw-down) flex items-center justify-center">
           <AlertTriangle className="w-5 h-5" aria-hidden="true" />
         </span>
-        <h2 id="local-error-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)] text-center">
+        <h2 id="local-error-title" className="text-xl font-bold tracking-tight text-(--sw-ink) text-center">
           {title}
         </h2>
-        <p className="text-sm text-[var(--sw-ink-soft)] text-center mt-1.5 leading-relaxed">{hint}</p>
+        <p className="text-sm text-(--sw-ink-soft) text-center mt-1.5 leading-relaxed">{hint}</p>
 
         {error !== title && (
-          <p className="sw-callout sw-callout-info mt-4 break-words">{error}</p>
+          <p className="sw-callout sw-callout-info mt-4 wrap-break-word">{error}</p>
         )}
 
         <button onClick={onTryAgain || onClose} className="sw-btn-primary w-full py-3.5 mt-5 text-sm">
@@ -61,7 +61,7 @@ export function ErrorModal({ error, mode, onClose, onTryAgain }: ErrorModalProps
         </button>
         <button
           onClick={onClose}
-          className="w-full py-3 mt-1 text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] transition-colors"
+          className="w-full py-3 mt-1 text-sm font-semibold text-(--sw-ink-soft) hover:text-(--sw-ink) transition-colors"
         >
           Close
         </button>

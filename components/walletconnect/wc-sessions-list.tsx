@@ -13,7 +13,7 @@ export function WcSessionsList({ compact = false }: { compact?: boolean }) {
   const disconnect = useWalletConnectStore((s) => s.disconnect);
 
   if (sessions.length === 0) {
-    return <p className="text-xs text-[var(--sw-muted)] py-3">No connected dApps.</p>;
+    return <p className="text-xs text-(--sw-muted) py-3">No connected dApps.</p>;
   }
 
   return (
@@ -25,12 +25,12 @@ export function WcSessionsList({ compact = false }: { compact?: boolean }) {
           <div key={s.topic} className={`flex items-center gap-3 ${compact ? "py-2" : "py-3"}`}>
             <DappIcon src={meta.icons?.[0]} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-[var(--sw-ink)] truncate">{meta.name || "dApp"}</p>
-              {!compact && host && <p className="text-xs text-[var(--sw-muted)] truncate">{host}</p>}
+              <p className="text-sm font-medium text-(--sw-ink) truncate">{meta.name || "dApp"}</p>
+              {!compact && host && <p className="text-xs text-(--sw-muted) truncate">{host}</p>}
             </div>
             <button
               onClick={() => disconnect(s.topic)}
-              className="sw-icon-btn p-1.5 hover:!text-[var(--sw-down)]"
+              className="sw-icon-btn p-1.5 hover:text-(--sw-down)!"
               title="Disconnect"
               aria-label={`Disconnect ${meta.name || "dApp"}`}
             >

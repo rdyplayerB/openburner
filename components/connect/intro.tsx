@@ -102,14 +102,14 @@ export function Intro() {
   const finish = () => setSeen(true);
 
   return (
-    <div className="sw-screen min-h-[100dvh] flex flex-col sm:items-center sm:justify-center sm:px-6 sm:py-10">
-      <div className="flex-1 sm:flex-none flex flex-col w-full sm:max-w-[440px] sm:rounded-xl sm:border sm:border-[var(--sw-line)] sm:bg-[var(--sw-surface)] sm:overflow-hidden">
+    <div className="sw-screen min-h-dvh flex flex-col sm:items-center sm:justify-center sm:px-6 sm:py-10">
+      <div className="flex-1 sm:flex-none flex flex-col w-full sm:max-w-[440px] sm:rounded-xl sm:border sm:border-(--sw-line) sm:bg-(--sw-surface) sm:overflow-hidden">
         <header className="flex items-center justify-between px-5 sm:px-8 pt-[max(1rem,env(safe-area-inset-top))] sm:pt-6 pb-2">
           <Wordmark />
           <button
             type="button"
             onClick={finish}
-            className={`text-sm font-semibold text-[var(--sw-ink-soft)] hover:text-[var(--sw-ink)] px-2 py-2 -mr-2 transition-opacity ${
+            className={`text-sm font-semibold text-(--sw-ink-soft) hover:text-(--sw-ink) px-2 py-2 -mr-2 transition-opacity ${
               last ? "opacity-0 pointer-events-none" : ""
             }`}
             tabIndex={last ? -1 : 0}
@@ -127,7 +127,7 @@ export function Intro() {
           role="region"
           aria-roledescription="carousel"
           aria-label="What OpenBurner is"
-          className="flex overflow-x-auto snap-x snap-mandatory overscroll-x-contain ob-no-scrollbar focus-visible:outline-none"
+          className="flex overflow-x-auto snap-x snap-mandatory overscroll-x-contain ob-no-scrollbar focus-visible:outline-hidden"
         >
           {SLIDES.map(({ Art, title, body }, i) => (
             <section
@@ -136,10 +136,10 @@ export function Intro() {
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${SLIDES.length}`}
               aria-hidden={i !== index}
-              className="w-full flex-shrink-0 snap-start snap-always px-5 sm:px-8 pt-3"
+              className="w-full shrink-0 snap-start snap-always px-5 sm:px-8 pt-3"
             >
               <div
-                className="ob-intro-stage rounded-2xl bg-[var(--sw-fill)] overflow-hidden"
+                className="ob-intro-stage rounded-2xl bg-(--sw-fill) overflow-hidden"
                 style={{
                   backgroundImage:
                     "linear-gradient(var(--sw-line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--sw-line-soft) 1px, transparent 1px)",
@@ -149,10 +149,10 @@ export function Intro() {
               >
                 <Art active={i === index} />
               </div>
-              <h1 className="mt-7 text-[1.75rem] leading-[1.1] sm:text-[2rem] font-bold tracking-tight text-[var(--sw-ink)]">
+              <h1 className="mt-7 text-[1.75rem] leading-[1.1] sm:text-[2rem] font-bold tracking-tight text-(--sw-ink)">
                 {keepLastWordsTogether(title)}
               </h1>
-              <p className="mt-3 text-[15px] leading-relaxed text-[var(--sw-ink-soft)]">{keepLastWordsTogether(body)}</p>
+              <p className="mt-3 text-[15px] leading-relaxed text-(--sw-ink-soft)">{keepLastWordsTogether(body)}</p>
             </section>
           ))}
         </div>
@@ -171,13 +171,13 @@ export function Intro() {
                 <span
                   className={`block h-[3px] rounded-full transition-all duration-300 ${
                     i === index
-                      ? "w-8 bg-[var(--sw-accent)]"
-                      : "w-4 bg-[var(--sw-line)] group-hover:bg-[var(--sw-muted)]"
+                      ? "w-8 bg-(--sw-accent)"
+                      : "w-4 bg-(--sw-line) group-hover:bg-(--sw-muted)"
                   }`}
                 />
               </button>
             ))}
-            <span className="ml-auto text-xs text-[var(--sw-muted)] sw-num" aria-hidden="true">
+            <span className="ml-auto text-xs text-(--sw-muted) sw-num" aria-hidden="true">
               {String(index + 1).padStart(2, "0")} / {String(SLIDES.length).padStart(2, "0")}
             </span>
           </div>
@@ -195,7 +195,7 @@ export function Intro() {
         href={SOURCE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="hidden sm:inline-flex items-center gap-1 mt-6 text-xs text-[var(--sw-muted)] hover:text-[var(--sw-ink)] transition-colors"
+        className="hidden sm:inline-flex items-center gap-1 mt-6 text-xs text-(--sw-muted) hover:text-(--sw-ink) transition-colors"
       >
         Source code on GitHub
         <ArrowUpRight className="w-3 h-3" aria-hidden="true" />

@@ -33,7 +33,7 @@ const KEYS: {
 type KeyState = "saved" | "server" | "none";
 
 function StatusChip({ state, loading }: { state: KeyState; loading: boolean }) {
-  if (loading) return <span className="text-[11px] text-[var(--sw-muted)]">…</span>;
+  if (loading) return <span className="text-[11px] text-(--sw-muted)">…</span>;
   const color = state === "none" ? "var(--sw-muted)" : "var(--sw-up)";
   const text = state === "saved" ? "Saved" : state === "server" ? "Server" : "Not set";
   return (
@@ -100,10 +100,10 @@ export function SettingsModal({
         else onClose();
       }}
       labelledBy="settings-title"
-      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden max-h-[90dvh] flex flex-col"
+      className="sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden max-h-[90dvh] flex flex-col"
     >
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--sw-line-soft)]">
-          <h2 id="settings-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">Settings</h2>
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-(--sw-line-soft)">
+          <h2 id="settings-title" className="text-lg font-bold text-(--sw-ink) tracking-tight">Settings</h2>
           <button onClick={onClose} className="sw-icon-btn p-2 -mr-2" aria-label="Close settings">
             <X className="w-5 h-5" />
           </button>
@@ -114,24 +114,24 @@ export function SettingsModal({
           <p className="sw-seclabel mt-1 mb-1">Appearance</p>
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center gap-2.5">
-              {isDarkMode ? <Moon className="w-4 h-4 text-[var(--sw-muted)]" /> : <Sun className="w-4 h-4 text-[var(--sw-muted)]" />}
-              <span className="text-sm text-[var(--sw-ink)]">Dark mode</span>
+              {isDarkMode ? <Moon className="w-4 h-4 text-(--sw-muted)" /> : <Sun className="w-4 h-4 text-(--sw-muted)" />}
+              <span className="text-sm text-(--sw-ink)">Dark mode</span>
             </div>
             <button
               onClick={toggleTheme}
               role="switch"
               aria-checked={isDarkMode}
               aria-label="Dark mode"
-              className={`relative w-10 h-6 rounded-full transition-colors ${isDarkMode ? "bg-[var(--sw-accent-fill)]" : "bg-[var(--sw-fill-strong)]"}`}
+              className={`relative w-10 h-6 rounded-full transition-colors ${isDarkMode ? "bg-(--sw-accent-fill)" : "bg-(--sw-fill-strong)"}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${isDarkMode ? "translate-x-4" : ""}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${isDarkMode ? "translate-x-4" : ""}`} />
             </button>
           </div>
 
           <div className="flex items-center justify-between py-3">
             <div className="min-w-0">
-              <span className="text-sm text-[var(--sw-ink)]">Debug logging</span>
-              <p className="text-[11px] text-[var(--sw-muted)] mt-0.5">For support sessions. Never logs keys, signatures or PINs.</p>
+              <span className="text-sm text-(--sw-ink)">Debug logging</span>
+              <p className="text-[11px] text-(--sw-muted) mt-0.5">For support sessions. Never logs keys, signatures or PINs.</p>
             </div>
             <button
               onClick={() => {
@@ -141,9 +141,9 @@ export function SettingsModal({
               role="switch"
               aria-checked={debugLogging}
               aria-label="Debug logging"
-              className={`relative w-10 h-6 flex-shrink-0 rounded-full transition-colors ${debugLogging ? "bg-[var(--sw-accent-fill)]" : "bg-[var(--sw-fill-strong)]"}`}
+              className={`relative w-10 h-6 shrink-0 rounded-full transition-colors ${debugLogging ? "bg-(--sw-accent-fill)" : "bg-(--sw-fill-strong)"}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${debugLogging ? "translate-x-4" : ""}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${debugLogging ? "translate-x-4" : ""}`} />
             </button>
           </div>
 
@@ -158,13 +158,13 @@ export function SettingsModal({
                 <div key={k.key} className="py-3.5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[var(--sw-ink)] truncate">
+                      <p className="text-sm font-semibold text-(--sw-ink) truncate">
                         {k.label}
-                        <span className="text-[var(--sw-muted)] font-normal"> · {k.purpose}</span>
+                        <span className="text-(--sw-muted) font-normal"> · {k.purpose}</span>
                       </p>
-                      <p className="text-[11px] sw-mono text-[var(--sw-muted)] mt-0.5 truncate">{k.env}</p>
+                      <p className="text-[11px] sw-mono text-(--sw-muted) mt-0.5 truncate">{k.env}</p>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-3 shrink-0">
                       <StatusChip state={state} loading={server === null} />
                       {!open && (
                         <button
@@ -189,14 +189,14 @@ export function SettingsModal({
                         }}
                         placeholder="Paste key"
                         aria-label={`${k.purpose} API key`}
-                        className="sw-field w-full px-3 py-2.5 text-sm sw-mono bg-transparent text-[var(--sw-ink)] outline-none placeholder:text-[var(--sw-muted)]"
+                        className="sw-field w-full px-3 py-2.5 text-sm sw-mono bg-transparent text-(--sw-ink) outline-hidden placeholder:text-(--sw-muted)"
                       />
                       <div className="flex items-center justify-between mt-2.5">
                         <a
                           href={`https://${k.where}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] text-[var(--sw-muted)] hover:text-[var(--sw-ink)] inline-flex items-center gap-1 transition-colors"
+                          className="text-[11px] text-(--sw-muted) hover:text-(--sw-ink) inline-flex items-center gap-1 transition-colors"
                         >
                           Get a key at {k.where} <ExternalLink className="w-3 h-3" />
                         </a>
@@ -204,7 +204,7 @@ export function SettingsModal({
                           {isSaved && (
                             <button
                               onClick={() => remove(k.key)}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-md text-[var(--sw-down)] hover:bg-[var(--sw-down-bg)] transition-colors"
+                              className="text-xs font-semibold px-3 py-1.5 rounded-md text-(--sw-down) hover:bg-(--sw-down-bg) transition-colors"
                             >
                               Remove
                             </button>
@@ -230,17 +230,17 @@ export function SettingsModal({
               );
             })}
           </div>
-          <p className="text-[11px] text-[var(--sw-muted)] mt-3 leading-relaxed">
+          <p className="text-[11px] text-(--sw-muted) mt-3 leading-relaxed">
             Keys are stored in this browser and override server settings. Used only for
             read-only data — never to move funds. Saving reloads the app.
           </p>
 
           {isHosted && (
             <div className="mt-4 sw-callout sw-callout-info">
-              <p className="text-[11px] font-semibold text-[var(--sw-ink)] mb-1">
+              <p className="text-[11px] font-semibold text-(--sw-ink) mb-1">
                 Shared free-tier instance
               </p>
-              <p className="text-[11px] text-[var(--sw-muted)] leading-relaxed">
+              <p className="text-[11px] text-(--sw-muted) leading-relaxed">
                 Pricing (CoinGecko) and collectibles (Alchemy) here run on free API tiers
                 shared by everyone on openburner.xyz. If prices or NFTs stop loading, a rate
                 or daily limit was likely hit. Wait a few minutes for it to reset, add your
@@ -262,8 +262,8 @@ export function SettingsModal({
           <p className="sw-seclabel mt-5 mb-1">About</p>
           <div className="sw-list">
             <div className="flex items-center justify-between py-3">
-              <span className="text-sm text-[var(--sw-ink)]">Version</span>
-              <span className="text-sm sw-mono text-[var(--sw-muted)]">v{APP_VERSION}</span>
+              <span className="text-sm text-(--sw-ink)">Version</span>
+              <span className="text-sm sw-mono text-(--sw-muted)">v{APP_VERSION}</span>
             </div>
             <a
               href="https://openburner.xyz"
@@ -271,8 +271,8 @@ export function SettingsModal({
               rel="noopener noreferrer"
               className="flex items-center justify-between py-3 group"
             >
-              <span className="text-sm text-[var(--sw-ink)]">OpenBurner.xyz</span>
-              <ExternalLink className="w-4 h-4 text-[var(--sw-muted)] group-hover:text-[var(--sw-ink)]" />
+              <span className="text-sm text-(--sw-ink)">OpenBurner.xyz</span>
+              <ExternalLink className="w-4 h-4 text-(--sw-muted) group-hover:text-(--sw-ink)" />
             </a>
           </div>
         </div>

@@ -79,7 +79,7 @@ export function Modal({
   children,
   ariaLabel,
   labelledBy,
-  className = "sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden",
+  className = "sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden",
   closeOnBackdrop = true,
   closeOnEscape = true,
   initialFocusRef,
@@ -170,7 +170,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className={`ob-modal-backdrop fixed inset-0 z-[1000] flex justify-center bg-black/50 backdrop-blur-sm p-3 ${
+      className={`ob-modal-backdrop fixed inset-0 z-1000 flex justify-center bg-black/50 backdrop-blur-xs p-3 ${
         align === "top" ? "items-start sm:items-center pt-[max(0.75rem,env(safe-area-inset-top))]" : "items-center ob-sheet-host"
       }`}
       style={keyboardInset ? ({ "--ob-kb": `${keyboardInset}px`, paddingBottom: keyboardInset } as CSSProperties) : undefined}
@@ -185,7 +185,7 @@ export function Modal({
         aria-label={labelledBy ? undefined : ariaLabel}
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        className={`ob-modal-panel outline-none ${sheet ? "ob-sheet" : ""} ${className}`}
+        className={`ob-modal-panel outline-hidden ${sheet ? "ob-sheet" : ""} ${className}`}
       >
         {children}
       </div>

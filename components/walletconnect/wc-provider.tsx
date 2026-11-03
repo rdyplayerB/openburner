@@ -58,10 +58,10 @@ function Unreadable({ what, onReject }: { what: string; onReject: () => void }) 
   return (
     <Modal onClose={onReject} labelledBy="wc-unreadable-title" closeOnBackdrop={false}>
       <div className="px-5 pt-6 pb-5">
-        <h2 id="wc-unreadable-title" className="text-lg font-bold text-[var(--sw-ink)] tracking-tight">
+        <h2 id="wc-unreadable-title" className="text-lg font-bold text-(--sw-ink) tracking-tight">
           Couldn&apos;t show this {what}
         </h2>
-        <p className="text-sm text-[var(--sw-ink-soft)] mt-1 mb-5">
+        <p className="text-sm text-(--sw-ink-soft) mt-1 mb-5">
           The dApp sent something OpenBurner can&apos;t display, so it can&apos;t be approved. Reject it and try again from the dApp.
         </p>
         <button onClick={onReject} className="sw-btn-primary w-full py-3.5 text-sm">

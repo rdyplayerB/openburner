@@ -79,7 +79,7 @@ export function TransactionStatusModal({ status, tx, chainName, onClose }: Trans
       onClose={onClose}
       labelledBy="tx-status-title"
       closeOnBackdrop={!waiting}
-      className="sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden relative"
+      className="sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden relative"
     >
       <div className="px-5 pt-6 pb-5" role={status === "failed" ? "alert" : "status"} aria-live="polite">
         <button onClick={onClose} className="sw-icon-btn p-2 absolute top-3 right-3" aria-label={waiting ? "Hide" : "Close"}>
@@ -92,18 +92,18 @@ export function TransactionStatusModal({ status, tx, chainName, onClose }: Trans
 
         <h2
           id="tx-status-title"
-          className={`text-xl font-bold text-center tracking-tight ${status === "failed" ? "text-[var(--sw-down)]" : "text-[var(--sw-ink)]"}`}
+          className={`text-xl font-bold text-center tracking-tight ${status === "failed" ? "text-(--sw-down)" : "text-(--sw-ink)"}`}
         >
           {view.title}
         </h2>
-        <p className="text-center text-2xl sw-num font-semibold text-[var(--sw-ink)] mt-2 break-words">{headline}</p>
-        <p className="text-sm text-[var(--sw-ink-soft)] text-center mt-2 mb-5 leading-relaxed">{view.body}</p>
+        <p className="text-center text-2xl sw-num font-semibold text-(--sw-ink) mt-2 wrap-break-word">{headline}</p>
+        <p className="text-sm text-(--sw-ink-soft) text-center mt-2 mb-5 leading-relaxed">{view.body}</p>
 
-        <ol className="rounded-xl bg-[var(--sw-fill)] px-4 py-2 mb-4" aria-label="Progress">
+        <ol className="rounded-xl bg-(--sw-fill) px-4 py-2 mb-4" aria-label="Progress">
           {steps.map((s) => (
             <li key={s.label} className="flex items-center gap-3 py-2">
               <StepIcon state={s.state} />
-              <span className={`text-sm ${s.state === "failed" ? "text-[var(--sw-down)] font-semibold" : "text-[var(--sw-ink)]"}`}>{s.label}</span>
+              <span className={`text-sm ${s.state === "failed" ? "text-(--sw-down) font-semibold" : "text-(--sw-ink)"}`}>{s.label}</span>
             </li>
           ))}
         </ol>
@@ -111,13 +111,13 @@ export function TransactionStatusModal({ status, tx, chainName, onClose }: Trans
         <dl className="text-sm mb-5 space-y-1.5">
           {!isSwap && tx.recipient && (
             <div className="flex justify-between gap-3">
-              <dt className="text-[var(--sw-muted)]">To</dt>
-              <dd className="sw-mono text-[var(--sw-ink)]">{shortAddress(tx.recipient, 8, 6)}</dd>
+              <dt className="text-(--sw-muted)">To</dt>
+              <dd className="sw-mono text-(--sw-ink)">{shortAddress(tx.recipient, 8, 6)}</dd>
             </div>
           )}
           <div className="flex justify-between gap-3">
-            <dt className="text-[var(--sw-muted)]">Network</dt>
-            <dd className="flex items-center gap-1.5 text-[var(--sw-ink)]">
+            <dt className="text-(--sw-muted)">Network</dt>
+            <dd className="flex items-center gap-1.5 text-(--sw-ink)">
               <ChainLogo chainId={tx.chainId} name={network} className="w-4 h-4" />
               {network}
             </dd>
@@ -150,17 +150,17 @@ function StatusBadge({ status, kind }: { status: "waiting" | TransactionStatus; 
   if (status === "waiting") {
     return (
       <span className="relative w-16 h-16 flex items-center justify-center" aria-hidden="true">
-        <span className="absolute inset-0 rounded-full border-[3px] border-[var(--sw-line)] border-t-[var(--sw-accent)] animate-spin" />
-        <Icon className="w-6 h-6 text-[var(--sw-ink)]" />
+        <span className="absolute inset-0 rounded-full border-[3px] border-(--sw-line) border-t-(--sw-accent) animate-spin" />
+        <Icon className="w-6 h-6 text-(--sw-ink)" />
       </span>
     );
   }
   const tone =
     status === "success"
-      ? "bg-[var(--sw-up-bg)] text-[var(--sw-up)]"
+      ? "bg-(--sw-up-bg) text-(--sw-up)"
       : status === "failed"
-        ? "bg-[var(--sw-down-bg)] text-[var(--sw-down)]"
-        : "bg-[var(--sw-warn-bg)] text-[var(--sw-warn)]";
+        ? "bg-(--sw-down-bg) text-(--sw-down)"
+        : "bg-(--sw-warn-bg) text-(--sw-warn)";
   return (
     <span className={`ob-pop-in w-16 h-16 rounded-full flex items-center justify-center ${tone}`} aria-hidden="true">
       {status === "success" ? (
@@ -179,27 +179,27 @@ function StatusBadge({ status, kind }: { status: "waiting" | TransactionStatus; 
 function StepIcon({ state }: { state: "done" | "active" | "failed" | "waiting" }) {
   if (state === "done") {
     return (
-      <span className="w-5 h-5 rounded-full bg-[var(--sw-up)] text-white flex items-center justify-center flex-shrink-0" aria-hidden="true">
+      <span className="w-5 h-5 rounded-full bg-(--sw-up) text-white flex items-center justify-center shrink-0" aria-hidden="true">
         <Check className="w-3 h-3" strokeWidth={3} />
       </span>
     );
   }
   if (state === "failed") {
     return (
-      <span className="w-5 h-5 rounded-full bg-[var(--sw-down)] text-white flex items-center justify-center flex-shrink-0" aria-hidden="true">
+      <span className="w-5 h-5 rounded-full bg-(--sw-down) text-white flex items-center justify-center shrink-0" aria-hidden="true">
         <X className="w-3 h-3" strokeWidth={3} />
       </span>
     );
   }
   if (state === "active") {
     return (
-      <span className="w-5 h-5 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-        <span className="w-4 h-4 rounded-full border-2 border-[var(--sw-line)] border-t-[var(--sw-accent)] animate-spin" />
+      <span className="w-5 h-5 flex items-center justify-center shrink-0" aria-hidden="true">
+        <span className="w-4 h-4 rounded-full border-2 border-(--sw-line) border-t-(--sw-accent) animate-spin" />
       </span>
     );
   }
   return (
-    <span className="w-5 h-5 flex items-center justify-center flex-shrink-0 text-[var(--sw-warn)]" aria-hidden="true">
+    <span className="w-5 h-5 flex items-center justify-center shrink-0 text-(--sw-warn)" aria-hidden="true">
       <Clock className="w-4 h-4" />
     </span>
   );

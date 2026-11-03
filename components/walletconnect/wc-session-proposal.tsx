@@ -63,18 +63,18 @@ export function WcSessionProposal() {
 
         <div className="flex flex-col items-center text-center">
           <DappIcon src={meta.icons?.[0]} size="lg" />
-          <h2 id="wc-proposal-title" className="text-xl font-bold tracking-tight text-[var(--sw-ink)] mt-3 max-w-full break-words">
+          <h2 id="wc-proposal-title" className="text-xl font-bold tracking-tight text-(--sw-ink) mt-3 max-w-full wrap-break-word">
             Connect to {name}?
           </h2>
           <div className="flex items-center justify-center gap-2 mt-1 min-w-0 max-w-full">
-            {host && <span className="text-sm text-[var(--sw-ink-soft)] truncate">{host}</span>}
+            {host && <span className="text-sm text-(--sw-ink-soft) truncate">{host}</span>}
             <VerifyBadge status={verify.status} />
           </div>
         </div>
 
         {warning && (
           <div className="sw-callout sw-callout-danger flex items-start gap-2 mt-4" role="alert">
-            <ShieldAlert className="w-4 h-4 mt-px flex-shrink-0 text-[var(--sw-down)]" aria-hidden="true" />
+            <ShieldAlert className="w-4 h-4 mt-px shrink-0 text-(--sw-down)" aria-hidden="true" />
             <span>{warning}</span>
           </div>
         )}
@@ -90,19 +90,19 @@ export function WcSessionProposal() {
           {available.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {available.map((id) => (
-                <span key={id} className="sw-chip px-2.5 py-1 text-xs !font-medium">
+                <span key={id} className="sw-chip px-2.5 py-1 text-xs font-medium!">
                   <ChainLogo chainId={id} name={getChainName(id)} className="w-4 h-4" />
                   {getChainName(id)}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-[var(--sw-muted)]">
+            <p className="text-xs text-(--sw-muted)">
               {chainIds.length > 0 ? "None of the requested networks are set up in OpenBurner." : "No networks requested."}
             </p>
           )}
           {unavailable > 0 && available.length > 0 && (
-            <p className="text-xs text-[var(--sw-muted)] mt-2">
+            <p className="text-xs text-(--sw-muted) mt-2">
               {unavailable} other requested {unavailable === 1 ? "network isn't" : "networks aren't"} set up and won&apos;t be shared.
             </p>
           )}
@@ -114,9 +114,9 @@ export function WcSessionProposal() {
               type="checkbox"
               checked={acknowledged}
               onChange={(e) => setAcknowledged(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-[var(--sw-down)] flex-shrink-0"
+              className="mt-0.5 w-4 h-4 accent-(--sw-down) shrink-0"
             />
-            <span className="text-sm text-[var(--sw-ink)]">I understand the risk and want to connect.</span>
+            <span className="text-sm text-(--sw-ink)">I understand the risk and want to connect.</span>
           </label>
         )}
 
@@ -141,14 +141,14 @@ function Permission({ ok = false, children }: { ok?: boolean; children: React.Re
   return (
     <li className="flex items-start gap-2.5">
       <span
-        className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-          ok ? "bg-[var(--sw-up-bg)] text-[var(--sw-up)]" : "bg-[var(--sw-fill-strong)] text-[var(--sw-muted)]"
+        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+          ok ? "bg-(--sw-up-bg) text-(--sw-up)" : "bg-(--sw-fill-strong) text-(--sw-muted)"
         }`}
         aria-hidden="true"
       >
         {ok ? <Check className="w-3 h-3" strokeWidth={3} /> : <Minus className="w-3 h-3" strokeWidth={3} />}
       </span>
-      <span className={ok ? "text-[var(--sw-ink)]" : "text-[var(--sw-muted)]"}>{children}</span>
+      <span className={ok ? "text-(--sw-ink)" : "text-(--sw-muted)"}>{children}</span>
     </li>
   );
 }

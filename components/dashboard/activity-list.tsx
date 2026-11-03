@@ -58,11 +58,11 @@ export function ActivityList({ address }: { address: string }) {
   if (items.length === 0) {
     return (
       <div className="text-center px-6 py-16">
-        <span className="mx-auto mb-4 w-12 h-12 rounded-full bg-[var(--sw-fill-strong)] flex items-center justify-center">
-          <Clock className="w-5 h-5 text-[var(--sw-ink-soft)]" aria-hidden="true" />
+        <span className="mx-auto mb-4 w-12 h-12 rounded-full bg-(--sw-fill-strong) flex items-center justify-center">
+          <Clock className="w-5 h-5 text-(--sw-ink-soft)" aria-hidden="true" />
         </span>
-        <p className="text-sm font-semibold text-[var(--sw-ink)]">No activity yet</p>
-        <p className="text-sm text-[var(--sw-muted)] mt-1 max-w-xs mx-auto">
+        <p className="text-sm font-semibold text-(--sw-ink)">No activity yet</p>
+        <p className="text-sm text-(--sw-muted) mt-1 max-w-xs mx-auto">
           Sends, swaps and dApp transactions you make from this device show up here.
         </p>
       </div>
@@ -73,7 +73,7 @@ export function ActivityList({ address }: { address: string }) {
     <div className="px-2 sm:px-3 pb-3">
       {groups.map((group) => (
         <section key={group.label} className="pt-3">
-          <h3 className="px-2 pb-1 text-xs font-semibold text-[var(--sw-muted)]">{group.label}</h3>
+          <h3 className="px-2 pb-1 text-xs font-semibold text-(--sw-muted)">{group.label}</h3>
           <ul>
             {group.items.map((item) => (
               <ActivityRow key={item.hash} item={item} />
@@ -81,9 +81,9 @@ export function ActivityList({ address }: { address: string }) {
           </ul>
         </section>
       ))}
-      <div className="flex items-center justify-between gap-3 px-2 pt-4 text-xs text-[var(--sw-muted)]">
+      <div className="flex items-center justify-between gap-3 px-2 pt-4 text-xs text-(--sw-muted)">
         <span>Kept on this device only.</span>
-        <button onClick={() => clear(owner)} className="font-semibold hover:text-[var(--sw-ink)]">
+        <button onClick={() => clear(owner)} className="font-semibold hover:text-(--sw-ink)">
           Clear history
         </button>
       </div>
@@ -99,23 +99,23 @@ function ActivityRow({ item }: { item: ActivityItem }) {
 
   const content = (
     <>
-      <span className="relative w-9 h-9 flex-shrink-0">
-        <span className="w-9 h-9 rounded-full bg-[var(--sw-fill-strong)] text-[var(--sw-ink)] flex items-center justify-center">
+      <span className="relative w-9 h-9 shrink-0">
+        <span className="w-9 h-9 rounded-full bg-(--sw-fill-strong) text-(--sw-ink) flex items-center justify-center">
           <Icon className="w-4 h-4" aria-hidden="true" />
         </span>
-        <span className="absolute -right-0.5 -bottom-0.5 w-3.5 h-3.5 rounded-full ring-2 ring-[var(--sw-surface)] bg-[var(--sw-surface)] overflow-hidden">
+        <span className="absolute -right-0.5 -bottom-0.5 w-3.5 h-3.5 rounded-full ring-2 ring-(--sw-surface) bg-(--sw-surface) overflow-hidden">
           <ChainLogo chainId={item.chainId} className="w-full h-full" />
         </span>
       </span>
       <span className="flex-1 min-w-0">
-        <span className="block text-sm font-semibold text-[var(--sw-ink)] truncate">{title}</span>
-        <span className="block text-xs text-[var(--sw-muted)] truncate">
+        <span className="block text-sm font-semibold text-(--sw-ink) truncate">{title}</span>
+        <span className="block text-xs text-(--sw-muted) truncate">
           {detail ? `${detail} · ` : ""}
           {time} · {network}
         </span>
       </span>
       <StatusPill status={item.status} />
-      {url && <ExternalLink className="w-3.5 h-3.5 text-[var(--sw-muted)] opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />}
+      {url && <ExternalLink className="w-3.5 h-3.5 text-(--sw-muted) opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />}
     </>
   );
 
@@ -123,7 +123,7 @@ function ActivityRow({ item }: { item: ActivityItem }) {
   return (
     <li>
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" className={`${cls} hover:bg-[var(--sw-fill)]`} aria-label={`${title}, ${item.status}. View on explorer`}>
+        <a href={url} target="_blank" rel="noopener noreferrer" className={`${cls} hover:bg-(--sw-fill)`} aria-label={`${title}, ${item.status}. View on explorer`}>
           {content}
         </a>
       ) : (
@@ -136,10 +136,10 @@ function ActivityRow({ item }: { item: ActivityItem }) {
 function StatusPill({ status }: { status: ActivityItem["status"] }) {
   if (status === "success") return null;
   if (status === "failed") {
-    return <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--sw-down-bg)] text-[var(--sw-down)]">Failed</span>;
+    return <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-(--sw-down-bg) text-(--sw-down)">Failed</span>;
   }
   return (
-    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--sw-warn-bg)] text-[var(--sw-warn)] inline-flex items-center gap-1">
+    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-(--sw-warn-bg) text-(--sw-warn) inline-flex items-center gap-1">
       <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" aria-hidden="true" />
       Pending
     </span>
