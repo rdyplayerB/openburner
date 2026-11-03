@@ -28,7 +28,7 @@ function forbidden(): NextResponse {
   return NextResponse.json({ error: "Origin not allowed." }, { status: 403 });
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (req.method !== "GET" && req.method !== "HEAD") {
     return NextResponse.json({ error: "Method not allowed." }, { status: 405 });
   }
