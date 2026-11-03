@@ -76,7 +76,7 @@ npm run dev
 ## Tech Stack
 
 **Frontend:**
-- Next.js 15 + React 19
+- Next.js 16 + React 19
 - TypeScript
 - Tailwind CSS
 - Zustand (state management)
@@ -404,7 +404,7 @@ openburner/
 ├── app/                    # Next.js app
 │   ├── page.tsx           # Main entry (connect screen or dashboard)
 │   └── api/               # Proxies: coingecko, swap/quote, nft, config-status
-├── middleware.ts           # Origin guard for every /api route
+├── proxy.ts                # Origin guard for every /api route
 ├── components/             # React components (dashboard, send, swap, NFTs, WalletConnect)
 ├── lib/                    # Core libraries
 │   ├── card/              # Card key parsing, tx building, signature checks

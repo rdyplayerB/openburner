@@ -43,7 +43,7 @@ You can run it locally with a USB NFC reader, or host it and use your phone as t
 - **Signature Binding** - Every transaction and message signature must recover to the connected address, so a different card or a tampered link can't sign for you
 - **Locked-Down API** - The proxy routes only answer the app's own origin, validate every input, and rate-limit per IP (shared across instances with Upstash)
 - **No Card Data in Logs** - Production builds don't log keys, signatures, pairing links or PINs
-- **Modern Stack** - Next.js 15, React 19, TypeScript, Tailwind CSS, ethers.js v6
+- **Modern Stack** - Next.js 16, React 19, TypeScript, Tailwind CSS, ethers.js v6
 - **State Persistence** - localStorage-backed state management with Zustand
 
 ## Local vs Hosted
@@ -209,7 +209,7 @@ You're encouraged to fork OpenBurner for your own use:
 - `components/` - React components for UI
 - `lib/` - Core libraries (Burner, multicall, pricing)
 - `lib/card/` - Card key parsing and signature checks (shared by every connection mode)
-- `middleware.ts` - Origin guard for the API routes
+- `proxy.ts` - Origin guard for the API routes
 - `tests/` - Vitest suite (`npm test`)
 - `stories/` - Every screen and state as a [Ladle](https://ladle.dev) story (`npm run stories`)
 - `store/` - Zustand state management

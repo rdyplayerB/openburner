@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
  * Guards for the public proxy routes (CoinGecko, 0x, Alchemy). They spend
  * shared API keys, so every route is:
  *
- *  1. Origin-checked in middleware.ts (same-origin only by default).
+ *  1. Origin-checked in proxy.ts (same-origin only by default).
  *  2. Rate limited per IP here, plus an optional global daily cap per upstream.
  *
  * Counters live in Upstash Redis when UPSTASH_REDIS_REST_URL and

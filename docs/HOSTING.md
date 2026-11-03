@@ -39,7 +39,7 @@ Notes:
 Because deployer keys are shared by all visitors, the proxy routes (`/api/coingecko`,
 `/api/nft`, `/api/swap/quote`) are locked down:
 
-- **Same-origin only** — `middleware.ts` refuses requests from other websites (it checks
+- **Same-origin only** — `proxy.ts` refuses requests from other websites (it checks
   `Sec-Fetch-Site`, `Origin`, and a same-origin `Referer` for older Safari). No CORS headers
   are sent, so another site's JavaScript can't read the responses. In hosted mode, requests
   with no browser headers at all (scripts, servers) are refused too.
