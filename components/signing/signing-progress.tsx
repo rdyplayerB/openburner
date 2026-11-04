@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { useEnvironment } from "@/hooks/use-environment";
 import { useWalletStore } from "@/store/wallet-store";
 import { useSigningStore } from "@/store/signing-store";
+import { FLAME_SMALL, FLAME_VIEWBOX } from "@/components/common/brand-mark-paths";
 import { BURNER_CARD } from "@/components/common/burner-card";
 
 /**
@@ -117,14 +118,6 @@ export function CardTapArt({
   className?: string;
 }) {
   const ink = { stroke: "var(--sw-ink)" };
-  const waves = (
-    <>
-      <path className={active ? "ob-wave" : ""} d="M -4 -8 A 10 10 0 0 1 -4 8" />
-      <path className={active ? "ob-wave ob-wave-2" : ""} d="M -11 -14 A 18 18 0 0 1 -11 14" />
-      <path className={active ? "ob-wave ob-wave-3" : ""} d="M -18 -20 A 26 26 0 0 1 -18 20" />
-    </>
-  );
-  const waveStyle = { stroke: "var(--sw-accent)", fill: "none", opacity: active ? 1 : 0.25 };
 
   if (reader === "reader") {
     // USB reader, drawn abstractly: rings rippling out
@@ -159,30 +152,38 @@ export function CardTapArt({
     );
   }
 
+  // The hint says to hold the card against the top of the phone, so that's what
+  // this plays: the card lands there, rings spread from the contact, the phone buzzes.
   return (
-    <svg viewBox="0 0 200 120" className={className} aria-hidden="true">
-      {/* Phone */}
-      <g>
-        <rect x="120" y="10" width="56" height="100" rx="11" style={{ fill: "var(--sw-surface)", ...ink }} strokeWidth="2" />
-        <rect x="140" y="16" width="16" height="3" rx="1.5" style={{ fill: "var(--sw-line)" }} />
-        {reader === "gateway" && (
-          <g style={{ fill: "var(--sw-line)" }}>
-            <rect x="130" y="36" width="36" height="5" rx="2.5" />
-            <rect x="130" y="47" width="26" height="5" rx="2.5" />
-          </g>
-        )}
+    <svg viewBox="0 0 200 120" className={className} overflow="visible" aria-hidden="true">
+      <g className={active ? "ob-phone-buzz" : ""}>
+        <rect x="112" y="8" width="58" height="104" rx="12" style={{ fill: "var(--sw-surface)", ...ink }} strokeWidth="2.5" />
+        <rect x="133" y="14" width="16" height="3" rx="1.5" style={{ fill: "var(--sw-line)" }} />
+        <svg x="132" y="72" width="18" height="21" viewBox={FLAME_VIEWBOX}>
+          <path d={FLAME_SMALL} fill="var(--sw-accent)" fillRule="evenodd" />
+        </svg>
       </g>
 
-      {/* The card (the real render) */}
-      <g transform="translate(34 10)">
-        <g className={active ? "ob-tap-card" : ""}>
-          <image href={BURNER_CARD.angled()} width={92 * BURNER_CARD.angledRatio} height={92} />
+      {active && (
+        <g style={{ fill: "none", stroke: "var(--sw-accent)" }} strokeWidth="2">
+          {[0, 0.4].map((delay) => (
+            <circle
+              key={delay}
+              cx="141"
+              cy="36"
+              r="40"
+              vectorEffect="non-scaling-stroke"
+              className="ob-tap-ring"
+              style={{ animationDelay: `${delay}s` }}
+            />
+          ))}
         </g>
-      </g>
+      )}
 
-      {/* NFC waves, between the card and the phone */}
-      <g transform="translate(118 34)" style={waveStyle} strokeWidth="2.5" strokeLinecap="round">
-        {waves}
+      <g transform="translate(16 22)">
+        <g className={active ? "ob-tap-card" : ""}>
+          <image href={BURNER_CARD.angled()} width={78 * BURNER_CARD.angledRatio} height={78} />
+        </g>
       </g>
     </svg>
   );

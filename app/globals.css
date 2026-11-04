@@ -514,8 +514,22 @@
 }
 /* Card-tap illustration: the card eases toward the reader, waves pulse out. */
 @keyframes obTapCard {
-  0%, 100% { transform: translate(0, 0); }
-  45%, 60% { transform: translate(12px, -4px); }
+  0%, 8% { transform: translate(0, 0); animation-timing-function: cubic-bezier(0.25, 0.8, 0.3, 1); }
+  36%, 74% { transform: translate(66px, -14px); animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes obTapRing {
+  0%, 36% { transform: scale(0.3); opacity: 0; }
+  40% { opacity: 0.9; animation-timing-function: cubic-bezier(0.2, 0.55, 0.35, 1); }
+  76%, 100% { transform: scale(1); opacity: 0; }
+}
+@keyframes obPhoneBuzz {
+  0%, 37%, 49%, 100% { transform: translateX(0); }
+  39% { transform: translateX(-0.9px); }
+  41% { transform: translateX(0.9px); }
+  43% { transform: translateX(-0.7px); }
+  45% { transform: translateX(0.6px); }
+  47% { transform: translateX(-0.3px); }
 }
 @keyframes obWave {
   0% { opacity: 0; transform: scale(0.6); }
@@ -526,7 +540,9 @@
   from { stroke-dashoffset: 24; }
   to { stroke-dashoffset: 0; }
 }
-.ob-tap-card { animation: obTapCard 2.4s ease-in-out infinite; transform-origin: 50% 50%; transform-box: fill-box; }
+.ob-tap-card { animation: obTapCard 3s infinite; }
+.ob-tap-ring { animation: obTapRing 3s infinite; transform-origin: center; transform-box: fill-box; }
+.ob-phone-buzz { animation: obPhoneBuzz 3s linear infinite; }
 .ob-wave { animation: obWave 2.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
 .ob-wave-2 { animation-delay: 0.35s; }
 .ob-wave-3 { animation-delay: 0.7s; }
@@ -593,6 +609,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   /* A still ring instead of a ripple. */
+  .ob-tap-ring { display: none; }
+  .ob-tap-card, .ob-phone-buzz { animation: none !important; }
   .ob-ripple { animation: none !important; opacity: 0.6; transform: scale(0.7); }
   *,
   *::before,
