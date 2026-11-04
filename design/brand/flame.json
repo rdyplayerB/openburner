@@ -96,29 +96,30 @@
  "s_tongue": {
   "tip": [
    146,
-   164
+   138
   ],
   "c": [
    162,
-   290
+   282
   ],
-  "r": 52,
+  "r": 62,
   "hl": [
    -10,
    40,
-   30
+   34
   ],
   "hr": [
    22,
    34,
-   40
+   46
   ]
  },
  "wordmark": {
-  "tracking": -0.025,
-  "mark_em": 1,
-  "gap_em": 0.22,
-  "lift_em": 0.13
+  "tracking": -0.018,
+  "tracking_small": -0.01,
+  "mark_em": 0.92,
+  "gap_em": 0.19,
+  "lift_em": 0.075
  },
  "icon_scale": 0.66,
  "icon_dy": -0.035

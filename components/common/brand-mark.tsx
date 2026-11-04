@@ -1,9 +1,8 @@
-import { FLAME_ASPECT, FLAME_FULL, FLAME_SMALL, FLAME_SMALL_BELOW, FLAME_VIEWBOX } from "./brand-mark-paths";
+import { FLAME_ASPECT, FLAME_SMALL, FLAME_VIEWBOX } from "./brand-mark-paths";
 
 /**
- * The OpenBurner flame, drawn inline so it takes the theme's accent orange.
- * Below 44 px it switches to the small version (a solid flame with a teardrop cut
- * out), which still reads as a flame in headers and favicons. Geometry: design/brand (npm run brand).
+ * The OpenBurner flame, drawn inline so it takes the theme's accent orange. One
+ * solid drawing at every size. Geometry: design/brand (npm run brand).
  */
 export function BrandMark({
   size,
@@ -30,15 +29,15 @@ export function BrandMark({
       aria-hidden={title ? undefined : true}
       focusable="false"
     >
-      <path d={size < FLAME_SMALL_BELOW ? FLAME_SMALL : FLAME_FULL} fill={color} fillRule="evenodd" />
+      <path d={FLAME_SMALL} fill={color} fillRule="evenodd" />
     </svg>
   );
 }
 
 /**
  * Flame + "OpenBurner" in one ink colour. The flame is the only orange.
- * Proportions are tied to the type: flame 1em tall, sitting on the baseline
- * (its circle bottoms out with the "O"), 0.22em gap, -0.025em tracking.
+ * Proportions are tied to the type: flame 0.92em tall, sitting on the baseline
+ * (its circle bottoms out with the "O"), 0.19em gap, -0.018em tracking.
  */
 export function Wordmark({
   fontSize = 18,
@@ -55,10 +54,10 @@ export function Wordmark({
   return (
     <span
       className={`inline-flex items-center font-bold leading-none text-(--sw-ink) ${className}`}
-      style={{ fontSize, gap: "0.22em", letterSpacing: fontSize <= 20 ? "-0.015em" : "-0.025em" }}
+      style={{ fontSize, gap: "0.19em", letterSpacing: fontSize <= 20 ? "-0.01em" : "-0.018em" }}
     >
-      <span className="inline-flex" style={{ transform: "translateY(-0.13em)" }}>
-        <BrandMark size={fontSize} />
+      <span className="inline-flex" style={{ transform: "translateY(-0.075em)" }}>
+        <BrandMark size={fontSize * 0.92} />
       </span>
       <span className={hide}>OpenBurner</span>
     </span>
