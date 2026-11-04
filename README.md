@@ -75,7 +75,7 @@ OpenBurner runs in two modes, selected by `NEXT_PUBLIC_APP_MODE`:
    - Recommended: [ACR1252U on Amazon](https://amzn.to/3ISNwd7)
    - Budget option: [ACR122U on Amazon](https://amzn.to/3WQxGms)
 3. **HaLo Bridge** - Local WebSocket bridge software ([HaLo Tools](https://github.com/arx-research/libhalo/releases))
-4. **Node.js 20+** - [Download](https://nodejs.org)
+4. **Node.js 22.12+** - [Download](https://nodejs.org)
 
 ### Installation
 

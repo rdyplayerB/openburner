@@ -54,7 +54,7 @@ The mode is set with `NEXT_PUBLIC_APP_MODE` (`local` or `hosted`).
 - **Desktop NFC Reader** - ACR1252U (recommended) or ACR122U (budget option) USB reader
   - Recommended: [ACR1252U on Amazon](https://amzn.to/3ISNwd7)
   - Budget option: [ACR122U on Amazon](https://amzn.to/3WQxGms)
-- **Node.js 20+**
+- **Node.js 22.12+**
 
 ### Installation
 
