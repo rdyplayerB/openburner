@@ -11,7 +11,7 @@
  * /sw.js?v=<build> so each deployment gets fresh caches and old ones are pruned.
  */
 
-const SW_VERSION = '1.4.0';
+const SW_VERSION = '1.4.1';
 const BUILD = new URL(self.location.href).searchParams.get('v') || 'dev';
 const PREFIX = 'openburner-';
 const STATIC_CACHE = `${PREFIX}static-${SW_VERSION}-${BUILD}`;

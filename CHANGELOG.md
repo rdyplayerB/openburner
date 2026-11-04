@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-04 - Security Update
+
+### Security
+- **Next.js 15.5.29** - Fixes two Next.js advisories: a critical one in image optimization ([GHSA-2464-fhr4-w9xw](https://github.com/advisories/GHSA-2464-fhr4-w9xw)) and a denial of service through Server Actions ([GHSA-p3m5-59mp-jv5r](https://github.com/advisories/GHSA-p3m5-59mp-jv5r))
+- **decode-uri-component 0.5.1** - Replaces a vulnerable version pulled in by a dependency; production `npm audit` is clean
+
 ## [1.4.0] - 2026-10-11 - Security Hardening & Faster Loads
 
 ### Security
