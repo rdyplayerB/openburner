@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Monad, HyperEVM, Ink, Gnosis, Celo and Cronos** - Now in the network menu, each with two public RPCs from different operators that held up under load. Swaps and collectible discovery aren't available on them yet
-- **A note on public RPCs** - The network menu says built-in networks use free public RPCs run by other companies, and Settings → About says OpenBurner comes as is under the MIT license
+- **Your own RPC for any network** - Enter a built-in network's chain ID in the add-network form to use your RPC instead of its public ones, in this browser only
+- **A light note on care** - The connect screen says OpenBurner is free and open source and to try a small amount first. The network menu says built-in networks use free public RPCs that OpenBurner doesn't run, and Settings → About says OpenBurner comes as is under the MIT license
 
 ### Changed
 - **Backup RPCs** - Where a network's own RPC refused requests under load, Pocket Network is now the backup: Ethereum, Base, Arbitrum, OP Mainnet, Robinhood Chain and Mantle. After switching to a backup, the app goes back to the first RPC a few minutes later
+- **Clearer RPC errors** - When a network's RPC is down or busy, the message says so instead of asking you to check your connection
+- **Rate limits inside normal replies** - Some RPCs report a rate limit inside a normal reply. The app now treats that as a failure and moves to the backup
 - **OP Mainnet logo** - Now Optimism's current OP Mainnet symbol
 - **Robinhood Chain logo** - More room around the feather
 
@@ -21,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mode** - Mode sees very little use now, so it's no longer in the network menu. If you were using it, it stays as one of your custom networks
 
 ### Fixed
+- **No double payments when an RPC times out** - The app resends the same signed transaction, which can only land once. If it still can't tell whether the transaction arrived, it waits in Activity instead of asking you to sign again, and Activity marks it "Not sent" if the network never sees it
 - **Version in Settings** - Showed v1.4.0; it now comes from the release itself
 - **Apps adding a built-in network** - An app asking to add a network the app already has now just switches to it, instead of leaving a duplicate entry in your custom networks
 

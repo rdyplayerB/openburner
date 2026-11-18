@@ -16,6 +16,8 @@ import { TokenSelector } from "./token-selector";
 import { getProvider } from "@/lib/provider";
 import { parseAmount, formatAmountForInput, getNativeGasReserve, truncateToDecimals } from "@/lib/amount";
 import { friendlyTxError, isRetryablePinError } from "@/lib/tx-errors";
+import { broadcastSigned, BroadcastUncertainError, UNCERTAIN_SEND_MESSAGE } from "@/lib/broadcast";
+import { recordActivity } from "@/store/activity-store";
 import { getChainDisplayName, getNativeSymbol } from "@/lib/supported-chains";
 import { looksLikeEns, resolveEns } from "@/lib/ens";
 import type { ProgressStep } from "./signing/signing-progress";
@@ -531,19 +533,24 @@ export function SendToken({
       const signedTx = await signTransactionSmart(transaction, keySlot, enteredPin, environment);
 
       setSignStep("send");
-      const txResponse = await provider.broadcastTransaction(signedTx);
+      const txHash = await broadcastSigned(provider, signedTx);
       setRecents(saveRecentRecipient({ address: review.to, ens: review.ens ?? undefined }));
       setShowPinInput(false);
       onSubmitted({
         kind: "send",
-        txHash: txResponse.hash,
+        txHash,
         chainId,
         fromToken: token.symbol,
         fromAmount: review.amount,
         recipient: review.to,
       });
     } catch (err: any) {
-      if (isRetryablePinError(err)) {
+      if (err instanceof BroadcastUncertainError) {
+        // It may have been sent: keep it in Activity (which settles it) rather than inviting a second send.
+        recordActivity({ hash: err.hash, chainId, kind: "send", fromToken: token.symbol, fromAmount: review.amount, recipient: review.to });
+        setShowPinInput(false);
+        setError(UNCERTAIN_SEND_MESSAGE);
+      } else if (isRetryablePinError(err)) {
         // Keep the PIN dialog open for another try.
         setPinError(friendlyTxError(err, nativeSymbol));
       } else {

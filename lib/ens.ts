@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { getProvider } from "./provider";
-import { getChainConfig } from "./supported-chains";
+import { getPrimaryRpcUrl } from "./supported-chains";
 
 /**
  * ENS names (Ethereum mainnet) for display and for sending to `name.eth`.
@@ -11,7 +11,7 @@ const CACHE_KEY = "openburner_ens";
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 function mainnet() {
-  return getProvider(1, getChainConfig(1)?.rpcUrl ?? "https://ethereum-rpc.publicnode.com");
+  return getProvider(1, getPrimaryRpcUrl(1) ?? "https://ethereum-rpc.publicnode.com");
 }
 
 /** True for strings that look like an ENS name (e.g. "vitalik.eth"). */

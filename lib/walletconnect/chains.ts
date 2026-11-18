@@ -5,7 +5,7 @@
  * user has saved. We only ever approve WalletConnect sessions for chains in this set, so a
  * signing request can never arrive for a chain we have no RPC for.
  */
-import { CHAINS, getNativeSymbol } from "../supported-chains";
+import { CHAINS, getNativeSymbol, getPrimaryRpcUrl } from "../supported-chains";
 
 export interface ChainInfo {
   chainId: number;
@@ -81,13 +81,13 @@ export function getServeChains(): ChainInfo[] {
 
 /** Resolve the RPC URL for a chain (built-in or custom), or null if we can't serve it. */
 export function getRpcForChain(chainId: number): string | null {
-  if (BUILTIN_CHAINS[chainId]) return BUILTIN_CHAINS[chainId].rpcUrl;
+  if (BUILTIN_CHAINS[chainId]) return getPrimaryRpcUrl(chainId)!;
   const custom = getCustomRPCs();
   return custom[String(chainId)]?.rpcUrl ?? null;
 }
 
 export function getChainInfo(chainId: number): ChainInfo | null {
-  if (BUILTIN_CHAINS[chainId]) return BUILTIN_CHAINS[chainId];
+  if (BUILTIN_CHAINS[chainId]) return { ...BUILTIN_CHAINS[chainId], rpcUrl: getPrimaryRpcUrl(chainId)! };
   const custom = getCustomRPCs();
   const c = custom[String(chainId)];
   return c ? { chainId, name: c.name, rpcUrl: c.rpcUrl, explorer: "", currency: getNativeSymbol(chainId) } : null;

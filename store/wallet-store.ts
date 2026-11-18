@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CHAINS, FORMER_PRESETS, RETIRED_CHAIN_IDS, getChainConfig } from "@/lib/supported-chains";
+import { CHAINS, FORMER_PRESETS, RETIRED_CHAIN_IDS, getChainConfig, getPrimaryRpcUrl } from "@/lib/supported-chains";
 
 export type ConnectionMode = 'bridge' | 'gateway';
 
@@ -41,9 +41,8 @@ export const useWalletStore = create<WalletState>()(
         set({ address, publicKey, keySlot, isConnected: true });
       },
       setChain: (chainId, rpcUrl, chainName) => {
-        // Preset networks always use their tested public RPCs (lib/supported-chains.ts).
-        const preset = getChainConfig(chainId);
-        set({ chainId, rpcUrl: preset?.rpcUrl ?? rpcUrl, chainName, balance: "0" });
+        // Built-in networks use your own RPC if you set one, else their tested public RPCs.
+        set({ chainId, rpcUrl: getPrimaryRpcUrl(chainId) ?? rpcUrl, chainName, balance: "0" });
       },
       setBalance: (balance) => {
         set({ balance });
@@ -76,9 +75,9 @@ export const useWalletStore = create<WalletState>()(
         }
         // Move saved sessions on a preset network to its current RPC (e.g. after
         // an RPC is retired).
-        const preset = getChainConfig(state.chainId);
-        if (preset && state.rpcUrl !== preset.rpcUrl) {
-          set({ rpcUrl: preset.rpcUrl });
+        const primary = getPrimaryRpcUrl(state.chainId);
+        if (primary && state.rpcUrl !== primary) {
+          set({ rpcUrl: primary });
         }
         // Sessions saved on a former preset that still runs keep it as a custom network.
         const former = FORMER_PRESETS[state.chainId];
@@ -97,7 +96,7 @@ export const useWalletStore = create<WalletState>()(
         // Sessions saved on a network that has since shut down move to Ethereum.
         if (RETIRED_CHAIN_IDS.has(state.chainId)) {
           const ethereum = getChainConfig(1)!;
-          set({ chainId: 1, rpcUrl: ethereum.rpcUrl, chainName: ethereum.name, balance: "0" });
+          set({ chainId: 1, rpcUrl: getPrimaryRpcUrl(1)!, chainName: ethereum.name, balance: "0" });
         }
       },
     }),

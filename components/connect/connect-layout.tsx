@@ -69,6 +69,9 @@ export function ConnectLayout({ subline, controls, action, checks, checksTitle =
               <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
             </a>
           </nav>
+          <p className="mt-3 text-center text-xs text-(--sw-muted)">
+            Free and open source. Try a small amount&nbsp;first.
+          </p>
         </div>
       </div>
 

@@ -8,7 +8,8 @@ import { useWalletStore } from "./wallet-store";
  */
 
 export type ActivityKind = "send" | "swap" | "nft" | "dapp" | "approve";
-export type ActivityStatus = "pending" | "success" | "failed";
+/** "dropped": the network never saw it (an RPC timed out and the transaction never landed). */
+export type ActivityStatus = "pending" | "success" | "failed" | "dropped";
 
 export interface ActivityItem {
   hash: string;

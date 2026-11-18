@@ -15,6 +15,7 @@ import { ChainLogo } from "@/components/common/token-icon";
 import { getProvider } from "@/lib/provider";
 import { getChainDisplayName, getExplorerTxUrl, getNativeSymbol } from "@/lib/supported-chains";
 import { friendlyTxError, isRetryablePinError } from "@/lib/tx-errors";
+import { broadcastSigned, BroadcastUncertainError, UNCERTAIN_SEND_MESSAGE } from "@/lib/broadcast";
 import { formatTokenBalance } from "@/lib/format-utils";
 import {
   RecipientField,
@@ -161,11 +162,11 @@ export function SendNft({
       const signedTx = await signTransactionSmart(transaction, keySlot, enteredPin, environment);
 
       setSignStep("send");
-      const txResponse = await provider.broadcastTransaction(signedTx);
-      setTxHash(txResponse.hash);
+      const sentHash = await broadcastSigned(provider, signedTx);
+      setTxHash(sentHash);
       setRecents(saveRecentRecipient({ address: review.to, ens: review.ens ?? undefined }));
       recordActivity({
-        hash: txResponse.hash,
+        hash: sentHash,
         chainId,
         kind: "nft",
         label: nft.name,
@@ -174,9 +175,14 @@ export function SendNft({
       });
       setShowPinInput(false);
       setView("confirming");
-      waitForOutcome(txResponse.hash);
+      waitForOutcome(sentHash);
     } catch (err: any) {
-      if (isRetryablePinError(err)) {
+      if (err instanceof BroadcastUncertainError) {
+        // It may have been sent: keep it in Activity (which settles it) rather than inviting a second send.
+        recordActivity({ hash: err.hash, chainId, kind: "nft", label: nft.name, recipient: review.to, ...(isMultiEdition ? { fromAmount: review.quantity } : {}) });
+        setShowPinInput(false);
+        setError(UNCERTAIN_SEND_MESSAGE);
+      } else if (isRetryablePinError(err)) {
         setPinError(friendlyTxError(err, nativeSymbol));
       } else {
         setShowPinInput(false);

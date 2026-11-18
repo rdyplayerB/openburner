@@ -59,3 +59,21 @@ describe("custom network prices", () => {
     expect(sourceFor({ symbol: "POL", address: "native", chainId: 137 })).not.toBeNull();
   });
 });
+
+describe("your own RPC for a built-in network", () => {
+  it("replaces the public primary and backup, and can be removed", async () => {
+    const { getPresetRpcUrls, getPrimaryRpcUrl, setRpcOverride, getChainConfig } = await import("@/lib/supported-chains");
+    const publicUrls = getChainConfig(1)!.rpcUrls;
+    setRpcOverride(1, "https://my-node.example.org");
+    expect(getPresetRpcUrls(1)).toEqual(["https://my-node.example.org"]);
+    expect(getPrimaryRpcUrl(1)).toBe("https://my-node.example.org");
+    setRpcOverride(1, null);
+    expect(getPresetRpcUrls(1)).toEqual(publicUrls);
+  });
+
+  it("ignores saved overrides for networks that aren't built in", async () => {
+    const { getPrimaryRpcUrl } = await import("@/lib/supported-chains");
+    store.set("rpcOverrides", JSON.stringify({ 250: "https://x.example.org" }));
+    expect(getPrimaryRpcUrl(250)).toBeUndefined();
+  });
+});

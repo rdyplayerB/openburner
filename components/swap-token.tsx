@@ -22,6 +22,7 @@ import { formatSwapBalance } from '../lib/format-utils';
 import { getProvider } from '../lib/provider';
 import { truncateToDecimals, parseAmount, formatAmountForInput, getNativeGasReserve } from '../lib/amount';
 import { friendlyTxError, isRetryablePinError } from '../lib/tx-errors';
+import { broadcastSigned, BroadcastUncertainError, UNCERTAIN_SEND_MESSAGE } from '../lib/broadcast';
 import { getChainDisplayName, getNativeSymbol } from '../lib/supported-chains';
 import { showToast } from '../store/toast-store';
 import type { TransactionSummary } from './transaction-completion-modal';
@@ -420,7 +421,7 @@ export function SwapToken({
 
   /** Shown inside the PIN sheet; wrong PIN / no card keep it open for a retry. */
   const handlePinFailure = (error: any) => {
-    const message = friendlyTxError(error, nativeSymbol);
+    const message = error instanceof BroadcastUncertainError ? UNCERTAIN_SEND_MESSAGE : friendlyTxError(error, nativeSymbol);
     if (isRetryablePinError(error)) {
       setPinError(message);
     } else {
@@ -458,12 +459,14 @@ export function SwapToken({
       const approvalTx = await buildSpecificApprovalTransaction(fromToken.address, quote.allowanceTarget, quote.sellAmount, address, provider);
       const signed = await signWithCard(approvalTx, enteredPin, 'approve');
       setStep('send-approval');
-      const txResponse = await provider.broadcastTransaction(signed);
-      hash = txResponse.hash;
+      hash = await broadcastSigned(provider, signed).catch((e) => {
+        if (e instanceof BroadcastUncertainError) trackApproval(e.hash, fromToken.symbol);
+        throw e;
+      });
       trackApproval(hash, fromToken.symbol);
       setPinMode(null);
       showToast(`Approving ${fromToken.symbol}…`, 'info');
-      const receipt = await txResponse.wait();
+      const receipt = await provider.waitForTransaction(hash);
       if (receipt?.status === 0) {
         settleApproval(hash, false);
         setQuoteError('The approval failed on-chain. Try again.');
@@ -508,11 +511,14 @@ export function SwapToken({
         setStep('approve');
         const approvalTx = await buildInfiniteApprovalTransaction(fromToken.address, quote.allowanceTarget, address, provider);
         const signedApproval = await signWithCard(approvalTx, enteredPin, 'approve');
-        const approvalResponse = await provider.broadcastTransaction(signedApproval);
-        trackApproval(approvalResponse.hash, fromToken.symbol);
+        const approvalHash = await broadcastSigned(provider, signedApproval).catch((e) => {
+          if (e instanceof BroadcastUncertainError) trackApproval(e.hash, fromToken.symbol);
+          throw e;
+        });
+        trackApproval(approvalHash, fromToken.symbol);
         setStep('approve-wait');
-        const approvalReceipt = await approvalResponse.wait();
-        settleApproval(approvalResponse.hash, approvalReceipt?.status !== 0);
+        const approvalReceipt = await provider.waitForTransaction(approvalHash);
+        settleApproval(approvalHash, approvalReceipt?.status !== 0);
         if (approvalReceipt?.status === 0) throw new Error('The approval failed on-chain.');
         setAllowanceInfo(null);
 
@@ -543,18 +549,24 @@ export function SwapToken({
       const swapTx = await buildSwapTransaction(currentQuote, address, provider, chainId);
       const signed = await signWithCard(swapTx, enteredPin, 'sign');
       setStep('send');
-      const txResponse = await provider.broadcastTransaction(signed);
+      const swapSummary = {
+        fromToken: fromToken.symbol,
+        toToken: toToken.symbol,
+        fromAmount: fromAmount || ethers.formatUnits(currentQuote.sellAmount, fromDecimals),
+        toAmount: formatSwapBalance(ethers.formatUnits(currentQuote.buyAmount, toDecimals)),
+      };
+      const swapHash = await broadcastSigned(provider, signed).catch((e) => {
+        if (e instanceof BroadcastUncertainError) recordActivity({ hash: e.hash, chainId, kind: 'swap', ...swapSummary });
+        throw e;
+      });
 
       setPinMode(null);
 
       onTransactionSubmitted?.({
         kind: 'swap',
-        txHash: txResponse.hash,
+        txHash: swapHash,
         chainId,
-        fromToken: fromToken.symbol,
-        toToken: toToken.symbol,
-        fromAmount: fromAmount || ethers.formatUnits(currentQuote.sellAmount, fromDecimals),
-        toAmount: formatSwapBalance(ethers.formatUnits(currentQuote.buyAmount, toDecimals)),
+        ...swapSummary,
       });
       onSuccess();
     } catch (error: any) {

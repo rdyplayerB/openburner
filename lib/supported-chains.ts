@@ -71,8 +71,48 @@ export const FORMER_PRESETS: Record<number, { name: string; rpcUrl: string }> = 
 const BY_ID = new Map(CHAINS.map((c) => [c.chainId, c]));
 
 /** A preset's RPCs, primary first; null for networks added by the user. */
+/**
+ * Your own RPC for a built-in network, set from the network menu (saved in this
+ * browser only). It replaces the public primary and backup for that network.
+ */
+const OVERRIDES_KEY = "rpcOverrides";
+
+export function getRpcOverrides(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const saved = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}");
+    return saved && typeof saved === "object" ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+export function getRpcOverride(chainId: number): string | null {
+  const url = getRpcOverrides()[String(chainId)];
+  return BY_ID.has(chainId) && typeof url === "string" && url ? url : null;
+}
+
+export function setRpcOverride(chainId: number, url: string | null): void {
+  const next = getRpcOverrides();
+  if (url) next[String(chainId)] = url;
+  else delete next[String(chainId)];
+  try {
+    localStorage.setItem(OVERRIDES_KEY, JSON.stringify(next));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** The RPCs a built-in network uses: your own if you set one, else its public primary and backup. */
 export function getPresetRpcUrls(chainId: number): string[] | null {
+  const own = getRpcOverride(chainId);
+  if (own) return [own];
   return BY_ID.get(chainId)?.rpcUrls ?? null;
+}
+
+/** The RPC a built-in network starts on: your own if you set one, else its public primary. */
+export function getPrimaryRpcUrl(chainId: number): string | undefined {
+  return getRpcOverride(chainId) ?? BY_ID.get(chainId)?.rpcUrl;
 }
 
 export function getChainConfig(chainId: number): ChainConfig | undefined {

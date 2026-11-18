@@ -4,12 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, Plus, X } from "lucide-react";
 import { useWalletStore } from "@/store/wallet-store";
 import { showToast } from "@/store/toast-store";
-import { CHAINS, CURRENCY_SYMBOL_RE, getChainConfig } from "@/lib/supported-chains";
+import { CHAINS, CURRENCY_SYMBOL_RE, getChainConfig, getRpcOverrides, setRpcOverride } from "@/lib/supported-chains";
 import { ChainLogo } from "../common/token-icon";
+
+/** Just the host, so an API key in a provider's URL path never shows on screen. */
+function rpcHost(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "custom RPC";
+  }
+}
 
 type CustomRPCs = { [chainId: string]: { name: string; rpcUrl: string; symbol?: string } };
 
-/** Network picker: built-in networks, saved custom RPCs, and a form to add one. */
+/** Network picker: built-in networks, saved custom RPCs, your own RPCs for built-in networks, and a form to add one. */
 export function NetworkMenu() {
   const chainId = useWalletStore((s) => s.chainId);
   const chainName = useWalletStore((s) => s.chainName);
@@ -24,6 +33,7 @@ export function NetworkMenu() {
   const [symbol, setSymbol] = useState("");
   const [checking, setChecking] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +48,7 @@ export function NetworkMenu() {
     } catch {
       /* ignore corrupt storage */
     }
+    setOverrides(getRpcOverrides());
   }, []);
 
   useEffect(() => {
@@ -71,21 +82,19 @@ export function NetworkMenu() {
     setShowForm(false);
   }
 
-  const symbolOk = !symbol.trim() || CURRENCY_SYMBOL_RE.test(symbol.trim());
+  // A built-in network's chain ID means "use my own RPC for it" rather than a new network.
+  const builtInTarget = id ? CHAINS.find((c) => c.chainId === Number(id)) : undefined;
+  const symbolOk = !!builtInTarget || !symbol.trim() || CURRENCY_SYMBOL_RE.test(symbol.trim());
 
   /** Check the RPC really serves this chain ID before saving it (a mistyped ID would sign every transaction for the wrong chain). */
   async function addCustom() {
-    if (!rpc || !id || !name || !symbolOk || checking) return;
+    if (!rpc || !id || (!name && !builtInTarget) || !symbolOk || checking) return;
     const chainIdNum = Number(id);
     if (!Number.isSafeInteger(chainIdNum) || chainIdNum <= 0) {
       setFormError("The chain ID must be a whole number.");
       return;
     }
     const builtIn = CHAINS.find((c) => c.chainId === chainIdNum);
-    if (builtIn) {
-      setFormError(`Chain ${chainIdNum} is already built in as ${builtIn.name}.`);
-      return;
-    }
     setFormError(null);
     setChecking(true);
     let served: number | null = null;
@@ -110,6 +119,20 @@ export function NetworkMenu() {
       return;
     }
 
+    if (builtIn) {
+      setRpcOverride(chainIdNum, rpc);
+      setOverrides(getRpcOverrides());
+      setChain(chainIdNum, rpc, builtIn.name);
+      showToast(`${builtIn.name} now uses your RPC`, "success");
+      setName("");
+      setRpc("");
+      setId("");
+      setSymbol("");
+      setShowForm(false);
+      setOpen(false);
+      return;
+    }
+
     const sym = symbol.trim();
     save({ ...customRPCs, [String(chainIdNum)]: { name, rpcUrl: rpc, ...(sym ? { symbol: sym } : {}) } });
     setChain(chainIdNum, rpc, name);
@@ -126,6 +149,15 @@ export function NetworkMenu() {
     setSymbol("");
     setShowForm(false);
     setOpen(false);
+  }
+
+  /** Put a built-in network back on its public RPCs. */
+  function removeOverride(key: string) {
+    const chain = getChainConfig(Number(key));
+    setRpcOverride(Number(key), null);
+    setOverrides(getRpcOverrides());
+    if (chain && chainId === chain.chainId) setChain(chain.chainId, chain.rpcUrl, chain.name);
+    showToast(`${chain?.name ?? "That network"} is back on its public RPCs`, "info");
   }
 
   function removeCustom(key: string) {
@@ -172,11 +204,37 @@ export function NetworkMenu() {
                 >
                   <ChainLogo chainId={chain.chainId} name={chain.name} className="w-6 h-6" />
                   <span className="flex-1 truncate">{chain.name}</span>
+                  {overrides[String(chain.chainId)] && <span className="text-[11px] font-normal text-(--sw-muted)">Your RPC</span>}
                   {active && <Check className="w-4 h-4 text-(--sw-ink)" aria-hidden="true" />}
                 </button>
               );
             })}
           </div>
+
+          {Object.keys(overrides).filter((k) => getChainConfig(Number(k))).length > 0 && (
+            <div className="pt-1.5 mt-1.5 border-t border-(--sw-line-soft) space-y-0.5">
+              {Object.entries(overrides).map(([key, url]) => {
+                const chain = getChainConfig(Number(key));
+                if (!chain) return null;
+                return (
+                  <div key={`own-${key}`} className={row(false)}>
+                    <ChainLogo chainId={chain.chainId} name={chain.name} className="w-6 h-6" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{chain.name}</span>
+                      <span className="block text-[11px] text-(--sw-muted) font-normal truncate" title={rpcHost(url)}>Your RPC · {rpcHost(url)}</span>
+                    </span>
+                    <button
+                      onClick={() => removeOverride(key)}
+                      className="sw-icon-btn p-1.5 hover:text-(--sw-down)!"
+                      aria-label={`Use public RPCs for ${chain.name} again`}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {Object.keys(customRPCs).length > 0 && (
             <div className="pt-1.5 mt-1.5 border-t border-(--sw-line-soft) space-y-0.5">
@@ -228,10 +286,11 @@ export function NetworkMenu() {
                 }}
               >
                 {[
-                  { v: name, set: setName, ph: "Network name", label: "Network name", type: "text" },
+                  // A built-in network already has a name and currency, so only the RPC and chain ID matter.
+                  ...(builtInTarget ? [] : [{ v: name, set: setName, ph: "Network name", label: "Network name", type: "text" }]),
                   { v: rpc, set: setRpc, ph: "https://rpc.example.org", label: "RPC URL", type: "url" },
                   { v: id, set: setId, ph: "Chain ID", label: "Chain ID", type: "number" },
-                  { v: symbol, set: setSymbol, ph: "Currency symbol (optional, e.g. POL)", label: "Currency symbol", type: "text" },
+                  ...(builtInTarget ? [] : [{ v: symbol, set: setSymbol, ph: "Currency symbol (optional, e.g. POL)", label: "Currency symbol", type: "text" }]),
                 ].map((f) => (
                   <div key={f.label} className="sw-field px-3 py-2">
                     <input
@@ -247,6 +306,11 @@ export function NetworkMenu() {
                     />
                   </div>
                 ))}
+                {builtInTarget && !formError && (
+                  <p className="text-xs text-(--sw-ink-soft) px-1">
+                    {builtInTarget.name} is built in, so this RPC replaces its public ones in this&nbsp;browser.
+                  </p>
+                )}
                 {(formError || !symbolOk) && (
                   <p className="text-xs text-(--sw-down) px-1" role="alert">
                     {formError ?? "Use up to 11 letters or numbers for the symbol."}
@@ -254,15 +318,15 @@ export function NetworkMenu() {
                 )}
                 <button
                   type="submit"
-                  disabled={!rpc || !id || !name || !symbolOk || checking}
+                  disabled={!rpc || !id || (!name && !builtInTarget) || !symbolOk || checking}
                   className="sw-btn-primary w-full py-2.5 text-sm"
                 >
-                  {checking ? "Checking the RPC…" : "Add network"}
+                  {checking ? "Checking the RPC…" : builtInTarget ? `Use this RPC for ${builtInTarget.name}` : "Add network"}
                 </button>
               </form>
             )}
             <p className="px-2.5 pt-2 pb-1 text-[11px] leading-snug text-(--sw-muted)">
-              Built-in networks use free public RPCs run by other companies. They can be slow or go down, and they see your address and the transactions you&nbsp;send.
+              Built-in networks use free public RPCs that OpenBurner doesn&apos;t run. They can be slow or go down, and like any RPC they see your address and the transactions you send. To use your own, add a network with the same chain&nbsp;ID.
             </p>
           </div>
         </div>

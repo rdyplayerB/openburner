@@ -9,7 +9,8 @@ import { getPresetRpcUrls } from "./supported-chains";
  * reusing one instance lets ethers batch concurrent calls into one HTTP request.
  *
  * Preset networks get their backup RPC too: when a request to the current RPC
- * fails at the HTTP level (down, timed out, rate-limited), it is retried on the
+ * fails (down, timed out, or rate-limited, including rate limits some RPCs send
+ * as an error inside a normal 200 response), it is retried on the
  * next one. The provider stays on whichever answered, but goes back to the
  * primary after a few minutes, so a short outage doesn't move every later
  * request to the backup's operator.
@@ -26,6 +27,29 @@ const BATCH_MAX_COUNT = 10;
 export const RETURN_TO_PRIMARY_MS = 3 * 60_000;
 
 type Payload = ethers.JsonRpcPayload | Array<ethers.JsonRpcPayload>;
+
+/**
+ * Rate limits some public RPCs return inside a 200 response instead of an HTTP 429
+ * (OP's official RPC sends -32016 "exceeded its requests per second capacity",
+ * Hyperliquid's -32005 "rate limited"). Treated like a failed request so the
+ * provider moves to the backup.
+ */
+export function isRateLimitReply(result: ethers.JsonRpcResult | ethers.JsonRpcError | undefined): boolean {
+  const error = (result as ethers.JsonRpcError | undefined)?.error;
+  if (!error) return false;
+  const message = String(error.message ?? "").toLowerCase();
+  return (
+    error.code === -32005 ||
+    error.code === -32016 ||
+    error.code === -32090 ||
+    message.includes("rate limit") ||
+    message.includes("too many requests") ||
+    message.includes("requests per second") ||
+    message.includes("exceeded its")
+  );
+}
+
+class RateLimitedError extends Error {}
 
 /** True when every call in the batch got a reply (result or a per-call error). */
 function answersAll(payload: Array<ethers.JsonRpcPayload>, results: Array<ethers.JsonRpcResult>): boolean {
@@ -56,7 +80,9 @@ export class FailoverRpcProvider extends ethers.JsonRpcProvider {
     const response = await request.send();
     response.assertOk();
     const body = response.bodyJson;
-    return Array.isArray(body) ? body : [body];
+    const results = Array.isArray(body) ? body : [body];
+    if (results.some(isRateLimitReply)) throw new RateLimitedError(`${url} is rate-limiting`);
+    return results;
   }
 
   async #sendTo(url: string, payload: Payload): Promise<Array<ethers.JsonRpcResult>> {
@@ -64,7 +90,9 @@ export class FailoverRpcProvider extends ethers.JsonRpcProvider {
     try {
       const results = await this.#post(url, payload);
       if (answersAll(payload, results)) return results;
-    } catch {
+    } catch (err) {
+      // Rate-limited: let the caller try the backup instead of sending more calls here.
+      if (err instanceof RateLimitedError) throw err;
       /* rejected as a batch: fall through and send the calls one by one */
     }
     const singles = await Promise.all(payload.map((p) => this.#post(url, p)));

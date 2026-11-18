@@ -34,11 +34,22 @@ export function friendlyTxError(err: any, nativeSymbol = "ETH"): string {
   if (code === "NUMERIC_FAULT" || code === "INVALID_ARGUMENT") {
     return "That amount or address isn't valid.";
   }
-  if (code === "TIMEOUT" || msg.includes("timeout")) {
-    return "The network took too long to respond. Check your connection and try again.";
-  }
-  if (code === "NETWORK_ERROR" || code === "SERVER_ERROR" || msg.includes("failed to fetch")) {
-    return "Couldn't reach the network. Check your connection and try again.";
+  // Public RPCs go down and rate-limit now and then: say so plainly instead of
+  // blaming the user's connection, unless the browser really is offline.
+  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  const rpcTrouble =
+    code === "TIMEOUT" ||
+    code === "NETWORK_ERROR" ||
+    code === "SERVER_ERROR" ||
+    msg.includes("timeout") ||
+    msg.includes("failed to fetch") ||
+    msg.includes("rate limit") ||
+    msg.includes("too many requests") ||
+    msg.includes("exceeded its");
+  if (rpcTrouble) {
+    if (offline) return "You're offline. Check your connection and try again.";
+    if (code === "TIMEOUT" || msg.includes("timeout")) return "This network's RPC is slow to answer right now. Try again in a moment.";
+    return "This network's RPC isn't answering right now. Try again in a moment.";
   }
   if (!raw) return "Something went wrong. Please try again.";
   // Keep the first sentence and drop any embedded JSON / data dumps.

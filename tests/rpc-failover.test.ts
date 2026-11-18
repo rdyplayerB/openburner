@@ -5,10 +5,10 @@ import { FailoverRpcProvider, getProvider, RETURN_TO_PRIMARY_MS } from "@/lib/pr
 import { CHAINS } from "@/lib/supported-chains";
 
 const servers: http.Server[] = [];
-const hits = { down: 0, up: 0, small: 0 };
+const hits = { down: 0, up: 0, small: 0, soft: 0 };
 
-/** A JSON-RPC server that answers eth_blockNumber / eth_chainId, always fails, or rejects batches over 3. */
-async function serve(kind: "down" | "up" | "small"): Promise<string> {
+/** A JSON-RPC server that answers eth_blockNumber / eth_chainId, always fails, rejects batches over 3, or rate-limits inside a 200. */
+async function serve(kind: "down" | "up" | "small" | "soft"): Promise<string> {
   const server = http.createServer((req, res) => {
     let body = "";
     req.on("data", (c) => (body += c));
@@ -19,6 +19,12 @@ async function serve(kind: "down" | "up" | "small"): Promise<string> {
         return;
       }
       const payload = JSON.parse(body);
+      if (kind === "soft") {
+        // OP's official RPC: HTTP 200 with a JSON-RPC rate-limit error per call
+        const limited = (p: any) => ({ jsonrpc: "2.0", id: p.id, error: { code: -32016, message: "Your IP has exceeded its requests per second capacity" } });
+        res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(Array.isArray(payload) ? payload.map(limited) : limited(payload)));
+        return;
+      }
       if (kind === "small" && Array.isArray(payload) && payload.length > 3) {
         res.writeHead(413).end("batch too large");
         return;
@@ -85,6 +91,13 @@ describe("RPC failover", () => {
       clock.mockRestore();
       provider.destroy();
     }
+  });
+
+  it("moves to the backup when the primary rate-limits inside a normal response", async () => {
+    const provider = new FailoverRpcProvider([await serve("soft"), await serve("up")], 137);
+    expect(await provider.getBlockNumber()).toBe(16);
+    expect(provider.currentUrl).toBe(provider.urls[1]);
+    provider.destroy();
   });
 
   it("re-sends a batch call by call when the RPC caps batch size", async () => {

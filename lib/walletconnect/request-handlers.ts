@@ -6,6 +6,7 @@
  * the JSON-RPC result. Errors thrown carry an optional `.code` for the dApp response.
  */
 import { ethers } from "ethers";
+import { broadcastSigned, BroadcastUncertainError } from "../broadcast";
 import { feeFields } from "@/lib/card/tx";
 import { addChainToSessions } from "./client";
 import { CURRENCY_SYMBOL_RE, getChainConfig } from "@/lib/supported-chains";
@@ -141,10 +142,15 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
         if (method === "eth_signTransaction") {
           return signedTx;
         }
-        const txResponse = await rpcRateLimiter.makeRequest(async () =>
-          provider.broadcastTransaction(signedTx)
-        );
-        return txResponse.hash;
+        // Returning the hash even when the RPC didn't confirm it got the transaction
+        // stops the app from asking for a second signature (which could pay twice).
+        // The transaction goes into Activity, which settles it either way.
+        try {
+          return await rpcRateLimiter.makeRequest(() => broadcastSigned(provider, signedTx));
+        } catch (err) {
+          if (err instanceof BroadcastUncertainError) return err.hash;
+          throw err;
+        }
       }
 
       case "wallet_switchEthereumChain": {

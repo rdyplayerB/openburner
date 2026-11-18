@@ -10,6 +10,8 @@ import { ChainLogo } from "../common/token-icon";
 import { shortAddress } from "../common/address-text";
 
 const RECHECK_MS = 15_000;
+/** A pending transaction the network still doesn't know after this long was never sent (or was dropped). */
+const NOT_SENT_AFTER_MS = 10 * 60_000;
 
 /** Transactions sent from this device, grouped by day, with live status. */
 export function ActivityList({ address }: { address: string }) {
@@ -29,8 +31,12 @@ export function ActivityList({ address }: { address: string }) {
         const rpc = getRpcForChain(item.chainId) ?? getChainConfig(item.chainId)?.rpcUrl;
         if (!rpc) continue;
         try {
-          const receipt = await getProvider(item.chainId, rpc).getTransactionReceipt(item.hash);
+          const provider = getProvider(item.chainId, rpc);
+          const receipt = await provider.getTransactionReceipt(item.hash);
           if (!cancelled && receipt) update(item.hash, { status: receipt.status === 1 ? "success" : "failed" });
+          else if (!cancelled && Date.now() - item.timestamp > NOT_SENT_AFTER_MS && !(await provider.getTransaction(item.hash))) {
+            update(item.hash, { status: "dropped" });
+          }
         } catch {
           /* try again next round */
         }
@@ -137,6 +143,9 @@ function StatusPill({ status }: { status: ActivityItem["status"] }) {
   if (status === "success") return null;
   if (status === "failed") {
     return <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-(--sw-down-bg) text-(--sw-down)">Failed</span>;
+  }
+  if (status === "dropped") {
+    return <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-(--sw-fill-strong) text-(--sw-ink-soft)">Not sent</span>;
   }
   return (
     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-(--sw-warn-bg) text-(--sw-warn) inline-flex items-center gap-1">
