@@ -36,8 +36,8 @@ export function BrandMark({
 
 /**
  * Flame + "OpenBurner" in one ink colour. The flame is the only orange.
- * Proportions are tied to the type: flame 0.92em tall, sitting on the baseline
- * (its circle bottoms out with the "O"), 0.19em gap, -0.018em tracking.
+ * Proportions are tied to the type: flame 1.16em tall with its circle centred
+ * on the capitals, 0.26em gap, -0.015em tracking.
  */
 export function Wordmark({
   fontSize = 18,
@@ -53,11 +53,11 @@ export function Wordmark({
   const hide = hideTextBelow === "md" ? "hidden md:inline" : hideTextBelow === "sm" ? "hidden sm:inline" : "";
   return (
     <span
-      className={`inline-flex items-center font-bold leading-none text-(--sw-ink) ${className}`}
-      style={{ fontSize, gap: "0.19em", letterSpacing: fontSize <= 20 ? "-0.01em" : "-0.018em" }}
+      className={`inline-flex items-baseline font-bold leading-none text-(--sw-ink) ${className}`}
+      style={{ fontSize, gap: "0.26em", letterSpacing: "-0.015em" }}
     >
-      <span className="inline-flex" style={{ transform: "translateY(-0.075em)" }}>
-        <BrandMark size={fontSize * 0.92} />
+      <span className="inline-flex" style={{ transform: "translateY(0.13em)" }}>
+        <BrandMark size={fontSize * 1.16} />
       </span>
       <span className={hide}>OpenBurner</span>
     </span>

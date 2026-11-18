@@ -96,11 +96,11 @@
  "s_tongue": {
   "tip": [
    146,
-   138
+   130
   ],
   "c": [
    162,
-   282
+   274
   ],
   "r": 62,
   "hl": [
@@ -115,12 +115,11 @@
   ]
  },
  "wordmark": {
-  "tracking": -0.018,
-  "tracking_small": -0.01,
-  "mark_em": 0.92,
-  "gap_em": 0.19,
-  "lift_em": 0.075
+  "tracking": -0.015,
+  "mark_em": 1.16,
+  "gap_em": 0.26,
+  "drop_em": 0.13
  },
- "icon_scale": 0.66,
+ "icon_scale": 0.64,
  "icon_dy": -0.035
 }
