@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bottom sheets on phones** - Every dialog opens from the bottom and stays above the keyboard
 - **Clearer, calmer visuals** - One shape for token icons with network badges, sentence-case labels, orange reserved for actions, readable button contrast (WCAG AA) and a clear disabled state
 - **One transaction screen** - Sent → Confirming → Confirmed in a single sheet, with explorer link
-- **Updated dependencies** - Next.js 16, React 19.3, Tailwind CSS 4 and libhalo 1.21. Running it yourself now needs Node.js 22.12 or later
+- **Updated dependencies** - Next.js 16, React 19.3, Tailwind CSS 4 and libhalo 1.22. Running it yourself now needs Node.js 22.12 or later
 
 ### Fixed
 - **Logo sent to connected apps** - Apps now get a logo that exists (the old link pointed at a missing file)
