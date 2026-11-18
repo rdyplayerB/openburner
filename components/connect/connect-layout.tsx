@@ -3,12 +3,12 @@
 import type { ReactNode } from "react";
 import { Wordmark as BrandWordmark } from "@/components/common/brand-mark";
 import { ArrowUpRight, Check, Loader2 } from "lucide-react";
-import { useIntroStore } from "@/store/intro-store";
+import { CardTapArt, useReader } from "@/components/signing/signing-progress";
 
 /**
  * The connect screen shared by every flow (USB reader, phone as reader, phone
- * NFC): one centred card with the wordmark, a line on what to do, the main
- * button, and what's ready underneath.
+ * NFC): one centred card with the wordmark, the card-tap animation for this
+ * reader, a line on what to do, the main button, and what's ready underneath.
  */
 
 /** OpenBurner wordmark at the connect screen's two sizes. */
@@ -31,7 +31,7 @@ interface ConnectLayoutProps {
 }
 
 export function ConnectLayout({ subline, controls, action, checks, checksTitle = "Before you connect", extra }: ConnectLayoutProps) {
-  const setIntroSeen = useIntroStore((s) => s.setSeen);
+  const reader = useReader();
   return (
     <div className="sw-screen min-h-dvh flex flex-col">
       <div className="flex-1 flex items-center justify-center px-4 pt-[max(2.5rem,env(safe-area-inset-top))] pb-10">
@@ -41,6 +41,7 @@ export function ConnectLayout({ subline, controls, action, checks, checksTitle =
           <div className="sw-surface rounded-xl border border-(--sw-line) overflow-hidden">
             <div className="text-center px-6 sm:px-8 pt-10 pb-8">
               <Wordmark size="lg" />
+              <CardTapArt reader={reader} className="w-full max-w-[200px] h-auto mx-auto block mt-8" />
               <p className="mt-6 text-base leading-relaxed text-(--sw-ink-soft) max-w-sm mx-auto" aria-live="polite">
                 {subline}
               </p>
@@ -58,16 +59,13 @@ export function ConnectLayout({ subline, controls, action, checks, checksTitle =
           </div>
 
           <nav className="mt-6 flex items-center justify-center gap-5 text-sm text-(--sw-muted)">
-            <button type="button" onClick={() => setIntroSeen(false)} className="hover:text-(--sw-ink) transition-colors">
-              What is OpenBurner?
-            </button>
             <a
               href="https://openburner.xyz"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 hover:text-(--sw-ink) transition-colors"
             >
-              openburner.xyz
+              What is OpenBurner?
               <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
             </a>
           </nav>

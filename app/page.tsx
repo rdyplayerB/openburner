@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { useWalletStore } from "@/store/wallet-store";
-import { useIntroStore } from "@/store/intro-store";
 import { useEnvironment } from "@/hooks/use-environment";
 import { usePWA } from "@/hooks/use-pwa";
 import { ToastHost } from "@/components/toast";
@@ -21,10 +20,6 @@ function Loading() {
 
 // Each screen (and its card/NFC/gateway stack) is its own chunk; only the one
 // for the current mode/device is downloaded.
-const Intro = dynamic(() => import("@/components/connect/intro").then((m) => m.Intro), {
-  ssr: false,
-  loading: Loading,
-});
 const WalletConnect = dynamic(
   () => import("@/components/local/wallet-connect").then((m) => m.WalletConnect),
   { ssr: false, loading: Loading }
@@ -44,7 +39,6 @@ const WalletDashboard = dynamic(
 
 export default function Home() {
   const isConnected = useWalletStore((s) => s.isConnected);
-  const introSeen = useIntroStore((s) => s.seen);
   const { isHosted, isMobile, isClient } = useEnvironment();
 
   // Register service worker for caching (works in all modes)
@@ -65,10 +59,8 @@ export default function Home() {
   return (
     <main className="sw-screen min-h-screen">
       {!isConnected ? (
-        // Connect screens own their full-screen layout. First visit: the intro.
-        !introSeen ? (
-          <Intro />
-        ) : isHosted && isMobile ? (
+        // Connect screens own their full-screen layout.
+        isHosted && isMobile ? (
           <HostedMobileConnect />
         ) : isHosted && !isMobile ? (
           <HostedDesktopConnect />

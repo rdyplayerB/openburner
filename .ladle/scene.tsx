@@ -7,7 +7,6 @@ import { useSwapStore } from "@/store/swap-store";
 import { useWalletConnectStore } from "@/store/walletconnect-store";
 import { useSigningStore, type CardPhase } from "@/store/signing-store";
 import { useToastStore } from "@/store/toast-store";
-import { useIntroStore } from "@/store/intro-store";
 import { log } from "@/lib/log";
 import { resetTokenListCache } from "@/components/token-list";
 import { resetGalleryCache } from "@/components/nft/nft-gallery";
@@ -28,8 +27,6 @@ export interface SceneProps {
   knobs?: Partial<Knobs>;
   /** Connected wallet (default true). */
   connected?: boolean;
-  /** Show the first-run welcome slides (default false: already seen). */
-  intro?: boolean;
   connectionMode?: "bridge" | "gateway";
   /** Seeded activity history (default true). */
   activity?: boolean;
@@ -88,7 +85,6 @@ function setup(p: SceneProps) {
   });
   useSigningStore.setState({ phase: p.signing ?? "idle" });
   useToastStore.setState({ toasts: [] });
-  useIntroStore.setState({ seen: !p.intro });
 }
 
 /** Sets up the app's state for one story, then runs its steps. */

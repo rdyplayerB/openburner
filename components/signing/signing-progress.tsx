@@ -22,9 +22,10 @@ export interface ProgressStep {
   card?: boolean;
 }
 
-type Reader = "phone" | "gateway" | "reader";
+export type Reader = "phone" | "gateway" | "reader";
 
-function useReader(): Reader {
+/** How this device reaches the card: tapped on this phone, via a phone on the HaLo Gateway, or a USB NFC reader. */
+export function useReader(): Reader {
   const env = useEnvironment();
   const connectionMode = useWalletStore((s) => s.connectionMode);
   if (env.isHosted && env.isMobile) return "phone";

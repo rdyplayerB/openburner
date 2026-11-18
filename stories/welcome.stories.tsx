@@ -11,42 +11,6 @@ export default {
   meta: { iframed: true, width: "desktop" },
 } satisfies StoryDefault;
 
-export const Intro: Story = () => (
-  <Scene connected={false} intro>
-    <Home />
-  </Scene>
-);
-Intro.storyName = "Intro 1, what OpenBurner is";
-
-export const IntroNetworks: Story = () => (
-  <Scene connected={false} intro steps={[{ click: "Next" }]}>
-    <Home />
-  </Scene>
-);
-IntroNetworks.storyName = "Intro 2, other EVM networks";
-
-export const IntroBuild: Story = () => (
-  <Scene connected={false} intro steps={[{ click: "Slide 3" }]}>
-    <Home />
-  </Scene>
-);
-IntroBuild.storyName = "Intro 3, build your own";
-
-export const IntroSigning: Story = () => (
-  <Scene connected={false} intro steps={[{ click: "Slide 4" }]}>
-    <Home />
-  </Scene>
-);
-IntroSigning.storyName = "Intro 4, every signature needs your card";
-
-export const IntroPhone: Story = () => (
-  <Scene connected={false} intro knobs={{ mode: "hosted", mobile: true, pricing: false }}>
-    <Home />
-  </Scene>
-);
-IntroPhone.storyName = "Intro on a phone";
-IntroPhone.meta = { width: "phone" };
-
 export const UsbReader: Story = () => (
   <Scene connected={false} knobs={{ bridge: "down" }}>
     <Home />

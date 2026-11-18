@@ -531,11 +531,6 @@
   45% { transform: translateX(0.6px); }
   47% { transform: translateX(-0.3px); }
 }
-@keyframes obWave {
-  0% { opacity: 0; transform: scale(0.6); }
-  30% { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.25); }
-}
 @keyframes obDraw {
   from { stroke-dashoffset: 24; }
   to { stroke-dashoffset: 0; }
@@ -543,27 +538,8 @@
 .ob-tap-card { animation: obTapCard 3s infinite; }
 .ob-tap-ring { animation: obTapRing 3s infinite; transform-origin: center; transform-box: fill-box; }
 .ob-phone-buzz { animation: obPhoneBuzz 3s linear infinite; }
-.ob-wave { animation: obWave 2.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
-.ob-wave-2 { animation-delay: 0.35s; }
-.ob-wave-3 { animation-delay: 0.7s; }
 .ob-draw { stroke-dasharray: 24; animation: obDraw 0.4s ease-out both; }
 
-/* Welcome slides: a resting card floats, a waiting step pings. */
-@keyframes obFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-@keyframes obPing {
-  0% { transform: scale(1); opacity: 0.9; }
-  80%, 100% { transform: scale(1.9); opacity: 0; }
-}
-@keyframes obTapLeft {
-  0%, 100% { transform: translate(0, 0); }
-  45%, 60% { transform: translate(-14px, -6px); }
-}
-.ob-float { animation: obFloat 4s ease-in-out infinite; }
-.ob-ping { animation: obPing 1.6s ease-out infinite; transform-origin: center; transform-box: fill-box; }
-.ob-tap-left { animation-name: obTapLeft; }
 /* Card coming down onto a USB reader. */
 @keyframes obTapDown {
   0%, 100% { transform: translate(0, 0); }
@@ -577,15 +553,6 @@
   100% { transform: scale(1); opacity: 0; }
 }
 .ob-ripple { animation: obRipple 3s cubic-bezier(0.2, 0.55, 0.35, 1) infinite; transform-origin: center; transform-box: fill-box; }
-@keyframes obCaret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-.ob-caret { animation: obCaret 1.1s steps(1) infinite; }
-/* 4:3 stage; tall phones get a square one so the slide fills the screen. */
-.ob-intro-stage { aspect-ratio: 4 / 3; }
-@media (max-width: 639px) and (min-height: 740px) {
-  .ob-intro-stage { aspect-ratio: 1 / 1; }
-}
-.ob-no-scrollbar { scrollbar-width: none; }
-.ob-no-scrollbar::-webkit-scrollbar { display: none; }
 
 .ob-modal-backdrop { animation: obFadeIn 0.15s ease-out; }
 .ob-modal-panel { animation: obPop 0.18s ease-out; }

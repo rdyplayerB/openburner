@@ -79,8 +79,8 @@ These rules sit on top of everything above. Where they disagree, these win.
 
 ### Line breaks
 - Never leave one word alone on the last line. `globals.css` sets `text-wrap: balance` on
-  headings and `text-wrap: pretty` on everything else. Where the text matters most (welcome
-  slides), the last two words are also joined with a non-breaking space for browsers
+  headings and `text-wrap: pretty` on everything else. Where the text matters most, the last two
+  words are also joined with a non-breaking space for browsers
   without `text-wrap`.
 
 ### Hierarchy
