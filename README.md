@@ -36,7 +36,8 @@ You can run it locally with a USB NFC reader, or host it and use your phone as t
 ### Technical Highlights
 - **Fast First Load** - About 111 kB of JavaScript up front; WalletConnect, the card libraries and each connect screen load only when you need them
 - **Multicall3 Integration** - One batched RPC call for native and token balances
-- **Public RPCs with a Backup** - Each preset network has two tested public RPCs from different operators, and the app switches to the second if the first stops answering. Batches are capped at 10 calls, and a batch an RPC rejects is re-sent one call at a time
+- **Public RPCs with a Backup** - Each built-in network has two tested public RPCs from different operators. If the first stops answering or rate-limits, the app switches to the second and goes back a few minutes later. Batches are capped at 10 calls, and a batch an RPC rejects is re-sent one call at a time
+- **Sends That Are Safe to Retry** - If an RPC times out after you sign, the app resends the same transaction, which can only land once, instead of asking you to sign again
 - **Advanced Caching** - Multi-tier price caching with a rate-limited server-side proxy
 - **Resilient Gateway Sessions** - Hosted phone-as-reader connections survive brief phone sleeps and resume in place, no constant QR re-scanning
 - **Burner Ethereum card integration** - NFC through a USB reader locally, or your phone when hosted (directly or through the HaLo Gateway)
@@ -166,6 +167,8 @@ On top of that, OpenBurner:
 
 OpenBurner works with any EVM-compatible network. The network menu lists some networks as examples. To add another, choose **Add a custom network** and enter its name, chain ID and your own RPC URL. Add the network's currency symbol too, even if it's ETH, so the balance can show a price. Before saving, OpenBurner checks that the RPC URL returns the chain ID you entered.
 
+To use your own RPC for a built-in network, enter its chain ID in the same form. Your RPC replaces the public ones in that browser. Otherwise, built-in networks use free public RPCs that OpenBurner doesn't run (PublicNode, Pocket Network, dRPC and the networks' own endpoints). They can be slow or go down, and like any RPC they see your address and the transactions you send.
+
 ## 📝 License & Usage
 
 This project is licensed under the MIT License. You can:
@@ -175,7 +178,7 @@ This project is licensed under the MIT License. You can:
 - Fork and build your own version
 - Distribute your modified versions
 
-See the [LICENSE](LICENSE) file for full terms.
+See the [LICENSE](LICENSE) file for full terms. OpenBurner comes as is, with no warranty, so try a small amount first.
 
 ## Maintenance
 
