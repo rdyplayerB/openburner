@@ -2,14 +2,13 @@
 
 ## Overview
 
-This document outlines the security considerations for USB NFC reader access via web browsers in the hosted version of OpenBurner.
+This document outlines the security considerations for USB NFC reader access through the HaLo Bridge. The bridge is used in local mode only: the hosted app on desktop connects through the HaLo Gateway, since a page served over HTTPS can't open the bridge's local `ws://` connection.
 
 ## Security Model
 
 ### 1. Consent-Based Access
 - **User Consent Required**: The bridge connection requires explicit user consent before accessing USB NFC readers
-- **Consent Modal**: A modal dialog matches the BurnerOS approval prompt, clearly explaining what access is being requested
-- **Website Verification**: The consent modal displays the requesting website URL for user verification
+- **Consent Page**: When the card needs your PIN, the bridge's own consent page opens in a small window (`http://localhost:32868/consent`)
 
 ### 2. Browser Security Limitations
 - **No Direct USB Access**: Web browsers cannot directly access USB devices for security reasons
@@ -19,28 +18,24 @@ This document outlines the security considerations for USB NFC reader access via
 ### 3. Network Security
 - **Localhost Only**: Bridge communication is restricted to localhost (127.0.0.1:32868)
 - **No External Network**: The bridge does not communicate over external networks
-- **HTTPS Required**: The hosted version must be served over HTTPS for security
 
 ## Security Measures Implemented
 
 ### 1. Consent Flow
 ```typescript
-// Consent is required before bridge connection
-if (error instanceof NFCBridgeConsentError) {
-  const consentURL = bridge.getConsentURL(window.location.origin, {});
-  // Show consent modal to user
-}
+// lib/burner-bridge.ts: the bridge asks for consent (PIN entry) on its own page
+const consentUrl = `http://localhost:32868/consent?uid=${msg.uid}`;
+window.open(consentUrl, "Burner PIN", "width=400,height=600");
 ```
 
-### 2. Origin Verification
-- The consent URL includes the website origin for verification
-- Users can verify they're granting access to the correct website
-- The consent modal displays the full website URL
+### 2. Signature Verification
+- Every signature must recover to the address you connected with before it's broadcast or returned to a dApp
+- A malformed card key ends the connection instead of being repaired
 
 ### 3. Error Handling
-- Graceful fallback to gateway mode if bridge fails
+- Gateway mode is available from the connect screen if the bridge isn't running
 - Clear error messages for users
-- No sensitive information exposed in error messages
+- No keys, signatures, pairing links or PINs in logs
 
 ### 4. Connection Validation
 - Bridge connection status is continuously monitored
@@ -100,20 +95,17 @@ if (error instanceof NFCBridgeConsentError) {
 ### Mitigations
 1. **Consent Verification**: User must explicitly grant consent
 2. **Localhost Restriction**: Bridge only accessible from localhost
-3. **HTTPS Enforcement**: Secure communication channel
+3. **Signature Checks**: Every signature must match the connected card
 4. **Origin Validation**: Verify requesting website origin
 
 ## Implementation Notes
 
 ### Bridge Service
-- Uses `@arx-research/libhalo` for proper consent handling
+- `lib/burner-bridge.ts` talks to the bridge over WebSocket at `ws://127.0.0.1:32868/ws`
 - Implements proper error handling and cleanup
-- Follows security best practices for WebSocket communication
 
-### Consent Modal
-- Matches BurnerOS approval prompt design
-- Clear explanation of permissions requested
-- User-friendly interface with proper accessibility
+### Consent Page
+- Served by the bridge itself, not by OpenBurner
 
 ### Error Handling
 - Graceful fallback to alternative connection methods
@@ -130,4 +122,4 @@ if (error instanceof NFCBridgeConsentError) {
 
 ## Conclusion
 
-The bridge implementation follows security best practices by requiring explicit user consent, restricting access to localhost, and providing clear fallback options. The consent flow matches the BurnerOS approval prompt to maintain consistency and user trust.
+The bridge connection requires explicit consent on the bridge's own page, is restricted to localhost, and every signature is checked against the connected card. The HaLo Gateway is the alternative when the bridge isn't available.

@@ -12,38 +12,42 @@ OpenBurner is organized to support both local development and hosted deployment:
 
 ```
 OpenBurner/
-├── app/                          # Next.js app directory
+├── app/                          # Next.js app directory (page + /api proxies)
+├── proxy.ts                      # Origin guard for the /api routes
 ├── components/
-│   ├── shared/                   # Components used by both local & hosted
+│   ├── shared/                   # Used by both local & hosted
 │   │   ├── wallet-dashboard.tsx
-│   │   ├── token-list.tsx
-│   │   ├── send-token.tsx
 │   │   └── price-display.tsx
-│   ├── local/                    # Local development only
-│   │   ├── wallet-connect.tsx    # Original implementation
+│   ├── local/                    # Local mode only
+│   │   ├── wallet-connect.tsx
 │   │   ├── mode-toggle.tsx
 │   │   ├── qr-display.tsx
 │   │   └── error-modal.tsx
-│   ├── hosted/                   # Hosted version only
+│   ├── hosted/                   # Hosted mode only
 │   │   ├── mobile/
 │   │   │   ├── mobile-connect.tsx
 │   │   │   └── mobile-error-modal.tsx
 │   │   └── desktop/
 │   │       └── hosted-desktop-connect.tsx
-│   └── common/                   # Shared UI components
-│       ├── theme-toggle.tsx
-│       └── error-modal.tsx
+│   ├── common/                   # Shared building blocks (logo, modal, token icon, ...)
+│   ├── dashboard/  connect/  nft/  signing/  walletconnect/
+│   └── send-token.tsx, swap-token.tsx, token-list.tsx, ...
 ├── lib/
 │   ├── config/                   # Environment configuration
 │   │   └── environment.ts
-│   ├── mobile/                   # Mobile-specific functionality
+│   ├── card/                     # Card key parsing and signature checks
+│   ├── mobile/                   # Phone NFC
 │   │   └── nfc.ts
-│   ├── burner.ts                 # Core Burner functionality
+│   ├── burner.ts                 # USB bridge connection
 │   ├── burner-gateway.ts         # Gateway mode implementation
-│   └── price-oracle.ts           # Pricing (disabled on hosted)
+│   ├── supported-chains.ts       # Preset networks and their RPCs
+│   └── price-oracle.ts           # Pricing (local and hosted)
 ├── hooks/                        # Custom React hooks
 │   ├── use-environment.ts
 │   └── use-mobile-detection.ts
+├── store/                        # Zustand state
+├── stories/  .ladle/             # Every screen as a Ladle story
+├── tests/                        # Vitest suite
 └── docs/                         # Documentation
     ├── HOSTED_DEPLOYMENT.md
     ├── MOBILE_NFC.md
@@ -53,18 +57,20 @@ OpenBurner/
 ## Environment Modes
 
 ### Local Development (`NEXT_PUBLIC_APP_MODE=local`)
-- Full functionality with pricing
+- Full functionality, pricing always on
 - Both bridge and gateway modes
 - Debugging and development features
-- Uses your CoinGecko API key
+- Uses your own API keys (see `env.example`)
 
 ### Hosted Version (`NEXT_PUBLIC_APP_MODE=hosted`)
-- Mobile: Single tap interface
-- Desktop: Bridge and gateway options
-- Pricing disabled (no API costs)
+- Mobile: tap the card to the phone
+- Desktop: gateway (phone as the reader); the USB bridge isn't available
+- Pricing, swaps, NFTs and dApp connections turn on with the deployer's keys (see `docs/HOSTING.md`)
 - Streamlined user experience
 
 ## Development Setup
+
+Requires Node.js 22.12 or later.
 
 1. **Clone the repository:**
    ```bash
@@ -79,8 +85,8 @@ OpenBurner/
 
 3. **Set up environment variables:**
    ```bash
-   cp .env.local.example .env.local
-   # Edit .env.local with your CoinGecko API key
+   cp env.example .env.local
+   # Add any API keys you have; every one is optional
    ```
 
 4. **Start development server:**
@@ -146,7 +152,7 @@ function MyComponent() {
 ### Local Testing
 ```bash
 npm run dev
-# Test with USB NFC reader and Burner card
+# Test with USB NFC reader and Burner Ethereum card
 ```
 
 ### Hosted Testing
@@ -154,6 +160,13 @@ npm run dev
 npm run dev:hosted
 # Test mobile interface on phone
 # Test desktop interface on computer
+```
+
+### Checks
+```bash
+npm run lint         # ESLint 10 (eslint.config.mjs)
+npm test             # Vitest
+npm run stories      # Every screen and state in Ladle, no card needed
 ```
 
 ### Build Testing
@@ -183,14 +196,14 @@ Since this is a personal project, you're encouraged to fork OpenBurner for your 
 **Use cases for forking:**
 - Add support for specific L2s or custom chains
 - Build a branded wallet for your project
-- Experiment with new Burner card features
+- Experiment with new Burner Ethereum card features
 - Create specialized tools (NFT minting, DAO voting, etc.)
 
 ## Code Style
 
 - Use TypeScript for all new code
 - Follow existing naming conventions
-- Use Tailwind CSS for styling
+- Use Tailwind CSS 4 for styling (theme and tokens in `app/globals.css`; see `docs/SWISS_STYLE.md`)
 - Prefer functional components with hooks
 - Add JSDoc comments for complex functions
 

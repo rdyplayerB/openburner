@@ -1,9 +1,16 @@
 # WalletConnect (dApp) Support — Implementation Plan
 
-> Status: **Plan / spec only — not yet implemented.**
+> Status: **Implemented (v1.3.0).** This is the original plan, kept for reference; the code
+> is the source of truth. Where it differs: message and typed-data signing live in
+> `lib/smart-signer.ts` (`signDigestSmart`, `signMessageSmart`, `signTypedDataSmart`), not a
+> separate `lib/sign-message.ts`; namespaces and chain helpers are in `lib/walletconnect/chains.ts`,
+> with request decoding in `decode.ts` and `params.ts`. dApp requests wait in a queue in
+> `store/walletconnect-store.ts` and are shown one at a time; the signer itself doesn't queue,
+> and `lib/smart-signer.ts` rejects a signature started while another is in progress.
+> SIWE `auth_request` is still not supported.
 > Goal: Let an OpenBurner user connect to external dApps (Uniswap, OpenSea, etc.) by
 > scanning a WalletConnect QR code or pasting a `wc:` URI, approve a session, and sign
-> the dApp's requests with their Burner hardware card.
+> the dApp's requests with their Burner Ethereum card.
 
 ## Decisions (locked)
 
@@ -253,7 +260,8 @@ each be obvious and never trap the user.
 - Show dApp origin/metadata prominently; never sign blind — always render what's being signed.
 - Decode `personal_sign` hex to UTF-8; show typed-data domain + primaryType.
 - For transactions: estimate gas, show to/value/data + network.
-- Per-request PIN + physical Burner tap; no session-level auto-approve.
+- Signing requests need a PIN + physical Burner tap each time. Network switch and add
+  requests need a confirmation only. No session-level auto-approve.
 - Scope sessions strictly to supported chains; reject unsupported.
 - Reject all requests when no wallet is connected.
 

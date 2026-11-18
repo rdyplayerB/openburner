@@ -64,5 +64,6 @@ hard quota.
 - Use each provider's free tier; CoinGecko/Alchemy free tiers are generous for read traffic.
 - Connect Upstash and set a `DAILY_CAP_*` for each key you pay for.
 - Tighten the per-route limits in `lib/rate-limit.ts` if you see abuse.
-- Or skip deployer keys entirely and rely on the user-provided keys in Settings — then the
-  hosted instance costs you nothing and each user brings their own.
+- Or skip deployer keys entirely and rely on the user-provided keys in Settings. That moves
+  upstream API usage to each user's own account. Your hosting costs still depend on your
+  deployment.

@@ -6,6 +6,8 @@ orange accent**, Geist (sans) + Geist Mono (numbers/addresses). No glass, no hea
 no gradients, no glow, no ember/dread effects.
 
 ## Tokens (CSS variables, already defined in globals.css — auto light/dark)
+Tailwind 4 reads its theme from `@theme` in `app/globals.css`; there is no `tailwind.config`.
+Use a token with Tailwind 4's variable shorthand: `text-(--sw-ink)`, `border-(--sw-line)`.
 `--sw-paper` page bg · `--sw-surface` raised surface · `--sw-ink` primary text ·
 `--sw-ink-soft` secondary text · `--sw-muted` tertiary/labels · `--sw-line` strong hairline ·
 `--sw-line-soft` item divider · `--sw-accent` orange · `--sw-accent-press` ·
@@ -22,27 +24,27 @@ remove existing `dark:bg-slate-*` / `dark:text-slate-*` etc. and use the token i
 ## Class mapping (old → new)
 | Old | New |
 |---|---|
-| `bg-white dark:bg-slate-800` (card) | drop; use hairline separation, or `sw-surface` + `border border-[var(--sw-line)]` |
+| `bg-white dark:bg-slate-800` (card) | drop; use hairline separation, or `sw-surface` + `border border-(--sw-line)` |
 | `rounded-2xl` / `rounded-3xl` + `shadow-card*` | `rounded-xl` (or none) and **remove shadows** |
-| `text-slate-900 dark:text-slate-100` | `text-[var(--sw-ink)]` |
-| `text-slate-600/500 dark:text-slate-400` | `text-[var(--sw-muted)]` (labels) or `text-[var(--sw-ink-soft)]` (body) |
-| `border-slate-200 dark:border-slate-700` | `border-[var(--sw-line)]` |
+| `text-slate-900 dark:text-slate-100` | `text-(--sw-ink)` |
+| `text-slate-600/500 dark:text-slate-400` | `text-(--sw-muted)` (labels) or `text-(--sw-ink-soft)` (body) |
+| `border-slate-200 dark:border-slate-700` | `border-(--sw-line)` |
 | primary `bg-brand-orange … rounded-xl shadow-glow*` | `sw-btn-primary` (+ `py-3 text-sm`) |
 | secondary/border button | `sw-btn-ghost` (+ `py-3 text-sm`) |
-| inputs `border rounded-lg focus:ring-*` | `sw-input border border-[var(--sw-line)] rounded-lg px-3 py-2.5 text-sm` |
+| inputs `border rounded-lg focus:ring-*` | `sw-input border border-(--sw-line) rounded-lg px-3 py-2.5 text-sm` |
 | small gray caption/label | `sw-uplabel` |
 | amounts / balances / addresses / hashes / chain ids | add `sw-mono` (small) or `sw-num` |
 | big hero balance | `sw-display` (e.g. `text-4xl sw-display`), `$` can be `sw-accent` |
 | token icon circle `rounded-full` | squared `rounded-lg`; letter fallback uses `sw-mark` |
 | pill/segmented tabs | left-aligned text tabs: `sw-tab` / add `sw-tab-active` |
-| success green / error red | `text-[var(--sw-up)]` / `text-[var(--sw-down)]` |
+| success green / error red | `text-(--sw-up)` / `text-(--sw-down)` |
 | glass-card-dark, dread-*, flicker, text-chromatic, ember, bg-connected, gradient text | **delete** |
 
 ## Modals
 - Overlay: `modal-overlay bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 z-50`
-- Card: `sw-surface w-full max-w-sm rounded-xl border border-[var(--sw-line)] overflow-hidden`
-- Header: `sw-uplabel` kicker or `text-lg font-bold text-[var(--sw-ink)]` title + an `X` button
-  (`text-[var(--sw-muted)] hover:text-[var(--sw-ink)]`).
+- Card: `sw-surface w-full max-w-sm rounded-xl border border-(--sw-line) overflow-hidden`
+- Header: `sw-uplabel` kicker or `text-lg font-bold text-(--sw-ink)` title + an `X` button
+  (`text-(--sw-muted) hover:text-(--sw-ink)`).
 
 ## Copy
 Keep text **clear, concise, direct**. Sentence case for body; UPPERCASE only via
@@ -64,6 +66,8 @@ These rules sit on top of everything above. Where they disagree, these win.
   takes the theme's accent orange (`--sw-accent`), so it always matches the buttons.
 - The wordmark is one colour: "OpenBurner" in ink, the flame is the only orange. Don't
   colour part of the name.
+- Don't build the lockup by hand. `Wordmark` sizes and places the flame, the gap and the
+  letter spacing from the font size.
 - The flame is one solid drawing with a teardrop cut out, at every size. An earlier open two-crescent drawing read as "( )" at header sizes and looked like a different logo.
 - Clear space: at least half the flame's width on every side. Minimum size: 16 px tall.
 - Don't stretch, outline, rotate, recolour (other than ink or white on orange), or put
@@ -105,8 +109,8 @@ These rules sit on top of everything above. Where they disagree, these win.
 | Quiet icon button | `.sw-icon-btn p-2` |
 | Warning / error / note | `.sw-callout` + `sw-callout-warn` / `sw-callout-danger` / `sw-callout-info` |
 | Loading placeholder | `.sw-skeleton` with a width and height |
-| Quiet fills | `bg-[var(--sw-fill)]`, `bg-[var(--sw-fill-strong)]` |
-| A Burner card | `BURNER_CARD` (`components/common/burner-card.ts`): the real renders in `public/images/cards` (`angled` for tap moments, `flat` for the front). Never draw a Burner card. |
+| Quiet fills | `bg-(--sw-fill)`, `bg-(--sw-fill-strong)` |
+| A Burner Ethereum card | `BURNER_CARD` (`components/common/burner-card.ts`): the real renders in `public/images/cards` (`angled` for tap moments, `flat` for the front). Never draw a Burner Ethereum card. |
 
 ### Signing
 - PIN entry and the card tap are one sheet: `PinInput` with `progress={{ steps, current }}`.
@@ -114,6 +118,9 @@ These rules sit on top of everything above. Where they disagree, these win.
   plus a hint for phone, gateway or USB reader) follows the live card phase from
   `store/signing-store.ts`, which `lib/smart-signer.ts` updates.
 - Typical steps: Prepare → Sign with your Burner (card) → Send to {network}.
+- `PinInput` renders `SigningProgress` (`components/signing/signing-progress.tsx`), whose
+  tap animation matches the reader: the card meeting the top of a phone, or rings where
+  it lands on a USB reader. It uses the `ob-tap-*`, `ob-phone-buzz` and `ob-ripple` classes.
 
 ### Phones
 - `Modal` opens as a bottom sheet under 640px and lifts above the on-screen keyboard.

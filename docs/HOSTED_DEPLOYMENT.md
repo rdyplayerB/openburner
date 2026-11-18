@@ -6,20 +6,20 @@ This guide explains how to deploy OpenBurner for hosted use on app.openburner.xy
 
 OpenBurner supports two deployment modes:
 - **Local Development**: Full functionality with pricing, both bridge and gateway modes
-- **Hosted Version**: Streamlined for mobile users with pricing disabled
+- **Hosted Version**: Streamlined for phones; pricing, swaps, NFTs and dApp connections turn on with the deployer's keys
 
 ## Environment Configuration
 
 ### Local Development
 ```bash
 NEXT_PUBLIC_APP_MODE=local
-NEXT_PUBLIC_COINGECKO_API_KEY=your_api_key_here
+# Optional keys: see env.example
 ```
 
 ### Hosted Version
 ```bash
 NEXT_PUBLIC_APP_MODE=hosted
-# No API key needed - pricing disabled
+# Optional keys (pricing, swaps, NFTs, dApp connections): see docs/HOSTING.md
 ```
 
 ## Build Commands
@@ -27,8 +27,6 @@ NEXT_PUBLIC_APP_MODE=hosted
 ### Local Development
 ```bash
 npm run dev          # Development server (local mode)
-npm run build        # Build for local deployment
-npm run start        # Start production server (local mode)
 ```
 
 ### Hosted Version
@@ -38,6 +36,8 @@ npm run build:hosted # Build for hosted deployment
 npm run start:hosted # Start production server (hosted mode)
 ```
 
+`npm run build` also builds in hosted mode; it's what Vercel runs. Node.js 22.12 or later is required.
+
 ## Deployment to Vercel
 
 1. **Build for hosted version:**
@@ -46,21 +46,21 @@ npm run start:hosted # Start production server (hosted mode)
    ```
 
 2. **Deploy to Vercel:**
-   - Set environment variable: `NEXT_PUBLIC_APP_MODE=hosted`
+   - `vercel.json` already sets `NEXT_PUBLIC_APP_MODE=hosted` and `NEXT_PUBLIC_PRICING_ENABLED=true` for the build
+   - Add the API keys you want in the project's environment variables (see [HOSTING.md](HOSTING.md))
    - Deploy to your subdomain (e.g., app.openburner.xyz)
 
 ## User Experience
 
 ### Mobile Users (Hosted)
-- Single "Tap Your Burner" button
-- Uses smartphone NFC or gateway mode
-- No pricing information (disabled)
+- Single "Tap your Burner" button
+- Reads the card with the phone's own NFC
+- Prices shown when the deployer turns pricing on, or with the user's own CoinGecko key
 - Streamlined, mobile-optimized UI
 
 ### Desktop Users (Hosted)
-- Bridge mode: USB NFC reader
-- Gateway mode: Smartphone as NFC reader
-- No pricing information (disabled)
+- Gateway mode: smartphone as the NFC reader (the USB bridge isn't available on a hosted page)
+- Prices shown when the deployer turns pricing on, or with the user's own CoinGecko key
 - Full wallet functionality
 
 ### Local Development
@@ -81,12 +81,6 @@ components/
 └── common/           # Shared UI components
 ```
 
-## Future Enhancements
+## API Keys
 
-The codebase is prepared for future pricing implementation:
-- User API key configuration
-- Encrypted local storage
-- Multiple pricing sources
-- Community pricing cache
-
-See `lib/config/pricing.ts` for implementation details.
+Users can add their own keys under **Settings → API keys** (stored in their browser). See [HOSTING.md](HOSTING.md) for deployer keys and abuse protection.

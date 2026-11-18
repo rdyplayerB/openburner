@@ -4,38 +4,30 @@ This document explains the mobile NFC implementation for the hosted version of O
 
 ## Overview
 
-The hosted mobile version provides a streamlined experience where users simply tap their Burner card to their smartphone to connect their wallet.
+The hosted mobile version provides a streamlined experience where users simply tap their Burner Ethereum card to their smartphone to connect their wallet.
 
 ## Implementation Strategy
 
-### Web NFC API (Primary)
-- **Supported**: Chrome/Android devices
-- **Implementation**: Direct NFC communication with Burner cards
-- **Status**: Prepared for future implementation
+### Phone NFC (hosted, on a phone)
+- **Implementation**: `lib/mobile/nfc.ts` sends each card command through libhalo's `execHaloCmdWeb` with `method: "credential"`. The phone shows its own NFC prompt and the card is read with one tap.
+- **Status**: Implemented. Connecting and every signature use it.
 
-### Gateway Mode (Fallback)
-- **Supported**: All devices with NFC
-- **Implementation**: Uses HaLo Gateway with smartphone as NFC reader
-- **Status**: Currently implemented and working
+### Gateway Mode (hosted, on a desktop)
+- **Implementation**: Uses the HaLo Gateway with a smartphone as the NFC reader (`lib/burner-gateway.ts`)
+- **Status**: Implemented
 
 ## Current Implementation
 
 ```typescript
 // lib/mobile/nfc.ts
 export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
-  if ('NDEFReader' in window) {
-    try {
-      return await connectWithWebNFC();
-    } catch (error) {
-      // Fallback to gateway mode
-      return await getBurnerAddressViaGateway();
-    }
-  } else {
-    // Use gateway mode for iOS and other browsers
-    return await getBurnerAddressViaGateway();
-  }
+  // No per-slot fallback here: each extra command would be another tap.
+  const key = await scanCardKeys(runNfcCommand);
+  return { address: key.address, publicKey: key.publicKey, keySlot: key.keySlot };
 }
 ```
+
+`scanCardKeys` (`lib/card/keys.ts`) picks the wallet key by slot priority (9 > 8 > 2) and accepts only a valid secp256k1 public key. `runNfcCommand` gives up after 60 seconds without a tap, and a dismissed NFC prompt is treated as a cancel, not an error.
 
 ## User Experience
 
@@ -46,55 +38,33 @@ export async function connectWithMobileNFC(): Promise<BurnerKeyInfo> {
 - Responsive design for all screen sizes
 
 ### Error Handling
-- NFC not available: Enable NFC in settings
-- Card not detected: Reposition card
+- NFC not available: Enable NFC in settings; use Chrome on Android or Safari on iPhone
+- Card not read: Reposition card
+- NFC access blocked: Allow NFC when the phone asks
+- Offline: Check internet connection
 - Connection failed: Retry with clear instructions
-- Network issues: Check internet connection
-
-## Future Web NFC Implementation
-
-When Web NFC API is implemented:
-
-```typescript
-async function connectWithWebNFC(): Promise<BurnerKeyInfo> {
-  const reader = new NDEFReader();
-  await reader.scan();
-  
-  // Similar logic to burner.ts but using Web NFC API
-  // Single tap to get all key information
-  // Priority-based key selection (9 > 8 > 2)
-  // Compressed key expansion for efficiency
-}
-```
 
 ## Testing
 
 ### Android Chrome
 - Enable NFC in device settings
-- Test with various Burner cards
+- Test with various Burner Ethereum cards
 - Verify error handling for missing cards
 
 ### iOS Safari
-- Should automatically use gateway mode
-- Test QR code scanning flow
-- Verify smartphone connection
+- Tap the card to the top of the phone
+- Verify connecting and signing
 
 ### Other Browsers
-- Should fallback to gateway mode
 - Test error messages for unsupported browsers
 
 ## Browser Compatibility
 
-| Browser | Web NFC | Gateway Mode | Status |
-|---------|---------|--------------|--------|
-| Chrome/Android | ✅ | ✅ | Full support |
-| Safari/iOS | ❌ | ✅ | Gateway only |
-| Firefox | ❌ | ✅ | Gateway only |
-| Edge | ❌ | ✅ | Gateway only |
+The app's NFC error screen tells people to use Chrome on Android or Safari on iPhone. On a desktop, the hosted app uses the HaLo Gateway instead.
 
 ## Security Considerations
 
-- No API keys stored on device
-- All wallet operations use existing LibBurner and LibHalo libraries
+- The deployer's API keys stay on the server. Keys you enter in Settings are stored in this browser
+- Card commands go through LibHalo
 - Gateway mode uses secure WebSocket connection
-- Web NFC will use same security model as bridge mode
+- Every signature is checked against the connected card, as in bridge mode

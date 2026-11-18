@@ -6,11 +6,11 @@
 
 ## What is OpenBurner?
 
-OpenBurner is a wallet application for Burner Ethereum hardware wallets. Run it locally or use the hosted app at [app.openburner.xyz](https://app.openburner.xyz). Private keys remain in the card's secure element.
+OpenBurner is a wallet application for Burner Ethereum cards. Run it locally or use the hosted app at [app.openburner.xyz](https://app.openburner.xyz). Private keys remain in the card's secure element.
 
 **Features:**
 - Works with Burner Ethereum cards (EAL6+ secure element)
-- Supports any EVM-compatible network (14+ chains + custom RPC)
+- Supports any EVM-compatible network: pick a preset or add your own RPC URL
 - Send & receive tokens, with on-chip signing
 - Token swaps via the 0x Swap API
 - NFT gallery — view, send & receive ERC-721 / ERC-1155 collectibles
@@ -36,21 +36,21 @@ The mode is set with `NEXT_PUBLIC_APP_MODE` (`local` or `hosted`).
 - **API costs**: you pay for your own API usage
 - **Fee customization**: can modify the swap fee recipient address in code
 
-### Hosted Version — phone as the NFC reader (HaLo Gateway)
-- **Connection**: pair by scanning a QR with your phone, then tap your Burner to sign — no reader or bridge install required. Sessions survive brief phone drops, so you reconnect without re-scanning.
+### Hosted Version — your phone is the NFC reader
+- **Connection**: on a phone, tap your card to the phone directly. On a computer, scan the HaLo Gateway's QR code with your phone, then tap your card to the phone. No reader or bridge install required. Gateway sessions survive brief phone drops, so you reconnect without re-scanning.
 - **Optional integrations are enabled per deployment** with server-side keys:
   - **Pricing** — `COINGECKO_API_KEY` (the free Demo tier works) + `NEXT_PUBLIC_PRICING_ENABLED=true`
   - **NFTs** — `ALCHEMY_API_KEY`
-  - **Swaps** — `ZEROX_API_KEY` (0.875% platform fee)
+  - **Swaps** — `ZEROX_API_KEY` (0.88% platform fee)
   - **dApp connections** — `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
 - **Bring your own keys**: users can also add their own keys in Settings (stored only in their browser, used for read-only data)
 
-**Note**: Any integration without a configured key is simply hidden — the core send/receive/manage functions always work. Pricing was previously disabled on hosted; it now works once a deployer sets `COINGECKO_API_KEY` + `NEXT_PUBLIC_PRICING_ENABLED`.
+**Note**: Missing keys don't hide features. Without pricing set up, hosted tokens show no dollar values. Swap stays visible, but quotes need a 0x key. **Connect to a dApp** is always there and asks for a WalletConnect project ID if none is set. The NFT gallery explains how to turn on discovery, and you can still add NFTs by contract address. Sending, receiving and managing tokens always work. Pricing was previously disabled on hosted; it now works once a deployer sets `COINGECKO_API_KEY` + `NEXT_PUBLIC_PRICING_ENABLED`.
 
 ## Quick Start
 
 ### Prerequisites
-- **Burner Card** - [Order here](https://arx-burner.myshopify.com/OPENBURNER)
+- **Burner Ethereum card** - [Order here](https://arx-burner.myshopify.com/OPENBURNER)
 - **Desktop NFC Reader** - ACR1252U (recommended) or ACR122U (budget option) USB reader
   - Recommended: [ACR1252U on Amazon](https://amzn.to/3ISNwd7)
   - Budget option: [ACR122U on Amazon](https://amzn.to/3WQxGms)
@@ -78,19 +78,21 @@ npm run dev
 **Frontend:**
 - Next.js 16 + React 19
 - TypeScript
-- Tailwind CSS
+- Tailwind CSS 4 (theme and tokens in `app/globals.css`, no `tailwind.config`)
 - Zustand (state management)
 
 **Web3 Libraries:**
 - ethers.js (blockchain interactions)
-- LibBurner (Burner card communication via WebSocket)
-- LibHalo (HaLo card communication and NFC operations)
+- HaLo Bridge WebSocket (USB reader, `lib/burner-bridge.ts`)
+- LibHalo (HaLo Gateway pairing and phone NFC)
 - Multicall3 (efficient batch RPC calls)
 
 **APIs:**
-- CoinGecko API (token prices - local version only)
+- CoinGecko API (token prices - both versions, through the app's `/api/coingecko` proxy)
 - 0x API (token swaps - both versions)
-- Custom RPC endpoints (blockchain data)
+- Alchemy NFT API (collectible discovery, optional)
+- WalletConnect / Reown (dApp connections)
+- Public or custom RPC endpoints (blockchain data)
 
 ## Architecture
 
@@ -131,7 +133,7 @@ npm run dev
 ### 2. View Balances
 - App queries blockchain RPCs for ETH and token balances
 - Uses Multicall3 for efficient batch queries
-- Fetches real-time prices from CoinGecko API
+- Fetches prices from CoinGecko through the app's proxy
 
 ### 3. Send Transaction
 - User enters recipient address and amount
@@ -153,12 +155,17 @@ const { address, publicKey, keySlot } = await getBurnerAddress();
 ### Sign Transaction
 
 ```typescript
+import { useEnvironment } from '@/hooks/use-environment';
 import { signTransactionSmart } from '@/lib/smart-signer';
+
+// In your component: hosted mode on a phone signs over the phone's NFC
+// only when the environment says it's a phone.
+const environment = useEnvironment();
 
 // Routes to the active connection (USB bridge, phone gateway or mobile NFC),
 // signs with the connected card's key slot, and throws unless the signature
 // recovers to the connected address.
-const signedTx = await signTransactionSmart(unsignedTx, undefined, pin);
+const signedTx = await signTransactionSmart(unsignedTx, undefined, pin, environment);
 await provider.broadcastTransaction(signedTx);
 ```
 
@@ -201,36 +208,25 @@ const prices = await getTokenPrices([
 clearPriceCache();
 ```
 
-**Price Caching Strategy (Local Version Only):**
+**Price Caching Strategy:**
 
-The local version uses an aggressive multi-tier caching strategy to minimize CoinGecko API calls and stay within the API rate limits (10-30 calls/minute):
+Prices are cached to keep CoinGecko calls low, in local and hosted mode alike:
 
-| Token Type | Cache Duration | Examples |
-|------------|----------------|----------|
+| Token Type | Fresh for | Examples |
+|------------|-----------|----------|
 | Stablecoins | 2 hours | USDC, USDT, DAI |
-| Major Tokens | 30 minutes | ETH, BTC, MATIC, BNB |
-| Other Tokens | 30 minutes | All other tokens |
+| Other Tokens | 30 minutes | ETH, WBTC, all other tokens |
 
 **Cache Layers:**
 1. **Memory cache** - Fast, session-only
 2. **localStorage** - Persistent across page reloads
-3. **Request deduplication** - Prevents duplicate concurrent API calls
-4. **Batch fetching** - All token prices fetched in single API call
+3. **Stale-while-revalidate** - A price up to 24 hours old is shown right away while a fresh one loads in the background
+4. **Batch fetching** - One request for coins known by ID, plus one per network for tokens looked up by contract address, never one per token
 
-**Manual Refresh Only:**
-- Prices are **NOT** auto-refreshed on page load
-- Cached prices are served immediately for instant UI
-- Users must manually click the refresh button to update prices
-- This prevents excessive API calls as user count scales
-
-**Why This Matters:**
-- With 100 tokens, 1 refresh = 1 API call (not 100)
-- With 1000 users refreshing randomly across 1 hour = ~16 calls/min (sustainable)
-- API rate limit: 10-30 calls/minute
-- If you need more frequent updates, consider upgrading to CoinGecko Pro
-
-**UI Indicator:**
-The token list shows "Updated Xm ago" next to the refresh button, so users know price freshness.
+**Refreshing:**
+- Opening the token list fetches only prices that are no longer fresh
+- The refresh button in the header, and every send or swap, refetches balances and prices
+- The `/api/coingecko` proxy also caches responses briefly and rate-limits per IP (see [docs/HOSTING.md](docs/HOSTING.md))
 
 ## Token Swaps (Both Versions)
 
@@ -264,9 +260,8 @@ OpenBurner supports token swaps on both local and hosted versions using the [0x 
 NEXT_PUBLIC_APP_MODE=local
 
 # --- Local development ---
-NEXT_PUBLIC_COINGECKO_API_KEY=your_key_here          # real-time pricing
-NEXT_PUBLIC_COINGECKO_API_URL=https://api.coingecko.com/api/v3
-NEXT_PUBLIC_0X_API_KEY=your_0x_api_key_here          # token swaps
+# Pricing is always on in local mode. The server-side keys below work locally too.
+NEXT_PUBLIC_0X_API_KEY=your_0x_api_key_here          # token swaps (legacy: ends up in the client bundle; prefer ZEROX_API_KEY)
 
 # --- Hosted deployment (server-side keys; kept secret, proxied) ---
 NEXT_PUBLIC_PRICING_ENABLED=true                     # turns pricing on in hosted mode
@@ -279,7 +274,7 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id # WalletConnect / dApp conn
 ALLOWED_ORIGINS=https://staging.yourapp.com          # extra origins allowed to call /api (own origin is always allowed)
 UPSTASH_REDIS_REST_URL=https://...upstash.io         # rate limits shared across instances
 UPSTASH_REDIS_REST_TOKEN=your_token
-DAILY_CAP_COINGECKO=20000                            # global daily cap per upstream key
+DAILY_CAP_COINGECKO=20000                            # global daily cap per upstream service (deployer and user keys share it)
 ```
 
 Notes:
@@ -287,6 +282,8 @@ Notes:
 - `NEXT_PUBLIC_PRICING_ENABLED=true` is required alongside `COINGECKO_API_KEY` to enable pricing in hosted mode — the key alone isn't enough, since the client needs a public flag to start fetching.
 - The API routes only answer your own deployment's origin and send no CORS headers. See [docs/HOSTING.md](docs/HOSTING.md) for the full abuse-protection setup.
 - For a free CoinGecko **Demo** key the proxy uses the `x-cg-demo-api-key` header automatically; set `COINGECKO_API_PLAN=pro` only if you have a paid Pro key.
+- `npm run dev` sets `NEXT_PUBLIC_APP_MODE=local`; `npm run build` and `npm run dev:hosted` set `hosted`.
+- Keys users add under **Settings → API keys** are stored in their browser and override the deployer's keys.
 
 ### Getting API Keys
 
@@ -314,7 +311,9 @@ Notes:
 
 ## Networks
 
-OpenBurner works with any EVM-compatible network. The presets in the network menu are examples, each defined in `lib/supported-chains.ts` with a primary public RPC URL and a backup from a different operator. If the primary stops answering, the app switches to the backup. Add any other network from the menu with its name, chain ID and an RPC URL. Networks you add are saved in your browser only. Presets also carry explorer, price and swap settings. An added network's coin is priced from the currency symbol you set for it.
+OpenBurner works with any EVM-compatible network. The presets in the network menu are examples, each defined in `lib/supported-chains.ts` with a primary public RPC URL and a backup from a different operator. If the primary stops answering, the app switches to the backup (`lib/provider.ts`), and batches are capped at 10 calls. Add any other network from the menu with its name, chain ID and an RPC URL; OpenBurner checks that the RPC returns that chain ID before saving it. Networks you add are saved in your browser only. Presets also carry explorer, price and swap settings. An added network's coin is priced from the currency symbol you set for it.
+
+Not every preset has every feature. Swaps need the network in `SUPPORTED_SWAP_CHAINS`, collectible discovery needs it in `ALCHEMY_NFT_NETWORKS` (`lib/nft.ts`), and default tokens come from `lib/token-lists.ts`. Robinhood Chain has none of these yet.
 
 ## Token Management
 
@@ -349,16 +348,13 @@ OpenBurner uses **streamlined token lists** focused on core tokens for optimal p
 **zkSync Era:**
 - WETH, USDC, USDT
 
+Other networks start with no default tokens.
+
 ### Adding Custom Tokens
 
-**Important:** There is currently no token list service or UI for adding custom tokens. If you need to track tokens that aren't in the hardcoded lists above, you must:
+Use **Add a token** in the token list and paste the token's contract address. OpenBurner reads its symbol, name and decimals from the network (or CoinGecko if that fails) and saves the token in your browser for that network.
 
-1. Fork the repository
-2. Edit `lib/token-lists.ts`
-3. Add your token addresses to the appropriate chain ID
-4. Rebuild and run your custom version
-
-**Example** - Adding a custom token to Ethereum:
+To ship a token to everyone in your own build, add it to `lib/token-lists.ts`:
 
 ```typescript
 // In lib/token-lists.ts
@@ -368,34 +364,28 @@ OpenBurner uses **streamlined token lists** focused on core tokens for optimal p
 ]
 ```
 
-This limitation is intentional to keep the app simple and local-first. Future versions may include a dynamic token management UI.
+## Bridge Connection (Local Version)
 
-## Bridge Connection (Hosted Version)
-
-The hosted version supports USB NFC reader connections through a bridge service that handles consent properly.
+The USB reader and HaLo Bridge are used in local mode only. The hosted app on desktop connects through the HaLo Gateway instead, since a page served over HTTPS can't open the bridge's local `ws://` connection.
 
 ### How It Works
 
-1. **HaloBridge Service**: Uses `@arx-research/libhalo` for proper consent handling
-2. **Consent Flow**: Shows a modal matching BurnerOS approval prompt
-3. **WebSocket Communication**: Communicates with local bridge software
-4. **Security**: Requires explicit user consent and HTTPS
+1. **WebSocket**: `lib/burner-bridge.ts` talks to the bridge at `ws://127.0.0.1:32868/ws`
+2. **PIN prompt**: When the card needs your PIN, the bridge's own consent page opens in a small window (`http://localhost:32868/consent`)
+3. **Signature check**: Every signature is checked against your connected card before it's used
 
 ### Bridge Requirements
 
 - **Halo Bridge Software**: Must be installed and running locally
 - **USB NFC Reader**: Compatible reader connected to computer
-- **Burner Card**: Physical card placed on reader
-- **User Consent**: Explicit permission granted through consent modal
+- **Burner Ethereum card**: Physical card placed on reader
 
 ### Security Considerations
 
 - Bridge communication is restricted to localhost only
-- User consent is required before any USB access
-- HTTPS is required for hosted version
-- Clear fallback to gateway mode if bridge fails
+- Use the HaLo Gateway (your phone as the reader) when the bridge isn't available
 
-See [BRIDGE_SECURITY.md](./docs/BRIDGE_SECURITY.md) for detailed security information.
+See [BRIDGE_SECURITY.md](./docs/BRIDGE_SECURITY.md) for more.
 
 ## Project Structure
 
@@ -405,19 +395,24 @@ openburner/
 │   ├── page.tsx           # Main entry (connect screen or dashboard)
 │   └── api/               # Proxies: coingecko, swap/quote, nft, config-status
 ├── proxy.ts                # Origin guard for every /api route
-├── components/             # React components (dashboard, send, swap, NFTs, WalletConnect)
+├── components/             # React components (dashboard, send, swap, NFTs, WalletConnect, signing)
 ├── lib/                    # Core libraries
 │   ├── card/              # Card key parsing, tx building, signature checks
 │   ├── burner.ts          # USB bridge connect + commands
 │   ├── burner-gateway.ts  # Phone gateway pairing + commands
 │   ├── mobile/nfc.ts      # Mobile Web NFC connect + commands
 │   ├── smart-signer.ts    # Routes signing to the active connection
+│   ├── supported-chains.ts # Preset networks, their RPCs and swap support
+│   ├── provider.ts        # Shared RPC providers with backup failover
 │   ├── log.ts             # The only logger (never prints card data)
 │   ├── rate-limit.ts      # Per-IP limits + daily caps for the proxies
 │   ├── multicall.ts       # Batch RPC calls
 │   ├── price-oracle.ts    # Price fetching
 │   └── token-lists.ts     # Token metadata
 ├── store/                  # Zustand state
+├── design/brand/           # Logo source (flame.json) and its build script
+├── stories/                # Ladle stories for every screen
+├── .ladle/                 # Story config, fakes and example data
 └── tests/                  # Vitest suite
 ```
 
@@ -477,7 +472,7 @@ openburner/
 # Run dev server
 npm run dev
 
-# Lint (ESLint 9, no-console enforced)
+# Lint (ESLint 10 flat config in eslint.config.mjs, no-console enforced)
 npm run lint
 
 # Tests
@@ -500,7 +495,7 @@ npm run build
 
 `stories/` holds every screen and state of the app as a [Ladle](https://ladle.dev) story: welcome, dashboard, send, signing, swap and connected apps, on phone and desktop widths, in light and dark (press `d`). Stories render the real components, so editing a component updates its stories as you save.
 
-Nothing in a story touches a card or the network. `.ladle/vite.config.ts` swaps the modules that would (RPC, prices, quotes, ENS, the card signer, WalletConnect, the connect transports) for fakes in `.ladle/mocks/`, fed by example data in `.ladle/fixtures.ts`. Each story picks its situation with knobs from `.ladle/scenario.ts`: hosted or local, prices on or off, a wrong PIN, a failed transaction, an approval needed, and so on.
+Stories never touch a card or an RPC. The only API call is from the Settings story, which fetches `/api/config-status`; Ladle doesn't serve it, so Settings shows no deployer keys. `.ladle/vite.config.ts` swaps the modules that would (RPC, prices, quotes, ENS, the card signer, WalletConnect, the connect transports) for fakes in `.ladle/mocks/`, fed by example data in `.ladle/fixtures.ts`. The example collectibles are real NFTs on Ethereum, with their art saved in `.ladle/assets/` so they load offline; the Collectibles story switches to Ethereum to show them. Each story picks its situation with knobs from `.ladle/scenario.ts`: hosted or local, prices on or off, a wrong PIN, a failed transaction, an approval needed, and so on.
 
 A story can also act like a person after it opens, through `Scene` steps (`.ladle/scene.tsx`): click a button, type into a field, wait for text. That's how stories open straight on a filled-in review or a quote, and how the "Whole flow" stories play a send or swap from start to finish with a pretend card.
 
@@ -528,7 +523,7 @@ This project is actively maintained by [@rdyplayerB](https://github.com/rdyplaye
 You're encouraged to fork OpenBurner for your own use:
 
 1. Fork the repository
-2. Modify chain configurations in `components/chain-selector.tsx`
+2. Modify chain configurations in `lib/supported-chains.ts`
 3. Update token lists in `lib/token-lists.ts`
 4. Customize UI in `components/` and `app/`
 5. Deploy to Vercel or run locally
@@ -541,7 +536,7 @@ You're encouraged to fork OpenBurner for your own use:
 **Use cases for forking:**
 - Add support for specific L2s or custom chains
 - Build a branded wallet for your project
-- Experiment with new Burner card features
+- Experiment with new Burner Ethereum card features
 - Create specialized tools (NFT minting, DAO voting, etc.)
 
 **Code structure:**
@@ -570,13 +565,13 @@ If you find OpenBurner useful, there are a few ways you can help:
 - Fork the project and experiment with your own ideas
 
 **Why the swap fee?**
-The 0.88% platform fee is competitive with popular wallets (MetaMask, Phantom) and helps maintain OpenBurner's development, server costs, and continuous improvements. Since OpenBurner is open source, this fee provides sustainable funding while keeping the project free to use.
+The 0.88% platform fee is competitive with popular wallets (MetaMask, Phantom) and helps maintain OpenBurner's development, server costs, and continuous improvements. Since OpenBurner is open source, this fee is how the project funds itself.
 
 ## Links
 
 - **GitHub**: https://github.com/rdyplayerB/openburner
-- **Get a Burner Card**: [Order here](https://arx-burner.myshopify.com/OPENBURNER)
-- **LibBurner Documentation**: https://github.com/arx-research/libburner
+- **Get a Burner Ethereum card**: [Order here](https://arx-burner.myshopify.com/OPENBURNER)
+- **LibHalo Documentation**: https://github.com/arx-research/libhalo
 - **ethers.js Docs**: https://docs.ethers.org
 
 ---

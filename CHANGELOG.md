@@ -8,27 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - Design Refresh
 
 ### Added
-- **Tap-your-card signing** - PIN and card tap are one sheet with a live step list (Prepare → Sign with your Burner → Send) and a hint for your reader: phone, HaLo Gateway or USB
+- **Tap-your-card signing** - PIN and card tap are one sheet with a live step list (Prepare → Sign with your Burner → Send) and a hint for your reader: phone, HaLo Gateway or USB. An animation shows the tap: the card meets the top of the phone and the phone buzzes, or rings ripple out where the card lands on a USB reader
 - **Activity** - Sends, swaps, approvals, NFT transfers and dApp transactions from this device, grouped by day, with live pending/failed status
 - **Readable dApp requests** - "Approve unlimited USDC", "Sign in to app.uniswap.org" instead of raw data; warnings for unlimited approvals, collection-wide NFT access, marketplace orders, sign-in domain mismatches and unverified or scam sites, which need an extra confirmation
 - **Token details** - Tap any token for its balance, value, Send/Swap and contract address
 - **ENS and recent recipients** - Send to `name.eth`, paste in one tap, pick from your last recipients; your own ENS name shows on the dashboard
 - **Any EVM network** - Networks you add are saved only after their RPC confirms the chain ID, can have their own currency symbol, and work right away with apps you've already connected
+- **Robinhood Chain** - Now in the network menu. Swaps, default tokens and collectible discovery aren't available on it yet
 
 ### Changed
-- **Redrawn logo** - The flame is redrawn cleanly from circles and smooth curves (it was an auto-trace), with a solid version for small sizes that still reads as a flame next to the name, a favicon drawn pixel by pixel at 16 px, and new app icons. The wordmark is one colour, with the flame as the only orange, and the flame now matches the app's accent orange in light and dark
+- **Redrawn logo** - The flame is redrawn cleanly from circles and smooth curves (it was an auto-trace) as one solid flame used at every size, with a favicon drawn pixel by pixel at 16 px and new app icons. The wordmark is one colour, with the flame as the only orange and new proportions between flame and name, and the flame now matches the app's accent orange in light and dark
 - **New dashboard** - Two columns on desktop (account + assets/activity), one clean column on phones; identicon, balance that animates on change, and a native-balance headline when prices are off instead of "$—"
 - **New Send** - Large amount entry with USD toggle, token switcher in the sheet, a button that says what's missing, and a review step with the full recipient address (ends highlighted) and first-time-recipient warnings
 - **New Swap** - Opens on your native token, quotes as you type, keeps the main button visible, shows balances on both sides and folds rate, impact, minimum received and fees into one row
-- **New welcome** - First visit: four short slides on what OpenBurner is, that it works on any EVM network, and how to build on it (swipe, or Skip), shown with real Burner card renders. Then the clean centred connect card, with live bridge and card status in local mode and "What is OpenBurner?" to see the slides again
+- **New welcome** - First visit: four short slides on what OpenBurner is, that it works on any EVM network, and how to build on it (swipe, or Skip), shown with real Burner Ethereum card renders. Then the clean centred connect card, with live bridge and card status in local mode and "What is OpenBurner?" to see the slides again
 - **Bottom sheets on phones** - Every dialog opens from the bottom and stays above the keyboard
 - **Clearer, calmer visuals** - One shape for token icons with network badges, sentence-case labels, orange reserved for actions, readable button contrast (WCAG AA) and a clear disabled state
 - **One transaction screen** - Sent → Confirming → Confirmed in a single sheet, with explorer link
-- **Dependencies updated** - Next.js 16.4 (fixes the Next.js advisories published in October 2026), React 19.3.1, Tailwind CSS 4, zustand 5, ESLint 10, TypeScript 6 and libhalo 1.21. `npm audit` reports no vulnerabilities in the packages the app ships
+- **Up-to-date frameworks and libraries** - The app now runs on current versions of its frameworks and libraries, including security fixes. Running it yourself needs Node.js 22.12 or later
 
 ### Fixed
 - **Logo sent to connected apps** - Apps now get a logo that exists (the old link pointed at a missing file)
-- **Network RPCs** - Polygon's RPC had stopped answering. Every preset network now has two tested public RPCs from different operators, and the app switches to the second if the first stops answering
+- **Network RPCs** - Polygon's RPC had stopped answering. Every preset network now has two tested public RPCs from different operators, ordered by how they held up in a load test, and the app switches to the second if the first stops answering
 - **Large batches on public RPCs** - The official Optimism, Scroll and Unichain RPCs refuse batches over 10 calls, so batches are now capped at 10, and a batch an RPC rejects is re-sent one call at a time
 - **Sending on networks without EIP-1559** - Transactions now use a legacy gas price on any network that reports no base fee
 - **Prices on added networks** - An added network's coin is priced only by the currency symbol you set for it. Tokens on added networks show no price, since a symbol alone can't tell a real USDC from a copy
@@ -41,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Every signature is checked** - Transactions, messages and typed data must recover to the connected address before they're broadcast or returned to a dApp
 - **No silent key-slot fallback** - Signing always uses the connected card's key slot; older sessions without one are asked to reconnect
 - **API routes locked to the app** - `/api` answers only the app's own origin (plus `ALLOWED_ORIGINS`), sends no CORS headers, validates every input, and the CoinGecko proxy only allows the endpoints the app uses
-- **Shared rate limits** - Optional Upstash Redis backing and `DAILY_CAP_*` limits per upstream key
+- **Shared rate limits** - Optional Upstash Redis backing and global `DAILY_CAP_*` limits per upstream service, shared by deployer and user-provided keys
 - **No card data in logs** - Keys, signatures, pairing links and PINs are never logged; production builds strip debug logs. A "Debug logging" switch in Settings helps support sessions
 - **Dependencies patched** - Next.js 15.5 and React 19 (fixes the critical Next.js advisories), ethers 6.17, libhalo 1.20, WalletConnect 2.26; production `npm audit` is clean
 
@@ -69,10 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hosted Pricing** - Live CoinGecko prices on the hosted app
 - **Resilient Gateway Sessions** - Phone-as-reader sessions survive brief drops
 
-## [1.2.0] - 2025-01-26 - Token Swaps with 0x Integration
+## [1.2.0] - 2025-10-27 - Token Swaps with 0x Integration
 
 ### Added
-- **Token Swaps via 0x Protocol** - Comprehensive swap functionality across 13 networks
+- **Token Swaps via 0x Protocol** - Comprehensive swap functionality across supported networks
   - Support for ERC-20 to ERC-20, ERC-20 to native, and native to ERC-20 swaps
   - Real-time price quotes with customizable slippage tolerance (default 0.5%)
   - Price impact warnings and transaction confirmation
@@ -80,11 +81,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Complete swap UX flow with automatic token approval handling
   - Transaction completion modal with block explorer links
 
-## [1.1.0] - 2025-01-21 - Architecture Enhancement & Library Integration
+## [1.1.0] - 2025-10-21 - Architecture Enhancement & Library Integration
 
 ### Added
 - **Dual Library Architecture** - Enhanced card communication with both LibBurner and LibHalo
-  - LibBurner for Burner card communication via WebSocket
+  - LibBurner for Burner Ethereum card communication via WebSocket
   - LibHalo for HaLo card communication and NFC operations
   - Improved compatibility across different card types and connection methods
 
@@ -127,9 +128,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clear user feedback for connection issues
   - Automatic retry mechanisms for transient failures
 
-## [1.0.1] - 2024-12-19 - Minor Updates
+## [1.0.1] - 2025-10-14 - Minor Updates
 
-## [1.0.0] - 2024-12-19 - First Stable Release
+## [1.0.0] - 2025-10-14 - First Stable Release
 
 ### Changed
 - **Project Structure** - Removed `/website` directory
@@ -143,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Stale-while-revalidate pattern for instant UI updates
   - Differential cache durations based on token volatility
   - 73-81% reduction in API calls vs naive implementation
-  - Support for 25+ tokens across 9 networks
+  - Token pricing across supported networks
 
 - **Comprehensive Documentation** - Organized documentation structure
   - Setup guides (installation, bridge, gateway, environment)
@@ -199,17 +200,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Future Plans
 
 ### Planned Features
-- NFT support (ERC-721, ERC-1155)
-- Transaction history
-- PIN protection UI
-- WalletConnect integration
-- EIP-712 typed data signing
 - Transaction simulation
 - Multi-signature support
 - Hardware wallet comparison mode
 
 ### Performance Improvements
-- Service worker caching
 - Optimistic UI updates
 - Background sync
 - Predictive prefetching

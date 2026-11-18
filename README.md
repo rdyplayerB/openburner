@@ -2,8 +2,8 @@
 
 An open-source app for Burner Ethereum cards. Use it on any EVM network with your own RPC URL, or start your own Burner project from its code. Built with Next.js, TypeScript and ethers.js.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## What is Burner?
@@ -23,12 +23,12 @@ You can run it locally with a USB NFC reader, or host it and use your phone as t
 
 ### Core Functionality
 - 🔐 **Hardware-Secured Keys** - Private keys never leave the secure element chip
-- 📱 **Flexible Connectivity** - Use a desktop USB NFC reader (HaLo Bridge) locally, or turn your phone into the reader via the HaLo Gateway when hosted — scan a QR, tap your card. Hosted sessions stay alive through brief phone sleeps so you keep working without re-pairing
+- 📱 **Flexible Connectivity** - Use a desktop USB NFC reader (HaLo Bridge) locally, or use your phone as the reader when hosted. On a phone, tap your card directly; on a computer, pair your phone by scanning the HaLo Gateway's QR code. Gateway sessions stay alive through brief phone sleeps so you keep working without re-pairing
 - 💰 **Token Management** - View balances for ETH and ERC-20 tokens
 - 💸 **Send Transactions** - Native and ERC-20 transfers with hardware signing
 - 🔄 **Token Swaps** - Decentralized swaps using [0x Standard Swap API](https://0x.org/docs/category/swap-api) (requires a 0x API key — your own locally, or one configured by the deployer when hosted)
 - 🖼️ **NFT Management** - View, receive, and send ERC-721 & ERC-1155 collectibles with a gallery view, full detail pages, and OpenSea links. Auto-discovery via an optional [Alchemy NFT API](https://www.alchemy.com) key, plus manual add-by-contract on any chain
-- 🔗 **WalletConnect** - Connect to dApps by scanning a WalletConnect QR (powered by [Reown](https://reown.com)). A header chip shows connected dApps with a live indicator and lets you manage or disconnect them
+- 🔗 **WalletConnect** - Connect to dApps by scanning a WalletConnect QR or pasting its link (powered by [Reown](https://reown.com)). A header chip shows connected dApps with a live indicator and lets you manage or disconnect them
 - 📊 **Real-Time Prices** - CoinGecko price feeds, available in both local and hosted modes (hosted needs a CoinGecko API key — the free Demo tier works)
 - 🚀 **Any EVM Network** - Add a network with its RPC URL and chain ID, and optionally its currency symbol. OpenBurner checks that the RPC serves that chain ID before saving the network. Apps you've already connected can use the new network right away
 - 🛡️ **Card Checks** - Every key the card reports is validated, and every signature is checked against your connected card before anything is sent
@@ -39,7 +39,7 @@ You can run it locally with a USB NFC reader, or host it and use your phone as t
 - **Public RPCs with a Backup** - Each preset network has two tested public RPCs from different operators, and the app switches to the second if the first stops answering. Batches are capped at 10 calls, and a batch an RPC rejects is re-sent one call at a time
 - **Advanced Caching** - Multi-tier price caching with a rate-limited server-side proxy
 - **Resilient Gateway Sessions** - Hosted phone-as-reader connections survive brief phone sleeps and resume in place, no constant QR re-scanning
-- **Burner Card Integration** - NFC-based hardware wallet support (local bridge or hosted gateway)
+- **Burner Ethereum card integration** - NFC through a USB reader locally, or your phone when hosted (directly or through the HaLo Gateway)
 - **Signature Binding** - Every transaction and message signature must recover to the connected address, so a different card or a tampered link can't sign for you
 - **Locked-Down API** - The proxy routes only answer the app's own origin, validate every input, and rate-limit per IP (shared across instances with Upstash)
 - **No Card Data in Logs** - Production builds don't log keys, signatures, pairing links or PINs
@@ -55,8 +55,8 @@ OpenBurner runs in two modes, selected by `NEXT_PUBLIC_APP_MODE`:
 - Full functionality (pricing, swaps, NFTs, sends) using your own API keys
 - Best for development and power users
 
-**Hosted (`hosted`)** — phone as the NFC reader via HaLo Gateway
-- Pair by scanning a QR with your phone, then tap your Burner to sign — no reader or bridge install needed
+**Hosted (`hosted`)** — your phone is the NFC reader
+- On a phone, tap your card to the phone directly. On a computer, scan the HaLo Gateway's QR code with your phone, then tap your card to the phone. No reader or bridge install needed
 - Optional integrations are enabled per deployment with server-side keys:
   - **Pricing** — `COINGECKO_API_KEY` (free Demo tier works) + `NEXT_PUBLIC_PRICING_ENABLED=true`
   - **NFTs** — `ALCHEMY_API_KEY`
@@ -64,13 +64,13 @@ OpenBurner runs in two modes, selected by `NEXT_PUBLIC_APP_MODE`:
   - **dApp connections** — `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
 - Users can also bring their own keys in **Settings** (stored only in their browser, used for read-only data)
 
-*Any integration without a configured key is simply hidden — the wallet's core send/receive/manage functions always work. OpenBurner uses 0x's standard swap API (not gasless), so users pay their own gas fees.*
+*Missing keys don't hide features. Without pricing set up, hosted tokens show no dollar values. Swap stays visible, but quotes need a 0x key. **Connect to a dApp** is always there and asks for a WalletConnect project ID if none is set. The NFT gallery explains how to turn on discovery, and you can still add NFTs by contract address. Sending, receiving and managing tokens always work. OpenBurner uses 0x's standard swap API (not gasless), so users pay their own gas fees.*
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-1. **Burner Card** - [Order here](https://arx-burner.myshopify.com/OPENBURNER)
+1. **Burner Ethereum card** - [Order here](https://arx-burner.myshopify.com/OPENBURNER)
 2. **Desktop NFC Reader** - ACR1252U (recommended) or ACR122U (budget option) USB NFC reader
    - Recommended: [ACR1252U on Amazon](https://amzn.to/3ISNwd7)
    - Budget option: [ACR122U on Amazon](https://amzn.to/3WQxGms)
@@ -150,11 +150,11 @@ Complete guide covering:
 └─────────────────────────────────────────┘
 ```
 
-*Hosted mode replaces the local HaLo Bridge + USB reader with the HaLo Gateway, using your phone's NFC as the reader (pair via QR, tap to sign). Keys still never leave the card's secure element either way.*
+*Hosted mode replaces the local HaLo Bridge + USB reader with your phone's NFC. On a phone, you tap your card directly. On a computer, you pair a phone through the HaLo Gateway's QR code. Keys still never leave the card's secure element either way.*
 
 ## 🔒 Security
 
-Your private keys never leave the Burner card's secure element (EAL6+ certified). All signing happens on-chip. The app only handles public keys and coordinates transactions via the local bridge or the phone gateway.
+Your private keys never leave the Burner Ethereum card's secure element (EAL6+ certified). All signing happens on-chip. The app only handles public keys and coordinates transactions via the local bridge or the phone gateway.
 
 On top of that, OpenBurner:
 - **Rejects malformed card keys** - A key that isn't exactly a valid secp256k1 public key ends the connection. It's never padded or "repaired" into an address nobody controls
@@ -201,7 +201,7 @@ You're encouraged to fork OpenBurner for your own use:
 **Use cases for forking:**
 - Add support for specific L2s or custom chains
 - Build a branded wallet for your project
-- Experiment with new Burner card features
+- Experiment with new Burner Ethereum card features
 - Create specialized tools (NFT minting, DAO voting, etc.)
 
 **Code structure:**
@@ -213,6 +213,7 @@ You're encouraged to fork OpenBurner for your own use:
 - `tests/` - Vitest suite (`npm test`)
 - `stories/` - Every screen and state as a [Ladle](https://ladle.dev) story (`npm run stories`)
 - `store/` - Zustand state management
+- `design/brand/` - Logo source; `npm run brand` rebuilds the logo, app icons and favicon from it
 
 ## How can I support OpenBurner?
 
@@ -228,8 +229,8 @@ If you find OpenBurner useful, there are a few ways you can help:
 ## Links
 
 - **GitHub**: https://github.com/rdyplayerB/openburner
-- **Get a Burner Card**: [Order here](https://arx-burner.myshopify.com/OPENBURNER)
-- **LibBurner Documentation**: https://github.com/arx-research/libburner
+- **Get a Burner Ethereum card**: [Order here](https://arx-burner.myshopify.com/OPENBURNER)
+- **LibHalo Documentation**: https://github.com/arx-research/libhalo
 - **ethers.js Docs**: https://docs.ethers.org
 
 ---

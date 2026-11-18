@@ -41,12 +41,13 @@ OpenBurner follows [Semantic Versioning (SemVer)](https://semver.org/) for all r
 
 ## Current Stable Version: v1.4.0
 
-This version represents the enhanced architecture with dual library support:
-- Dual library architecture (LibBurner + LibHalo)
-- Enhanced mobile NFC support
-- Comprehensive gateway integration
-- Improved service worker caching
-- Enhanced error handling and connection management
+Security hardening and faster loads (see `CHANGELOG.md`):
+- Card keys validated, never repaired; every signature checked against the connected card
+- API routes locked to the app's own origin, with per-IP rate limits and optional daily caps
+- No card data in logs
+- Smaller first load, with WalletConnect and the card libraries loaded on demand
+
+The next release is in progress under `[Unreleased]` in `CHANGELOG.md`.
 
 ## Future Development
 
