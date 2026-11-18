@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, Plus, X } from "lucide-react";
 import { useWalletStore } from "@/store/wallet-store";
 import { showToast } from "@/store/toast-store";
-import { CHAINS, CURRENCY_SYMBOL_RE } from "@/lib/supported-chains";
+import { CHAINS, CURRENCY_SYMBOL_RE, getChainConfig } from "@/lib/supported-chains";
 import { ChainLogo } from "../common/token-icon";
 
 type CustomRPCs = { [chainId: string]: { name: string; rpcUrl: string; symbol?: string } };
@@ -30,7 +30,11 @@ export function NetworkMenu() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("customRPCs");
-      if (stored) setCustomRPCs(JSON.parse(stored));
+      if (stored) {
+        // Hide entries for built-in chain IDs (older versions let a connected app save one).
+        const saved: CustomRPCs = JSON.parse(stored);
+        setCustomRPCs(Object.fromEntries(Object.entries(saved).filter(([id]) => !getChainConfig(Number(id)))));
+      }
     } catch {
       /* ignore corrupt storage */
     }

@@ -8,7 +8,7 @@
 import { ethers } from "ethers";
 import { feeFields } from "@/lib/card/tx";
 import { addChainToSessions } from "./client";
-import { CURRENCY_SYMBOL_RE } from "@/lib/supported-chains";
+import { CURRENCY_SYMBOL_RE, getChainConfig } from "@/lib/supported-chains";
 import {
   signTransactionSmart,
   signMessageSmart,
@@ -160,6 +160,12 @@ export async function executeRequest(request: any, opts: ExecuteOptions = {}): P
       case "wallet_addEthereumChain": {
         const p = params?.[0] ?? {};
         const target = parseChainIdParam(p.chainId);
+        // A built-in network keeps its tested RPCs: switch to it instead of saving the app's RPC.
+        const preset = getChainConfig(target);
+        if (preset) {
+          useWalletStore.getState().setChain(target, preset.rpcUrl, preset.name);
+          return null;
+        }
         const rpcUrl: string | undefined = (p.rpcUrls || [])[0];
         if (!rpcUrl) throw new RpcError(4001, "No RPC URL provided by dApp.");
 
