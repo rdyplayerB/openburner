@@ -222,8 +222,10 @@ export async function getTokenImage(
     if (cached?.url) return cached.url;
   }
 
-  const coinGeckoId = SYMBOL_TO_COINGECKO_ID[upperSymbol];
-  const saveCacheKey = coinGeckoId ? symbolOnlyKey : fullKey;
+  // A preset network's own coin comes from its CoinGecko id, so "MON" or "CRO" can't match a different coin.
+  const nativeId = (!tokenAddress || tokenAddress === "native") && chainId ? getChainConfig(chainId)?.nativeCoingeckoId : undefined;
+  const coinGeckoId = nativeId ?? SYMBOL_TO_COINGECKO_ID[upperSymbol];
+  const saveCacheKey = coinGeckoId && !nativeId ? symbolOnlyKey : fullKey;
   const save = (url: string) => {
     cacheTokenImage(saveCacheKey, url);
     return url;

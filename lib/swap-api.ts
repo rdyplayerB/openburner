@@ -36,7 +36,6 @@ export const SUPPORTED_CHAINS = {
   43114: 'avalanche', // Avalanche
   59144: 'linea',     // Linea
   5000: 'mantle',     // Mantle
-  34443: 'mode',      // Mode
   534352: 'scroll',   // Scroll
   324: 'zksync',      // zkSync Era
 };

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CHAINS, RETIRED_CHAIN_IDS, getChainConfig } from "@/lib/supported-chains";
+import { CHAINS, FORMER_PRESETS, RETIRED_CHAIN_IDS, getChainConfig } from "@/lib/supported-chains";
 
 export type ConnectionMode = 'bridge' | 'gateway';
 
@@ -79,6 +79,20 @@ export const useWalletStore = create<WalletState>()(
         const preset = getChainConfig(state.chainId);
         if (preset && state.rpcUrl !== preset.rpcUrl) {
           set({ rpcUrl: preset.rpcUrl });
+        }
+        // Sessions saved on a former preset that still runs keep it as a custom network.
+        const former = FORMER_PRESETS[state.chainId];
+        if (former) {
+          try {
+            const saved = JSON.parse(localStorage.getItem("customRPCs") || "{}");
+            if (!saved[String(state.chainId)]) {
+              saved[String(state.chainId)] = { name: former.name, rpcUrl: former.rpcUrl };
+              localStorage.setItem("customRPCs", JSON.stringify(saved));
+            }
+            set({ rpcUrl: saved[String(state.chainId)].rpcUrl, chainName: saved[String(state.chainId)].name });
+          } catch {
+            /* storage unavailable: leave the session as it is */
+          }
         }
         // Sessions saved on a network that has since shut down move to Ethereum.
         if (RETIRED_CHAIN_IDS.has(state.chainId)) {

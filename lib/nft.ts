@@ -85,7 +85,6 @@ const BLOCK_EXPLORERS: Record<number, string> = {
   43114: "https://snowtrace.io",
   59144: "https://lineascan.build",
   5000: "https://explorer.mantle.xyz",
-  34443: "https://explorer.mode.network",
   10: "https://optimistic.etherscan.io",
   137: "https://polygonscan.com",
   534352: "https://scrollscan.com",

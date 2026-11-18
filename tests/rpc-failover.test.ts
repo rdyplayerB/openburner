@@ -1,7 +1,7 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, afterAll, vi } from "vitest";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
-import { FailoverRpcProvider, getProvider } from "@/lib/provider";
+import { FailoverRpcProvider, getProvider, RETURN_TO_PRIMARY_MS } from "@/lib/provider";
 import { CHAINS } from "@/lib/supported-chains";
 
 const servers: http.Server[] = [];
@@ -34,6 +34,25 @@ async function serve(kind: "down" | "up" | "small"): Promise<string> {
 
 afterAll(() => servers.forEach((s) => s.close()));
 
+/** An RPC that can be switched off and on, counting the requests it gets. */
+async function serveSwitchable() {
+  const state = { down: true, hits: 0 };
+  const server = http.createServer((req, res) => {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => {
+      state.hits++;
+      if (state.down) return void res.writeHead(503).end("unavailable");
+      const payload = JSON.parse(body);
+      const answer = (p: any) => ({ jsonrpc: "2.0", id: p.id, result: "0x10" });
+      res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(Array.isArray(payload) ? payload.map(answer) : answer(payload)));
+    });
+  });
+  servers.push(server);
+  await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+  return { url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`, state };
+}
+
 describe("RPC failover", () => {
   it("moves to the backup when the primary is down, and stays there", async () => {
     const provider = new FailoverRpcProvider([await serve("down"), await serve("up")], 137);
@@ -43,6 +62,29 @@ describe("RPC failover", () => {
     expect(await provider.getBlockNumber()).toBeGreaterThanOrEqual(16);
     expect(hits.down).toBe(downBefore); // doesn't keep trying the dead one
     provider.destroy();
+  });
+
+  it("goes back to the primary a few minutes after failing over", async () => {
+    const primary = await serveSwitchable();
+    const provider = new FailoverRpcProvider([primary.url, await serve("up")], 137);
+    let now = 1_000_000;
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+    try {
+      await provider.getBlockNumber();
+      expect(provider.currentUrl).toBe(provider.urls[1]);
+      primary.state.down = false;
+      now += RETURN_TO_PRIMARY_MS - 1000;
+      await provider.send("eth_blockNumber", []);
+      expect(provider.currentUrl).toBe(provider.urls[1]); // still inside the window
+      now += 2000;
+      const before = primary.state.hits;
+      await provider.send("eth_blockNumber", []);
+      expect(primary.state.hits).toBe(before + 1);
+      expect(provider.currentUrl).toBe(provider.urls[0]);
+    } finally {
+      clock.mockRestore();
+      provider.destroy();
+    }
   });
 
   it("re-sends a batch call by call when the RPC caps batch size", async () => {

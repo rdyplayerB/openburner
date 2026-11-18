@@ -38,8 +38,8 @@ describe("custom network currency", () => {
 describe("custom network prices", () => {
   it("doesn't price an unnamed coin as Ether", async () => {
     const { sourceFor } = await import("@/lib/price-oracle");
-    save({ 100: { name: "Gnosis", rpcUrl: "x" } });
-    expect(sourceFor({ symbol: "ETH", address: "native", chainId: 100 })).toBeNull();
+    save({ 250: { name: "Fantom", rpcUrl: "x" } });
+    expect(sourceFor({ symbol: "ETH", address: "native", chainId: 250 })).toBeNull();
   });
 
   it("prices a coin by the symbol its owner gave it", async () => {
@@ -50,8 +50,8 @@ describe("custom network prices", () => {
 
   it("never prices tokens on a custom network by symbol", async () => {
     const { sourceFor } = await import("@/lib/price-oracle");
-    save({ 100: { name: "Gnosis", rpcUrl: "x", symbol: "XDAI" } });
-    expect(sourceFor({ symbol: "USDC", address: "0x0000000000000000000000000000000000000001", chainId: 100 })).toBeNull();
+    save({ 250: { name: "Fantom", rpcUrl: "x", symbol: "FTM" } });
+    expect(sourceFor({ symbol: "USDC", address: "0x0000000000000000000000000000000000000001", chainId: 250 })).toBeNull();
   });
 
   it("leaves built-in networks as they were", async () => {

@@ -311,9 +311,9 @@ Notes:
 
 ## Networks
 
-OpenBurner works with any EVM-compatible network. The presets in the network menu are examples, each defined in `lib/supported-chains.ts` with a primary public RPC URL and a backup from a different operator. If the primary stops answering, the app switches to the backup (`lib/provider.ts`), and batches are capped at 10 calls. Add any other network from the menu with its name, chain ID and an RPC URL; OpenBurner checks that the RPC returns that chain ID before saving it. Networks you add are saved in your browser only. Presets also carry explorer, price and swap settings. An added network's coin is priced from the currency symbol you set for it.
+OpenBurner works with any EVM-compatible network. The presets in the network menu are examples, each defined in `lib/supported-chains.ts` with a primary public RPC URL and a backup from a different operator. If the primary stops answering, the app switches to the backup and goes back to the primary a few minutes later (`lib/provider.ts`), and batches are capped at 10 calls. These RPCs are free public services run by other companies (PublicNode, Pocket Network, dRPC and the networks' own teams). They can be slow or go down, and they see your address and the transactions you send. To use other RPCs in your own copy, change `rpcUrls` in `lib/supported-chains.ts`. Add any other network from the menu with its name, chain ID and an RPC URL; OpenBurner checks that the RPC returns that chain ID before saving it. Networks you add are saved in your browser only. Presets also carry explorer, price and swap settings. An added network's coin is priced from the currency symbol you set for it.
 
-Not every preset has every feature. Swaps need the network in `SUPPORTED_SWAP_CHAINS`, collectible discovery needs it in `ALCHEMY_NFT_NETWORKS` (`lib/nft.ts`), and default tokens come from `lib/token-lists.ts`. Robinhood Chain has none of these yet.
+Not every preset has every feature. Swaps need the network in `SUPPORTED_SWAP_CHAINS`, collectible discovery needs it in `ALCHEMY_NFT_NETWORKS` (`lib/nft.ts`), and default tokens come from `lib/token-lists.ts`. Robinhood Chain, Monad, HyperEVM, Ink, Gnosis, Celo and Cronos have none of these yet.
 
 ## Token Management
 
