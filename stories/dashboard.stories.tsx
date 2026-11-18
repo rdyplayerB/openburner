@@ -97,8 +97,9 @@ export const AddToken: Story = () => (
 AddToken.storyName = "Add a token";
 AddToken.meta = { width: "phone" };
 
+// The example QFTs live on Ethereum, so the story switches there first.
 export const Collectibles: Story = () => (
-  <Scene steps={[{ wait: 600 }, { click: "Collectibles" }]}>
+  <Scene steps={[{ wait: 600 }, { click: "Network: Base" }, { click: "Ethereum" }, { wait: 600 }, { click: "Collectibles" }]}>
     <D />
   </Scene>
 );

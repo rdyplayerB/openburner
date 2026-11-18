@@ -46,11 +46,24 @@ export const IMAGES: Record<string, string> = {
   DEGEN: cg("34515/small/android-chrome-512x512.png"),
 };
 
+// Real Quantum Echoes QFTs (Quip Network, Ethereum). Their art is vendored in
+// .ladle/assets so stories stay deterministic and offline.
+const QFT = "0x5a5c9c3cd186d95eff4da56ce48a173c7e46455a";
+const qft = (tokenId: string, description: string): NftItem => ({
+  contractAddress: QFT,
+  tokenId,
+  tokenType: "ERC721",
+  name: `Quantum Echoes #${tokenId}`,
+  collectionName: "Quantum Echoes",
+  imageUrl: new URL(`./assets/qft-${tokenId}.webp`, import.meta.url).href,
+  description,
+});
+
 export const NFTS: NftItem[] = [
-  { contractAddress: ADDR.NFT, tokenId: "1204", tokenType: "ERC721", name: "Burner Pass #1204", collectionName: "Burner Pass", imageUrl: "https://picsum.photos/seed/burner1204/600", description: "Early-supporter pass." },
-  { contractAddress: ADDR.NFT, tokenId: "88", tokenType: "ERC721", name: "Burner Pass #88", collectionName: "Burner Pass", imageUrl: "https://picsum.photos/seed/burner88/600" },
-  { contractAddress: "0x1111111111111111111111111111111111111111", tokenId: "7", tokenType: "ERC1155", name: "Onchain Summer Badge", collectionName: "Base Badges", imageUrl: "https://picsum.photos/seed/basebadge/600", balance: "3" },
-  { contractAddress: "0x2222222222222222222222222222222222222222", tokenId: "4021", tokenType: "ERC721", name: "Grid #4021", collectionName: "Grids", imageUrl: "https://picsum.photos/seed/grid4021/600" },
+  qft("3454", "Holographic. Quasicrystal, Spectra palette."),
+  qft("11763", "Plasma. Bloch sphere, Aqua palette."),
+  qft("17078", "Quip. Hofstadter butterfly, Ice palette."),
+  qft("100000", "Superbloom, Spectra palette."),
 ];
 
 const now = Date.now();
