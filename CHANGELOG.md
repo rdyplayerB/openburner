@@ -5,7 +5,7 @@ All notable changes to OpenBurner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Design Refresh
+## [1.5.0] - 2026-11-17 - Design Refresh
 
 ### Added
 - **Tap-your-card signing** - PIN and card tap are one sheet with a live step list (Prepare → Sign with your Burner → Send) and a hint for your reader: phone, HaLo Gateway or USB. An animation shows the tap: the card meets the top of the phone and the phone buzzes, or rings ripple out where the card lands on a USB reader
@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sending on networks without EIP-1559** - Transactions now use a legacy gas price on any network that reports no base fee
 - **Prices on added networks** - An added network's coin is priced only by the currency symbol you set for it. Tokens on added networks show no price, since a symbol alone can't tell a real USDC from a copy
 - **Collectible links on added networks** - Collectibles on added networks no longer show an Etherscan link, since Etherscan doesn't cover those networks
+
+## [1.4.1] - 2026-11-04 - Security Update
+
+### Security
+- **Next.js 15.5.29** - Fixes two Next.js advisories: a critical one in image optimization ([GHSA-2464-fhr4-w9xw](https://github.com/advisories/GHSA-2464-fhr4-w9xw)) and a denial of service through Server Actions ([GHSA-p3m5-59mp-jv5r](https://github.com/advisories/GHSA-p3m5-59mp-jv5r))
+- **decode-uri-component 0.5.1** - Replaces a vulnerable version pulled in by a dependency; production `npm audit` is clean
 
 ## [1.4.0] - 2026-10-11 - Security Hardening & Faster Loads
 

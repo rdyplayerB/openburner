@@ -39,15 +39,13 @@ OpenBurner follows [Semantic Versioning (SemVer)](https://semver.org/) for all r
 - `feature/*`: Individual feature development
 - `hotfix/*`: Critical bug fixes for production
 
-## Current Stable Version: v1.4.0
+## Current Stable Version: v1.5.0
 
-Security hardening and faster loads (see `CHANGELOG.md`):
-- Card keys validated, never repaired; every signature checked against the connected card
-- API routes locked to the app's own origin, with per-IP rate limits and optional daily caps
-- No card data in logs
-- Smaller first load, with WalletConnect and the card libraries loaded on demand
-
-The next release is in progress under `[Unreleased]` in `CHANGELOG.md`.
+Design refresh (see `CHANGELOG.md`):
+- Card PIN and tap in one signing sheet, with Activity, token details and readable dApp requests
+- Works on any EVM network with your own RPC; every preset network has a tested backup RPC
+- Redrawn logo, new dashboard, Send and Swap, and bottom sheets on phones
+- Current versions of Next.js, React, Tailwind CSS and libhalo; needs Node.js 22.12 or later to run yourself
 
 ## Future Development
 
