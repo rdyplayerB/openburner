@@ -1,4 +1,5 @@
 import path from "node:path";
+import { readFileSync } from "node:fs";
 import { defineConfig, type Plugin } from "vite";
 
 /**
@@ -10,6 +11,7 @@ import { defineConfig, type Plugin } from "vite";
 const root = path.resolve(import.meta.dirname, "..");
 const r = (p: string) => path.join(root, p);
 const mock = (f: string) => r(`.ladle/mocks/${f}`);
+const { version } = JSON.parse(readFileSync(r("package.json"), "utf8"));
 
 const MOCKS: Record<string, string> = {
   [r("lib/provider.ts")]: mock("provider.ts"),
@@ -58,6 +60,7 @@ export default defineConfig({
   },
   define: {
     "process.env.NEXT_PUBLIC_APP_MODE": JSON.stringify("local"),
+    "process.env.NEXT_PUBLIC_APP_VERSION": JSON.stringify(version),
     "process.env.NEXT_PUBLIC_PRICING_ENABLED": JSON.stringify("true"),
     "process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID": JSON.stringify("stories"),
     "process.env.NEXT_PUBLIC_0X_API_KEY": JSON.stringify(""),

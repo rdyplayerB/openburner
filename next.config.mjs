@@ -1,8 +1,13 @@
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { readFileSync } from 'fs';
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The version shown in Settings comes from package.json.
+  env: { NEXT_PUBLIC_APP_VERSION: version },
   // Pin the workspace root (a parent directory also has a lockfile)
   outputFileTracingRoot: dirname(fileURLToPath(import.meta.url)),
   // Backstop for Fix 4: strip stray console.log/info/debug from production builds.

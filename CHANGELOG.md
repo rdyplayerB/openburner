@@ -10,9 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Blast** - Blast shut down in October 2026, so it's no longer in the network menu. If Blast was the last network you used, the app opens on Ethereum
 
+### Added
+- **A note on public RPCs** - The network menu says built-in networks use free public RPCs run by other companies, and Settings → About says OpenBurner comes as is under the MIT license
+
 ### Changed
 - **OP Mainnet logo** - Now Optimism's current OP Mainnet symbol
 - **Robinhood Chain logo** - More room around the feather
+
+### Fixed
+- **Version in Settings** - Showed v1.4.0; it now comes from the release itself
+- **Apps adding a built-in network** - An app asking to add a network the app already has now just switches to it, instead of leaving a duplicate entry in your custom networks
 
 ## [1.5.0] - 2026-11-17 - Design Refresh
 

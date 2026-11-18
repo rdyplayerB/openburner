@@ -14,7 +14,7 @@ interface ServerStatus {
   walletconnect: boolean;
 }
 
-const APP_VERSION = "1.4.0";
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
 
 const KEYS: {
   key: UserKeyName;
@@ -274,6 +274,9 @@ export function SettingsModal({
               <span className="text-sm text-(--sw-ink)">OpenBurner.xyz</span>
               <ExternalLink className="w-4 h-4 text-(--sw-muted) group-hover:text-(--sw-ink)" />
             </a>
+            <p className="py-3 text-xs leading-relaxed text-(--sw-muted)">
+              OpenBurner is free, open-source software. Under the MIT license it comes as is, with no warranty, so try a small amount first. Your keys stay on your card, and the built-in networks use public RPCs that OpenBurner doesn&apos;t&nbsp;run.
+            </p>
           </div>
         </div>
     </Modal>

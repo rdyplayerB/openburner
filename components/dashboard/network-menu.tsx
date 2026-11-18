@@ -261,6 +261,9 @@ export function NetworkMenu() {
                 </button>
               </form>
             )}
+            <p className="px-2.5 pt-2 pb-1 text-[11px] leading-snug text-(--sw-muted)">
+              Built-in networks use free public RPCs run by other companies. They can be slow or go down, and they see your address and the transactions you&nbsp;send.
+            </p>
           </div>
         </div>
       )}
