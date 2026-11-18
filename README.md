@@ -71,7 +71,7 @@ OpenBurner runs in two modes, selected by `NEXT_PUBLIC_APP_MODE`:
 
 ### Prerequisites
 
-1. **Burner Ethereum card** - [Order here](https://arx-burner.myshopify.com/OPENBURNER)
+1. **Burner Ethereum card** - [Order here](https://www.burner.pro/ethereum)
 2. **Desktop NFC Reader** - ACR1252U (recommended) or ACR122U (budget option) USB NFC reader
    - Recommended: [ACR1252U on Amazon](https://amzn.to/3ISNwd7)
    - Budget option: [ACR122U on Amazon](https://amzn.to/3WQxGms)
@@ -225,14 +225,14 @@ If you find OpenBurner useful, there are a few ways you can help:
 - Share your feedback by [opening an issue](https://github.com/rdyplayerB/openburner/issues), reaching out on [𝕏](https://x.com/rdyplayerB), [Farcaster](https://farcaster.xyz/rdyplayerb), or [email me](mailto:rdyplayerb@gmail.com)
 - You can also find me in the official [Burner Telegram channel](https://t.me/burnerofficial) (@rdyplayerB)
 - Share OpenBurner on [𝕏](https://x.com/rdyplayerB) or [Farcaster](https://farcaster.xyz/rdyplayerb)
-- Use my link to get a [Burner](https://arx-burner.myshopify.com/OPENBURNER) or [USB NFC reader](https://amzn.to/3ISNwd7) (ACR1252U recommended, [ACR122U budget option](https://amzn.to/3WQxGms))
+- Use my link to get a [Burner](https://www.burner.pro/ethereum) or [USB NFC reader](https://amzn.to/3ISNwd7) (ACR1252U recommended, [ACR122U budget option](https://amzn.to/3WQxGms))
 - Make token swaps - Using token swaps is a great way to support the project (platform fee included). If you fork OpenBurner, maintaining the default fee recipient address is appreciated
 - Support development with a donation to `rdyplayerB.eth`
 
 ## Links
 
 - **GitHub**: https://github.com/rdyplayerB/openburner
-- **Get a Burner Ethereum card**: [Order here](https://arx-burner.myshopify.com/OPENBURNER)
+- **Get a Burner Ethereum card**: [Order here](https://www.burner.pro/ethereum)
 - **LibHalo Documentation**: https://github.com/arx-research/libhalo
 - **ethers.js Docs**: https://docs.ethers.org
 

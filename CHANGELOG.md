@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A light note on care** - The connect screen says OpenBurner is free and open source and to try a small amount first. The network menu says built-in networks use free public RPCs that OpenBurner doesn't run, and Settings → About says OpenBurner comes as is under the MIT license
 
 ### Changed
+- **Network menu order** - Networks are listed by size and recent use: Ethereum, Base, BNB Chain, Robinhood Chain, Arbitrum and HyperEVM first. Each network's rank by deposits is averaged with its rank by 30-day trading volume
 - **Backup RPCs** - Where a network's own RPC refused requests under load, Pocket Network is now the backup: Ethereum, Base, Arbitrum, OP Mainnet, Robinhood Chain and Mantle. After switching to a backup, the app goes back to the first RPC a few minutes later
 - **Clearer RPC errors** - When a network's RPC is down or busy, the message says so instead of asking you to check your connection
 - **Rate limits inside normal replies** - Some RPCs report a rate limit inside a normal reply. The app now treats that as a failure and moves to the backup
