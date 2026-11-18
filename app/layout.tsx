@@ -7,10 +7,16 @@ import "./globals.css";
 // PWA metadata - only applies to mobile hosted mode
 const isHosted = process.env.NEXT_PUBLIC_APP_MODE === 'hosted';
 
+const description =
+  "An open-source app for Burner Ethereum cards. Use it on any EVM network with your own RPC, or start your own Burner project from the code.";
+const socialImage = { url: "/images/og-card.jpg", width: 1200, height: 630, alt: "OpenBurner: an open-source app for your Burner Ethereum card" };
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://app.openburner.xyz"),
   title: "OpenBurner",
-  description:
-    "An open-source app for Burner Ethereum cards. Use it on any EVM network with your own RPC, or start your own Burner project from the code.",
+  description,
+  openGraph: { title: "OpenBurner", description, type: "website", siteName: "OpenBurner", images: [socialImage] },
+  twitter: { card: "summary_large_image", title: "OpenBurner", description, images: [socialImage.url] },
   icons: {
     // ICO only: browsers prefer an SVG favicon when one is listed, which would
     // hide the pixel-fitted 16 px version.
