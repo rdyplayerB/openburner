@@ -61,7 +61,7 @@ export function TokenIcon({
 }
 
 /**
- * A network's logo. Base is drawn as its square mark; everything else is round.
+ * A network's logo. Base and OP Mainnet are drawn as their square marks; everything else is round.
  * Falls back to the first letter of the network name.
  */
 export function ChainLogo({

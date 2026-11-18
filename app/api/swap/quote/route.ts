@@ -17,7 +17,6 @@ const SUPPORTED_CHAINS = {
   137: 'polygon',     // Polygon
   56: 'bsc',          // BNB Chain
   43114: 'avalanche', // Avalanche
-  81457: 'blast',     // Blast
   59144: 'linea',     // Linea
   5000: 'mantle',     // Mantle
   34443: 'mode',      // Mode

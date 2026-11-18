@@ -336,9 +336,6 @@ OpenBurner uses **streamlined token lists** focused on core tokens for optimal p
 **Polygon:**
 - POL (native), WETH, USDC, USDT, WBTC
 
-**Blast:**
-- WETH, USDB (native stablecoin)
-
 **Scroll:**
 - WETH, USDC, USDT
 

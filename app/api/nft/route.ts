@@ -19,7 +19,6 @@ const ALCHEMY_NFT_NETWORKS: Record<number, string> = {
   137: "polygon-mainnet",
   42161: "arb-mainnet",
   10: "opt-mainnet",
-  81457: "blast-mainnet",
   59144: "linea-mainnet",
   534352: "scroll-mainnet",
   5000: "mantle-mainnet",

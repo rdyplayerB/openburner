@@ -48,12 +48,6 @@ export const TOKEN_LISTS: Record<number, TokenInfo[]> = {
     { address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", symbol: "WBTC", name: "Wrapped BTC", decimals: 8 },
   ],
   
-  // Blast
-  81457: [
-    { address: "0x4300000000000000000000000000000000000004", symbol: "WETH", name: "Wrapped Ether", decimals: 18 },
-    { address: "0x4300000000000000000000000000000000000003", symbol: "USDB", name: "USDB", decimals: 18 },
-  ],
-  
   // Scroll
   534352: [
     { address: "0x5300000000000000000000000000000000000004", symbol: "WETH", name: "Wrapped Ether", decimals: 18 },

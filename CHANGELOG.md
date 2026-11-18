@@ -5,6 +5,15 @@ All notable changes to OpenBurner will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-11-18 - Network Update
+
+### Removed
+- **Blast** - Blast shut down in October 2026, so it's no longer in the network menu. If Blast was the last network you used, the app opens on Ethereum
+
+### Changed
+- **OP Mainnet logo** - Now Optimism's current OP Mainnet symbol
+- **Robinhood Chain logo** - More room around the feather
+
 ## [1.5.0] - 2026-11-17 - Design Refresh
 
 ### Added

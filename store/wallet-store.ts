@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CHAINS, getChainConfig } from "@/lib/supported-chains";
+import { CHAINS, RETIRED_CHAIN_IDS, getChainConfig } from "@/lib/supported-chains";
 
 export type ConnectionMode = 'bridge' | 'gateway';
 
@@ -79,6 +79,11 @@ export const useWalletStore = create<WalletState>()(
         const preset = getChainConfig(state.chainId);
         if (preset && state.rpcUrl !== preset.rpcUrl) {
           set({ rpcUrl: preset.rpcUrl });
+        }
+        // Sessions saved on a network that has since shut down move to Ethereum.
+        if (RETIRED_CHAIN_IDS.has(state.chainId)) {
+          const ethereum = getChainConfig(1)!;
+          set({ chainId: 1, rpcUrl: ethereum.rpcUrl, chainName: ethereum.name, balance: "0" });
         }
       },
     }),

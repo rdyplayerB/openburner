@@ -39,7 +39,7 @@ OpenBurner follows [Semantic Versioning (SemVer)](https://semver.org/) for all r
 - `feature/*`: Individual feature development
 - `hotfix/*`: Critical bug fixes for production
 
-## Current Stable Version: v1.5.0
+## Current Stable Version: v1.5.1
 
 Design refresh (see `CHANGELOG.md`):
 - Card PIN and tap in one signing sheet, with Activity, token details and readable dApp requests

@@ -21,7 +21,7 @@ export interface ChainConfig {
    */
   rpcUrls: string[];
   logo: string;
-  /** Logo is a square mark (Base) rather than a round coin. */
+  /** Logo is a square mark (Base, OP Mainnet) rather than a round coin. */
   square?: boolean;
   nativeSymbol: string;
   nativeName: string;
@@ -43,16 +43,18 @@ export const CHAINS: ChainConfig[] = [
   { chainId: 56, name: "BNB Chain", shortName: "BNB Chain", rpcUrl: "https://bsc-dataseed.bnbchain.org", rpcUrls: ["https://bsc-dataseed.bnbchain.org", "https://bsc-rpc.publicnode.com"], logo: "/images/chains/binance.png", nativeSymbol: "BNB", nativeName: "BNB", explorer: "https://bscscan.com", coingeckoPlatform: "binance-smart-chain", nativeCoingeckoId: "binancecoin", minGasReserve: "0.0003" },
   { chainId: 42161, name: "Arbitrum One", shortName: "Arbitrum", rpcUrl: "https://arbitrum-one-rpc.publicnode.com", rpcUrls: ["https://arbitrum-one-rpc.publicnode.com", "https://arb1.arbitrum.io/rpc"], logo: "/images/chains/arbitrum.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://arbiscan.io", coingeckoPlatform: "arbitrum-one", nativeCoingeckoId: "ethereum", minGasReserve: "0.00003" },
   { chainId: 43114, name: "Avalanche", shortName: "Avalanche", rpcUrl: "https://api.avax.network/ext/bc/C/rpc", rpcUrls: ["https://api.avax.network/ext/bc/C/rpc", "https://avalanche-c-chain-rpc.publicnode.com"], logo: "/images/chains/avalanche.png", nativeSymbol: "AVAX", nativeName: "Avalanche", explorer: "https://snowtrace.io", coingeckoPlatform: "avalanche", nativeCoingeckoId: "avalanche-2", minGasReserve: "0.005" },
-  { chainId: 81457, name: "Blast", shortName: "Blast", rpcUrl: "https://rpc.blast.io", rpcUrls: ["https://rpc.blast.io", "https://blast.drpc.org"], logo: "/images/chains/blast.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://blastscan.io", coingeckoPlatform: "blast", nativeCoingeckoId: "ethereum", minGasReserve: "0.00002" },
   { chainId: 59144, name: "Linea Mainnet", shortName: "Linea", rpcUrl: "https://rpc.linea.build", rpcUrls: ["https://rpc.linea.build", "https://linea-rpc.publicnode.com"], logo: "/images/chains/linea.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://lineascan.build", coingeckoPlatform: "linea", nativeCoingeckoId: "ethereum", minGasReserve: "0.00003" },
   { chainId: 5000, name: "Mantle", shortName: "Mantle", rpcUrl: "https://mantle-rpc.publicnode.com", rpcUrls: ["https://mantle-rpc.publicnode.com", "https://rpc.mantle.xyz"], logo: "/images/chains/mantle.png", nativeSymbol: "MNT", nativeName: "Mantle", explorer: "https://explorer.mantle.xyz", coingeckoPlatform: "mantle", nativeCoingeckoId: "mantle", minGasReserve: "0.5" },
   { chainId: 34443, name: "Mode Mainnet", shortName: "Mode", rpcUrl: "https://mainnet.mode.network", rpcUrls: ["https://mainnet.mode.network", "https://mode-mainnet.rpc.sentio.xyz"], logo: "/images/chains/mode.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://explorer.mode.network", coingeckoPlatform: "mode", nativeCoingeckoId: "ethereum", minGasReserve: "0.00002" },
-  { chainId: 10, name: "OP Mainnet", shortName: "Optimism", rpcUrl: "https://optimism-rpc.publicnode.com", rpcUrls: ["https://optimism-rpc.publicnode.com", "https://mainnet.optimism.io"], logo: "/images/chains/optimism.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://optimistic.etherscan.io", coingeckoPlatform: "optimistic-ethereum", nativeCoingeckoId: "ethereum", minGasReserve: "0.00002" },
+  { chainId: 10, name: "OP Mainnet", shortName: "Optimism", rpcUrl: "https://optimism-rpc.publicnode.com", rpcUrls: ["https://optimism-rpc.publicnode.com", "https://mainnet.optimism.io"], logo: "/images/chains/optimism.svg", square: true, nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://optimistic.etherscan.io", coingeckoPlatform: "optimistic-ethereum", nativeCoingeckoId: "ethereum", minGasReserve: "0.00002" },
   { chainId: 137, name: "Polygon", shortName: "Polygon", rpcUrl: "https://polygon-bor-rpc.publicnode.com", rpcUrls: ["https://polygon-bor-rpc.publicnode.com", "https://polygon.drpc.org"], logo: "/images/chains/polygon.png", nativeSymbol: "POL", nativeName: "Polygon", explorer: "https://polygonscan.com", coingeckoPlatform: "polygon-pos", nativeCoingeckoId: "polygon-ecosystem-token", minGasReserve: "0.05" },
   { chainId: 534352, name: "Scroll", shortName: "Scroll", rpcUrl: "https://rpc.scroll.io", rpcUrls: ["https://rpc.scroll.io", "https://scroll-rpc.publicnode.com"], logo: "/images/chains/scroll.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://scrollscan.com", coingeckoPlatform: "scroll", nativeCoingeckoId: "ethereum", minGasReserve: "0.00003" },
   { chainId: 130, name: "Unichain", shortName: "Unichain", rpcUrl: "https://mainnet.unichain.org", rpcUrls: ["https://mainnet.unichain.org", "https://unichain-rpc.publicnode.com"], logo: "/images/chains/unichain.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://uniscan.xyz", coingeckoPlatform: "unichain", nativeCoingeckoId: "ethereum", minGasReserve: "0.00002" },
-  { chainId: 4663, name: "Robinhood Chain", shortName: "Robinhood", rpcUrl: "https://robinhood-rpc.publicnode.com", rpcUrls: ["https://robinhood-rpc.publicnode.com", "https://rpc.mainnet.chain.robinhood.com"], logo: "/images/chains/robinhood.png", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://robinhoodchain.blockscout.com", coingeckoPlatform: "robinhood", nativeCoingeckoId: "ethereum", minGasReserve: "0.00002" },
+  { chainId: 4663, name: "Robinhood Chain", shortName: "Robinhood", rpcUrl: "https://robinhood-rpc.publicnode.com", rpcUrls: ["https://robinhood-rpc.publicnode.com", "https://rpc.mainnet.chain.robinhood.com"], logo: "/images/chains/robinhood.svg", nativeSymbol: "ETH", nativeName: "Ethereum", explorer: "https://robinhoodchain.blockscout.com", coingeckoPlatform: "robinhood", nativeCoingeckoId: "ethereum", minGasReserve: "0.00002" },
 ];
+
+/** Former presets whose networks have shut down (Blast, October 2026). Saved sessions on them move to Ethereum. */
+export const RETIRED_CHAIN_IDS = new Set([81457]);
 
 const BY_ID = new Map(CHAINS.map((c) => [c.chainId, c]));
 
@@ -122,7 +124,7 @@ export function getExplorerAddressUrl(chainId: number, address: string): string 
  * (Unichain is supported by 0x but not yet whitelisted by the proxy.)
  */
 export const SUPPORTED_SWAP_CHAINS = new Set([
-  1, 10, 56, 137, 5000, 8453, 34443, 42161, 43114, 59144, 81457, 534352,
+  1, 10, 56, 137, 5000, 8453, 34443, 42161, 43114, 59144, 534352,
 ]);
 
 /**
