@@ -7,15 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.1] - 2026-11-18 - Network Update
 
-### Removed
-- **Blast** - Blast shut down in October 2026, so it's no longer in the network menu. If Blast was the last network you used, the app opens on Ethereum
-
 ### Added
+- **Monad, HyperEVM, Ink, Gnosis, Celo and Cronos** - Now in the network menu, each with two public RPCs from different operators that held up under load. Swaps and collectible discovery aren't available on them yet
 - **A note on public RPCs** - The network menu says built-in networks use free public RPCs run by other companies, and Settings → About says OpenBurner comes as is under the MIT license
 
 ### Changed
+- **Backup RPCs** - Where a network's own RPC refused requests under load, Pocket Network is now the backup: Ethereum, Base, Arbitrum, OP Mainnet, Robinhood Chain and Mantle. After switching to a backup, the app goes back to the first RPC a few minutes later
 - **OP Mainnet logo** - Now Optimism's current OP Mainnet symbol
 - **Robinhood Chain logo** - More room around the feather
+
+### Removed
+- **Blast** - Blast shut down in October 2026, so it's no longer in the network menu. If Blast was the last network you used, the app opens on Ethereum
+- **Mode** - Mode sees very little use now, so it's no longer in the network menu. If you were using it, it stays as one of your custom networks
 
 ### Fixed
 - **Version in Settings** - Showed v1.4.0; it now comes from the release itself
